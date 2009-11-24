@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="just_nu_feed">http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true</string>
+    <string name="app_name">SR Player</string>
+    <string name="srfeeds">http://www.sr.se/xmltv/sr_channels.xml</string>
+	
+	<string-array name="channels">
+	<item>P1</item>
+	<item>P2</item>
+	<item>P2 Musik</item>
+	<item>P3</item>
+	<item>P3 Rockster</item>
+	<item>P3 Star</item>
+	<item>P3 Street</item>
+	<item>P3 Svea</item>
+	<item>P4 med Radiosporten</item>
+	<item>P4 Radio Stockholm</item>
+	<item>Din gata</item>
+	<item>SR Metropol</item>
+	<item>Sisuradio</item>
+	<item>Sameradion</item>
+	<item>SR C</item>
+	<item>SR Klassiskt</item>
+	<item>SR Minnen</item>
+	<item>SR Atlas</item>
+	<item>SR Världen</item>
+	<item>Radioapans knattekanal</item>
+	<item>SR Extra 01</item>		
+	<item>SR Extra 02</item>
+	<item>SR Extra 03</item>
+	<item>SR Extra 04</item>
+	<item>SR Extra 05</item>
+	<item>SR Extra 06</item>
+	<item>SR Extra 07</item>
+	<item>SR Extra 08</item>
+	<item>SR Extra 09</item>
+	<item>SR Extra 10</item>	
+	</string-array>
+	
+	<string-array name="channelID">
+	<item>132</item>
+	<item>163</item>
+	<item>2562</item>
+	<item>164</item>
+	<item>1604</item>
+	<item>1607</item>
+	<item>1606</item>
+	<item>1605</item>
+	<item>179</item>
+	<item>701</item>
+	<item>2576</item> 
+	<item>2842</item>
+	<item>226</item>
+	<item>224</item>
+	<item>1265</item>
+	<item>1603</item>
+	<item>1602</item>
+	<item>2618</item>
+	<item>2619</item>
+	<item>2755</item>
+	<item>2383</item>		
+	<item>2384</item>
+	<item>2385</item>
+	<item>2386</item>
+	<item>2387</item>
+	<item>2388</item>
+	<item>2389</item>
+	<item>2390</item>
+	<item>2391</item>
+	<item>2392</item>	
+	</string-array>
+	
+	<string-array name="urls">
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P2.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P2musik.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Rockster.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Star.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Street.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Svea.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P4.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P4Stockholm.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-DinGata.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Metropol.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Sisuradio.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-sapmi.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-SRc.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Klassiskt.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Minnen.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Atlas.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Varlden.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Knatte.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra01.sdp</item>	
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra02.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra03.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra04.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra05.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra06.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra07.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra08.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra09.sdp</item>
+	<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra10.sdp</item>
+	</string-array>
+
+</resources>
