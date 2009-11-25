@@ -20,13 +20,63 @@
 			android:layout_marginRight="10dip" />
 	</LinearLayout>
 
-	<LinearLayout android:id="@+id/ProgramInfoLayout"
-		android:layout_width="fill_parent" android:layout_height="wrap_content"
-		android:orientation="horizontal" android:paddingTop="17dip">
-		<TextView android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:id="@+id/TextProgramTitle" 
-			android:paddingRight="2dip"/>
-		<TextView android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:id="@+id/TextProgramInfo" />
-		</LinearLayout>
+	<TextView android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:id="@+id/StationName"
+		 android:textColor="#FFFFFF" android:textSize="18dip"
+		android:padding="10dip" />
+
+	<ScrollView android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:layout_marginBottom="0px"
+		android:layout_marginTop="0px" android:layout_marginLeft="4dip"
+		android:layout_marginRight="4dip">
+		<RelativeLayout
+		android:id="@+id/rel1"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:scrollbars="horizontal">
+			<TextView android:id="@+id/ProgramNamnLabel"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="Nuvarande program:" android:textColor="#FFFFFF"
+				android:textSize="12dip" android:layout_below="@+id/ChannelName"
+				android:layout_marginLeft="5dip" />
+			<TextView android:id="@+id/ProgramNamn"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="-" android:textColor="#FFFFFF" android:textSize="18dip"
+				android:layout_below="@+id/ProgramNamnLabel"
+				android:layout_marginLeft="5dip" />
+			<TextView android:id="@+id/NextProgramNamnLabel"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="Nästa program:" android:textColor="#FFFFFF"
+				android:textSize="12dip" android:layout_below="@+id/ProgramNamn"
+				android:layout_marginTop="10dip" android:layout_marginLeft="5dip" />
+			<TextView android:id="@+id/NextProgramNamn"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="-" android:textColor="#FFFFFF" android:textSize="18dip"
+				android:layout_below="@+id/NextProgramNamnLabel"
+				android:layout_marginLeft="5dip" />
+			<TextView android:id="@+id/SongNamnLabel"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="Nuvarande låt:" android:textColor="#FFFFFF"
+				android:textSize="12dip" android:layout_below="@+id/NextProgramNamn"
+				android:layout_marginLeft="5dip" android:layout_marginTop="10dip" />
+			<TextView android:id="@+id/SongNamn" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:text="-"
+				android:textColor="#FFFFFF" android:textSize="18dip"
+				android:layout_below="@+id/SongNamnLabel"
+				android:layout_marginLeft="5dip" />
+
+			<TextView android:id="@+id/NextSongNamnLabel"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="Nästa låt:" android:textColor="#FFFFFF"
+				android:textSize="12dip" android:layout_below="@+id/SongNamn"
+				android:layout_marginTop="10dip" android:layout_marginLeft="5dip" />
+			<TextView android:id="@+id/NextSongNamn"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:text="-" android:textColor="#FFFFFF" android:textSize="18dip"
+				android:layout_below="@+id/NextSongNamnLabel"
+				android:layout_marginLeft="5dip" />
+		</RelativeLayout>
+
+	</ScrollView>
 </LinearLayout>

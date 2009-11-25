@@ -83,6 +83,8 @@ public class RightNowTask extends TimerTask {
 	        	 }
 	        	 eventType = xpp.next();
 	         }
+	         Log.d(SRPlayer.TAG, "RightNowTask Update: " + info.getProgramTitle());
+	 		 this.service.rightNowUpdate(info);
 		} catch (XmlPullParserException e) {
 			Log.e(SRPlayer.TAG, "Error getting RightNowInfo", e);
 		} catch (IOException e) {
@@ -95,8 +97,7 @@ public class RightNowTask extends TimerTask {
 			} catch (IOException e) { }
 		}
 		
-		Log.d(SRPlayer.TAG, "RightNowTask Update: " + info.getProgramTitle());
-		this.service.rightNowUpdate(info);
+		
 		RightNowTask.allreadyRunning = false;
 	}
 

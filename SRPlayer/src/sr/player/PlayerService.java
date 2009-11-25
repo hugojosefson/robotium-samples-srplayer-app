@@ -41,6 +41,8 @@ import android.util.Log;
 
 public class PlayerService extends Service implements OnPreparedListener,
 OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener {
+	private static final long _TIME_MINUTE = 60*1000L;
+
 	private static final int NOTIFY_ID = 1;
 	
 	// Constants used in the start intent to show what we want to perform.
@@ -144,7 +146,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.rightNowtask.cancel();
 		}
 		this.rightNowtask = new RightNowTask(this);
-		this.rightNowTimer.schedule(rightNowtask, 0, 30*60*1000L);	
+		this.rightNowTimer.schedule(rightNowtask, 0, 2 * _TIME_MINUTE);	
 	}
 
 	private void updateNotify(String stationName) {
@@ -304,7 +306,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	
 	@Override
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {
-		Log.d(SRPlayer.TAG, "PlayerService onBufferingUpdate : " + percent + "%");		
+		Log.d(SRPlayer.TAG, "PlayerService onBufferingUpdate : " + percent + "%");
+		if ( this.playerObservers != null ) {
+			for(PlayerObserver observer : this.playerObservers) {
+				observer.onBufferingUpdate(mp, percent);
+			}
+		}
 	}
 	
 	/**

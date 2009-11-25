@@ -110,7 +110,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			public void onClick(View v) {
 				try {
 					if (SRPlayer.this.playState == PLAY_STATE_STOPPED) {
-						setBufferText();
+						setBufferText(-1);
 						startStopButton.setImageResource(R.drawable.loading);
 						startPlaying();
 					} else {
@@ -167,7 +167,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 				try {
 					boundService.startPlay(SRPlayer.currentStation);
 					startStopButton.setImageResource(R.drawable.loading);
-					setBufferText();
+					setBufferText(-1);
 				} catch (IllegalArgumentException e) {
 					Log.e(SRPlayer.TAG, "Could not start to stream play.", e);
 					Toast.makeText(SRPlayer.this, "Failed to start stream! See log for more details.", 
@@ -236,16 +236,26 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 	
 	private void clearAllText() {
-		TextView tv = (TextView) findViewById(R.id.TextProgramTitle);
+		TextView tv = (TextView) findViewById(R.id.StationName);
 		tv.setText("");
-		tv = (TextView) findViewById(R.id.TextProgramInfo);
-		tv.setText("");
+		tv = (TextView) findViewById(R.id.ProgramNamn);
+		tv.setText("-");
+		tv = (TextView) findViewById(R.id.NextProgramNamn);
+		tv.setText("-");
+		tv = (TextView) findViewById(R.id.SongNamn);
+		tv.setText("-");
+		tv = (TextView) findViewById(R.id.NextSongNamn);
+		tv.setText("-");
 	}
 	
-	private void setBufferText() {
+	private void setBufferText(int percent) {
 		clearAllText();
-		TextView tv = (TextView) findViewById(R.id.TextProgramTitle);
-		tv.setText("Buffrar...");
+		TextView tv = (TextView) findViewById(R.id.StationName);
+		if ( percent == -1) {
+			tv.setText("Buffrar...");
+		} else {
+			tv.setText("Buffrar... " + percent + "%");
+		}
 	}
 
 	private void stopPlaying() {
@@ -260,12 +270,14 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	public void onPrepared(MediaPlayer mp) {
 		startStopButton.setImageResource(R.drawable.stop);
 		this.playState = PLAY_STATE_PLAY;
+		TextView tv = (TextView) findViewById(R.id.StationName);
+		tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
 	@Override
 	public void onCompletion(MediaPlayer mp) {
 		startStopButton.setImageResource(R.drawable.loading);
-		setBufferText();
+		setBufferText(-1);
 	}
 
 	@Override
@@ -276,7 +288,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		startStopButton.setImageResource(R.drawable.loading);
-		setBufferText();
+		setBufferText(-1);
 		return true;
 
 	}
@@ -325,17 +337,29 @@ public class SRPlayer extends Activity implements PlayerObserver,
              switch (msg.what) {
                   case SRPlayer.MSGUPDATECHANNELINFO:
                 	  	RightNowChannelInfo info = (RightNowChannelInfo) msg.getData().getSerializable("data");
-	                	TextView tv = (TextView) findViewById(R.id.TextProgramTitle);
+	                	TextView tv = (TextView) findViewById(R.id.ProgramNamn);
 	              		try {
-	              			tv.setText(info.getProgramTitle());
+	              			tv.setText(info.getProgramTitle() + " " + info.getProgramInfo());
 	              		} catch (Exception e) {
-	              			Log.e(SRPlayer.TAG, "Problem setting info", e);
+	              			Log.e(SRPlayer.TAG, "Problem setting program title and info", e);
 	              		}
-	              		tv = (TextView) findViewById(R.id.TextProgramInfo);
+	              		tv = (TextView) findViewById(R.id.NextProgramNamn);
 	              		try {
-	              			tv.setText(info.getProgramInfo());
+	              			tv.setText(info.getNextProgramTitle());
 	              		} catch (Exception e) {
-	              			Log.e(SRPlayer.TAG, "Problem setting info", e);
+	              			Log.e(SRPlayer.TAG, "Problem setting next program title", e);
+	              		}
+	              		tv = (TextView) findViewById(R.id.SongNamn);
+	              		try {
+	              			tv.setText(info.getSong());
+	              		} catch (Exception e) {
+	              			Log.e(SRPlayer.TAG, "Problem setting song name", e);
+	              		}
+	              		tv = (TextView) findViewById(R.id.NextSongNamn);
+	              		try {
+	              			tv.setText(info.getNextSong());
+	              		} catch (Exception e) {
+	              			Log.e(SRPlayer.TAG, "Problem setting next song name", e);
 	              		}
                        break;
              }
@@ -354,7 +378,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 
 	@Override
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {
-		// TODO Auto-generated method stub
-		
+		setBufferText(percent);
 	}
 }
