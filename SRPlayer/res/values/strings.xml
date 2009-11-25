@@ -7,10 +7,11 @@
 <!-- Menu strings -->
 <string name="menu_exit">Exit</string>
 <string name="menu_about">About</string>
+<string name="menu_config">Configure</string>
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is release under GPL.
-Created by Pontus Ullgren (ponul) and Mats (ZilverZurfarn)
+Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn)
 Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 </string>
 <string-array name="channels">

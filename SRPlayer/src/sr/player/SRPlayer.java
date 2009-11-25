@@ -54,7 +54,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	
 	private static final int MENU_EXIT = 0;
 	private static final int MENU_ABOUT = 1;
-
+	private static final int MENU_CONFIG = 2;
+	
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	
 	private static final int PLAY_STATE_STOPPED = 0;
@@ -195,6 +196,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			setIcon(android.R.drawable.ic_menu_close_clear_cancel);
 		menu.add(0, SRPlayer.MENU_ABOUT, 0, R.string.menu_about).
 			setIcon(android.R.drawable.ic_menu_help);
+		menu.add(0, SRPlayer.MENU_CONFIG, 0, R.string.menu_config).
+			setIcon(android.R.drawable.ic_menu_save);
+	
 		return true;
 	}
 	

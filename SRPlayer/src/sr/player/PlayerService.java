@@ -35,11 +35,19 @@ import android.media.MediaPlayer.OnInfoListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Binder;
 import android.os.IBinder;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class PlayerService extends Service implements OnPreparedListener,
 OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener {
 	private static final int NOTIFY_ID = 1;
+	
+	// Constants used in the start intent to show what we want to perform.
+	private static final int START_STREAMING = 0;
+	private static final int STOP_STREAMING = 1;
+	private static final int CHANGE_CHANNEL = 2;
+	
 	// This is the object that receives interactions from clients. See
 	// RemoteService for a more complete example.
 	private final IBinder mBinder = new PlayerBinder();
@@ -76,11 +84,27 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
 		rightNowTimer = new Timer();
+		
+		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);            
+        PhoneStateListener phoneListnerHandler = new PhoneStateHandler(this);
+		tm.listen(phoneListnerHandler, PhoneStateListener.LISTEN_CALL_STATE);
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
 		Log.i(SRPlayer.TAG, "PlayService onStart!");
+		switch (intent.getFlags())
+        {
+        case START_STREAMING :
+        	// Start the streaming (this is called from the widget
+        	break;
+        case STOP_STREAMING :
+        	// Start the streaming (this is called from the widget
+        	break;
+        case CHANGE_CHANNEL:
+        	// Change the channel
+        	break;
+        }
 	}
 
 	@Override
