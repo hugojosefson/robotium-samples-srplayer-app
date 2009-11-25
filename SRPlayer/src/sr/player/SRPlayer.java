@@ -133,12 +133,41 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		} else {
 			startStopButton.setImageResource(R.drawable.stop);
 		}
+		
+		// Restore save text strings 
+		if ( savedInstanceState != null ) {
+			try {
+	  			TextView tv = (TextView) findViewById(R.id.StationName);
+	  			tv.setText(savedInstanceState.getString("stationNamn"));
+	  			tv = (TextView) findViewById(R.id.ProgramNamn);
+	  			tv.setText(savedInstanceState.getString("programNamn"));
+	  			tv = (TextView) findViewById(R.id.NextProgramNamn);
+	  			tv.setText(savedInstanceState.getString("nextProgramNamn"));
+	  			tv = (TextView) findViewById(R.id.SongNamn);
+	  			tv.setText(savedInstanceState.getString("songName"));
+	  			tv = (TextView) findViewById(R.id.NextSongNamn);
+	  			tv.setText(savedInstanceState.getString("nextSongName"));
+	  		} catch (Exception e) {
+	  			Log.e(SRPlayer.TAG, "Problem setting next song name", e);
+	  		}
+		}
 	}
 	
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
-	  savedInstanceState.putInt("playState", this.playState);
-	  super.onSaveInstanceState(savedInstanceState);
+		savedInstanceState.putInt("playState", this.playState);
+		TextView tv = (TextView) findViewById(R.id.StationName);
+		savedInstanceState.putString("stationName", tv.getText().toString());
+		tv = (TextView) findViewById(R.id.ProgramNamn);
+		savedInstanceState.putString("programNamn", tv.getText().toString());
+		tv = (TextView) findViewById(R.id.NextProgramNamn);
+		savedInstanceState.putString("nextProgramNamn", tv.getText().toString());
+		tv = (TextView) findViewById(R.id.SongNamn);
+		savedInstanceState.putString("songName", tv.getText().toString());
+		tv = (TextView) findViewById(R.id.NextSongNamn);
+		savedInstanceState.putString("nextSongName", tv.getText().toString());
+		
+		super.onSaveInstanceState(savedInstanceState);
 	}
 
 	

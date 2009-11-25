@@ -134,7 +134,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			Log.i(SRPlayer.TAG, "Media Player start " + station.getStreamUrl());
 			this.currentStation = station;
 
-			updateNotify(station.getStationName());
+			updateNotify(station.getStationName(), null);
 			restartRightNowInfo();	
 			this.startStream();
 		} 
@@ -149,9 +149,16 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.rightNowTimer.schedule(rightNowtask, 0, 2 * _TIME_MINUTE);	
 	}
 
-	private void updateNotify(String stationName) {
+	private void updateNotify(String stationName, RightNowChannelInfo info) {
+		String str = "You have tuned in " + stationName;;
+		if ( info != null ) {
+			if ( ! info.getProgramTitle().trim().equals("") )
+				str += " - " + info.getProgramTitle();
+			else if ( ! info.getSong().trim().equals("") )
+				str += " - " + info.getSong();
+		}
 		notification.setLatestEventInfo(this, "SR Player",
-        		"You have tuned in " + stationName, notification.contentIntent);
+        		str, notification.contentIntent);
         mNM.notify(PlayerService.NOTIFY_ID, notification);
 	}
 
@@ -354,6 +361,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 
 	public void rightNowUpdate(RightNowChannelInfo info) {
+		updateNotify(this.currentStation.getStationName(), info);
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer: this.playerObservers) {
 				observer.onRightNowChannelInfoUpdate(info);
