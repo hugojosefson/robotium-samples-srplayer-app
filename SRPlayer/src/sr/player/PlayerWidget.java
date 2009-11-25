@@ -54,10 +54,6 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 public class PlayerWidget extends AppWidgetProvider {
-	public static final int INIT_SERVICE = 0;
-	public static final int START_STREAMING = 1;
-	public static final int STOP_STREAMING = 2;
-	public static final int UPDATE_CONFIG = 3;
 	
 	private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3.sdp";
 	private static int ChannelIndex = 3;
@@ -91,30 +87,25 @@ public class PlayerWidget extends AppWidgetProvider {
          if(intent.getAction().equals("sr.playerwidget.START")) 
          { 
               Intent ServiceIntent = new Intent(context, PlayerService.class);
-          	  ServiceIntent.addFlags(START_STREAMING);
+          	  ServiceIntent.addFlags(PlayerService.TOGGLE_STREAMING_STATUS);
           	  context.startService(ServiceIntent);
          }
          if(intent.getAction().equals("sr.playerservice.UPDATE")) 
          { 
+        	 //The service has sent information about
+        	 //the current channel and its status
         	 Log.d(getClass().getSimpleName(), "Service update intent received");        	 
              
+        	 //Store the data from the intent
         	 ChannelName = intent.getStringExtra("sr.playerservice.CHANNEL_NAME");
         	 CurrentProgramTitle = intent.getStringExtra("sr.playerservice.CURRENT_PROGRAM_NAME");
         	 NextProgramTitle = intent.getStringExtra("sr.playerservice.NEXT_PROGRAM_NAME");
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
         	 ChannelIndex = intent.getIntExtra("sr.playerservice.CHANNEL_INDEX", 0);     
         	 
-        	 //ComponentName thisWidget = new ComponentName(this, SRPlayerWidget.class);
- 	         //AppWidgetManager manager = AppWidgetManager.getInstance(this);
-        	 
-        	 
         	 if (ThisappWidgetId >= 0)
         	 {
 	        	 AppWidgetManager manager = AppWidgetManager.getInstance(context);
-	        	 //ComponentName thisWidget = new ComponentName(context, SRPlayerWidget.class);
-	        	  
-	        	 //int AppIds = manager.getAppWidgetIds(thisWidget)[0]; 	               	 
-	        	 //UpdateWidget(context, manager, AppIds);
 	        	 UpdateWidget(context, manager, ThisappWidgetId);
         	 }
          }
@@ -129,7 +120,7 @@ public class PlayerWidget extends AppWidgetProvider {
 		
     	
     	Intent clickintent=new Intent("sr.playerwidget.START"); 
-    	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, START_STREAMING);
+    	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, 0);
         updateViews.setOnClickPendingIntent(R.id.PlayPauseW, pendingIntentClick); 
         
         /*
@@ -170,8 +161,11 @@ public class PlayerWidget extends AppWidgetProvider {
     	
     	//Start service if not already started
     	Log.d( getClass().getSimpleName(), "Init start of new service" );
+    	
+    	//Generate an intent to get information about the status
+    	//and the current channel from the service
     	Intent ServiceIntentNew = new Intent(context, PlayerService.class);
-    	ServiceIntentNew.addFlags(INIT_SERVICE);
+    	ServiceIntentNew.addFlags(PlayerService.GET_INFO);
     	context.startService(ServiceIntentNew);
     	
     	    	
