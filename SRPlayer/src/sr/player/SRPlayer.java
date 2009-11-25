@@ -249,7 +249,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 	
 	private void setBufferText(int percent) {
-		clearAllText();
+		// clearAllText();
 		TextView tv = (TextView) findViewById(R.id.StationName);
 		if ( percent == -1) {
 			tv.setText("Buffrar...");
