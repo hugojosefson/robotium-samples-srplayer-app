@@ -15,6 +15,8 @@ package sr.player;
  * You should have received a copy of the GNU General Public License
  * along with SR Player for Android.  If not, see <http://www.gnu.org/licenses/>.
  */
+import java.io.IOException;
+
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -44,14 +46,17 @@ public class PhoneStateHandler extends PhoneStateListener {
 			service.stopPlay();
 			break;
 		case TelephonyManager.CALL_STATE_IDLE:
-			Log.d(getClass().getSimpleName(), "Idle state detected");
+			Log.d(SRPlayer.TAG, "Idle state detected");
 			if (WaitingForEndOfCall) {
 				try {
-					service.stopPlay();
+					service.startPlay(service.getCurrentStation());
 				} catch (IllegalArgumentException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} 
