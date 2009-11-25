@@ -46,9 +46,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private static final int NOTIFY_ID = 1;
 	
 	// Constants used in the start intent to show what we want to perform.
-	private static final int START_STREAMING = 0;
-	private static final int STOP_STREAMING = 1;
-	private static final int CHANGE_CHANNEL = 2;
+	public static final int GET_INFO = 0;	
+	public static final int TOGGLE_STREAMING_STATUS = 1;
 	
 	// This is the object that receives interactions from clients. See
 	// RemoteService for a more complete example.
@@ -97,14 +96,26 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		Log.i(SRPlayer.TAG, "PlayService onStart!");
 		switch (intent.getFlags())
         {
-        case START_STREAMING :
-        	// Start the streaming (this is called from the widget
+        case GET_INFO :
+        	//Request from widget to get updated information
         	break;
-        case STOP_STREAMING :
-        	// Start the streaming (this is called from the widget
-        	break;
-        case CHANGE_CHANNEL:
-        	// Change the channel
+        case TOGGLE_STREAMING_STATUS :
+        	//Request from widget to toggle the current status
+        	if (this.isstopped)
+				try {
+					startPlay(this.getCurrentStation());
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			else
+        		stopPlay();
         	break;
         }
 	}
