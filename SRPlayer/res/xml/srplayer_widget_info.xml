@@ -4,4 +4,3 @@ android:minHeight="72dip"
 android:minWidth="294dip" 
 android:updatePeriodMillis="3600000" android:initialLayout="@layout/srplayer_widget">
 </appwidget-provider>
-<!-- 3600000  60000-->

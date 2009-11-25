@@ -6,7 +6,7 @@
     android:background="@drawable/widget_bg_png_black"
     >
     <TextView
-        android:id="@+id/ChannelName"
+        android:id="@+id/ChannelNameW"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:paddingTop="15dip"
@@ -18,7 +18,7 @@
         android:textStyle="bold"/>
        
     <TextView
-        android:id="@+id/CurrentProgPrefix"
+        android:id="@+id/CurrentProgPrefixW"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:paddingTop="5dip"
@@ -30,7 +30,7 @@
         android:textStyle="bold"/>
     
     <TextView
-        android:id="@+id/CurrentProgName"
+        android:id="@+id/CurrentProgNameW"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:paddingTop="5dip"
@@ -44,7 +44,7 @@
         />    
     
     <TextView
-        android:id="@+id/NextProgPrefix"
+        android:id="@+id/NextProgPrefixW"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:paddingTop="22dip"
@@ -56,7 +56,7 @@
         android:textStyle="bold"/>
     
     <TextView
-        android:id="@+id/NextProgName"
+        android:id="@+id/NextProgNameW"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:paddingTop="22dip"
@@ -73,7 +73,7 @@
     <ImageButton 
 	    android:layout_height="wrap_content" 
 	    android:layout_width="wrap_content" 
-	    android:id="@+id/PlayPause" 
+	    android:id="@+id/PlayPauseW" 
 	    android:layout_marginLeft="15dip"
 	    android:layout_marginTop="5dip" 
 	    android:src="@drawable/play_white"
@@ -85,7 +85,7 @@
     <Button 
 	    android:layout_height="fill_parent" 
 	    android:layout_width="fill_parent" 
-	    android:id="@+id/ConfigButton" 
+	    android:id="@+id/ConfigButtonW" 
 	    android:layout_marginLeft="70dip"
 	    android:layout_marginTop="0dip" 
 	    android:background="#00000000">
