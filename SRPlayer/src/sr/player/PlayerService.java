@@ -25,6 +25,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -49,18 +50,30 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public static final int GET_INFO = 0;	
 	public static final int TOGGLE_STREAMING_STATUS = 1;
 	
+	// Constants used in the broadcast intent to send status information
+	public static final int STOP = 0;	
+	public static final int BUFFER = 1;
+	public static final int PLAY = 2;
+	
+	
 	// This is the object that receives interactions from clients. See
 	// RemoteService for a more complete example.
 	private final IBinder mBinder = new PlayerBinder();
 	private MediaPlayer player;
 	
 	private List<PlayerObserver> playerObservers;
-	private boolean isstopped;
+	private boolean isstopped = true;
+	private boolean isbuffering = false;
 	private NotificationManager mNM;
 	private Notification notification;
-	private Station currentStation;
+	//private Station currentStation;	
+	private Station currentStation = new Station("P1", 
+			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
+			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
+			132);	
 	private Timer rightNowTimer;
 	private TimerTask rightNowtask;
+	private RightNowChannelInfo LastRetreivedInfo;
 
 	
 	/**
@@ -98,6 +111,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         {
         case GET_INFO :
         	//Request from widget to get updated information
+        	if (LastRetreivedInfo == null)
+        		restartRightNowInfo(); //No info retreived. Request to retreive it
+        	UpdateDataAndInformReceivers();
         	break;
         case TOGGLE_STREAMING_STATUS :
         	//Request from widget to toggle the current status
@@ -193,6 +209,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		
 		this.player.prepareAsync();
 		this.isstopped = false;
+		this.isbuffering = true;
+		UpdateDataAndInformReceivers(); //Inform widgets
 	}
 	
 	synchronized public void stopPlay() {
@@ -200,6 +218,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.stop();
 		this.player.reset();
 		this.isstopped = true;
+		UpdateDataAndInformReceivers(); //Inform widgets
 		notification.setLatestEventInfo(this, "SR Player",
         		"Paused", notification.contentIntent);
         mNM.notify(PlayerService.NOTIFY_ID, notification);
@@ -213,6 +232,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		Log.d(SRPlayer.TAG, "PlayerService onPrepared!");
 		mp.start();
 		if ( this.playerObservers != null ) {
+			this.isbuffering = false; //No longer buffering
+			UpdateDataAndInformReceivers(); //Inform widgets
 			for(PlayerObserver observer : this.playerObservers) {
 				observer.onPrepared(mp);
 			}
@@ -238,7 +259,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		} else {
 
 		}
-		if ( this.playerObservers != null ) {
+		if ( this.playerObservers != null ) {			
 			for(PlayerObserver observer : this.playerObservers) {
 				observer.onCompletion(mp);
 			}
@@ -370,8 +391,72 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public Station getCurrentStation() {
 		return currentStation;
 	}
+	
+	private void UpdateDataAndInformReceivers() {
+		Intent updateIntent=new Intent("sr.playerservice.UPDATE");
+		
+		//Fill in the Intent with the data
+		//Insert the current index
+		//updateIntent.putExtra("sr.playerservice.CHANNEL_INDEX", currentStation.);
+		
+		//Insert the current channel name		
+		if (currentStation != null)
+		{
+		updateIntent.putExtra("sr.playerservice.CHANNEL_NAME", currentStation.getStationName());
+		}		
+		
+		if (LastRetreivedInfo != null)
+		{
+		
+		//Insert the current program name 
+		updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", LastRetreivedInfo.getProgramTitle());
+		
+		//Insert the next program name
+		updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", LastRetreivedInfo.getNextProgramTitle());
+		
+		//Insert the current program info 
+		updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", LastRetreivedInfo.getProgramInfo());
+		
+		//Insert the next program info
+		updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", LastRetreivedInfo.getNextProgramDescription());
+		
+		//Insert the next program info
+		updateIntent.putExtra("sr.playerservice.CURRENT_SONG", LastRetreivedInfo.getSong());
+					
+		//Insert the next song
+		updateIntent.putExtra("sr.playerservice.NEXT_SONG", LastRetreivedInfo.getNextSong());
+		}
+		
+		//Insert the status
+		if (this.isstopped)
+		{
+			//Player is stopped
+			updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.STOP);
+		}
+		else 
+		{
+			//Check is the player is buffering or playing
+			if (!this.isbuffering)
+				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.PLAY);
+			else
+				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.BUFFER);
+		}
+						
+		
+					
+		//Send a broadcast that the service has new data
+    	PendingIntent pendingupdateIntent=PendingIntent.getBroadcast(getBaseContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    	try {
+			pendingupdateIntent.send();
+		} catch (CanceledException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 	public void rightNowUpdate(RightNowChannelInfo info) {
+		LastRetreivedInfo = info; //Save the last retreived info
 		updateNotify(this.currentStation.getStationName(), info);
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer: this.playerObservers) {
