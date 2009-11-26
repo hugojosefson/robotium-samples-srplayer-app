@@ -400,6 +400,18 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public void addPlayerObserver(PlayerObserver playerObserver) {
 		if ( !this.playerObservers.contains(playerObserver)) {
 			this.playerObservers.add(playerObserver);
+			if ( this.isbuffering ) {
+				// Send indication to the observer that we are buffering
+				playerObserver.onError(this.player, -1, -1);
+			} else if ( this.isstopped ) {
+				// Send indication to the observer that we are stopped
+				playerObserver.onCompletion(this.player);
+			} else {
+				// Send indication to the observer that we are playing.
+				playerObserver.onPrepared(this.player);
+				// Also send the last RightNowInfo
+				playerObserver.onRightNowChannelInfoUpdate(this.LastRetreivedInfo);
+			}
 		}
 	}
 
@@ -479,6 +491,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 
 	public void rightNowUpdate(RightNowChannelInfo info) {
+		if ( info == null ) {
+			return;
+		}
 		LastRetreivedInfo = info; // Save the last retreived info
 		UpdateDataAndInformReceivers();
 		updateNotify(this.currentStation.getStationName(), info);
