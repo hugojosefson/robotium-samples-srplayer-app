@@ -56,14 +56,11 @@ import android.widget.AdapterView.OnItemSelectedListener;
 public class PlayerWidget extends AppWidgetProvider {
 	
 	private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3.sdp";
-	private static int ChannelIndex = 3;
+	//private static int ChannelIndex = 3;
 	private static String ChannelName = "";
-	//private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp";
-	public static final int STOP = 0;
-	public static final int BUFFER = 1;
-	public static final int PLAY = 2;
+	//private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp";	
 	
-	private static int ServerStatus=STOP;
+	private static int ServerStatus=PlayerService.STOP;
 	
 	//Collected data
 	private static String CurrentProgramTitle = "";
@@ -101,7 +98,8 @@ public class PlayerWidget extends AppWidgetProvider {
         	 CurrentProgramTitle = intent.getStringExtra("sr.playerservice.CURRENT_PROGRAM_NAME");
         	 NextProgramTitle = intent.getStringExtra("sr.playerservice.NEXT_PROGRAM_NAME");
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
-        	 ChannelIndex = intent.getIntExtra("sr.playerservice.CHANNEL_INDEX", 0);     
+        	 //ChannelIndex = intent.getIntExtra("sr.playerservice.CHANNEL_INDEX", 0);     
+        	 Log.d(getClass().getSimpleName(), "Service status = " + String.valueOf(ServerStatus));        
         	 
         	 if (ThisappWidgetId >= 0)
         	 {
@@ -120,7 +118,7 @@ public class PlayerWidget extends AppWidgetProvider {
 		
     	
     	Intent clickintent=new Intent("sr.playerwidget.START"); 
-    	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, 0);
+    	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, PlayerService.GET_INFO);
         updateViews.setOnClickPendingIntent(R.id.PlayPauseW, pendingIntentClick); 
         
         /*
@@ -135,15 +133,15 @@ public class PlayerWidget extends AppWidgetProvider {
         updateViews.setTextViewText(R.id.CurrentProgNameW, CurrentProgramTitle);
         updateViews.setTextViewText(R.id.NextProgNameW, NextProgramTitle);
          
-        if (ServerStatus == STOP)
+        if (ServerStatus == PlayerService.STOP)
         {
         	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.play_white);
         }
-        else if (ServerStatus == BUFFER)
+        else if (ServerStatus == PlayerService.BUFFER)
         {
         	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.buffer_white);
         }
-        else if (ServerStatus == PLAY)
+        else if (ServerStatus == PlayerService.PLAY)
         {
         	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.pause_white);
         }
