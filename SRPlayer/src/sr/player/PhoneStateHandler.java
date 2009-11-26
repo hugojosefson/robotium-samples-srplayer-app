@@ -49,7 +49,7 @@ public class PhoneStateHandler extends PhoneStateListener {
 			Log.d(SRPlayer.TAG, "Idle state detected");
 			if (WaitingForEndOfCall) {
 				try {
-					service.startPlay(service.getCurrentStation());
+					service.startPlay();
 				} catch (IllegalArgumentException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

@@ -121,7 +121,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         	{
 				try {
 					Log.i(SRPlayer.TAG, "Widget request to start");
-					startPlay(this.getCurrentStation());
+					startPlay();
 				} catch (IllegalArgumentException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -159,15 +159,26 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		return mBinder;
 	}
 
-	public void startPlay(Station station) throws IllegalArgumentException, 
+	public void selectChannel(Station station) {
+		Log.d(SRPlayer.TAG, "PlayerService selectChannel");
+
+		if ( !station.equals(this.currentStation) ) {
+			Log.d(SRPlayer.TAG, "PlayerService not equal");
+
+			this.currentStation = station.clone();
+			updateNotify(this.currentStation.getStationName(), null);
+			restartRightNowInfo();	
+			UpdateDataAndInformReceivers(); //Inform widgets
+		} 		
+	}
+	
+	public void startPlay() throws IllegalArgumentException, 
 		IllegalStateException, IOException  {
 		Log.d(SRPlayer.TAG, "PlayerService startPlay");
 
-		if ( !station.equals(this.currentStation) || this.isstopped ) {
-			Log.i(SRPlayer.TAG, "Media Player start " + station.getStreamUrl());
-			this.currentStation = station;
-
-			updateNotify(station.getStationName(), null);
+		if ( this.isstopped ) {
+			Log.i(SRPlayer.TAG, "Media Player start " + this.currentStation.getStreamUrl());	
+			updateNotify(this.currentStation.getStationName(), null);
 			restartRightNowInfo();	
 			this.startStream();
 		} 
@@ -231,6 +242,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
+        for(PlayerObserver observer : this.playerObservers) {
+			observer.onCompletion(this.player); // Call observers to let them
+												// know that the stream has stopped.
+		}
 	}
 	
 	@Override
@@ -267,7 +282,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 		if ( this.playerObservers != null ) {			
 			for(PlayerObserver observer : this.playerObservers) {
-				observer.onCompletion(mp);
+				observer.onError(mp, -1, -1); // Calling onError to set buffer icon
 			}
 		}
 	}
@@ -399,6 +414,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 	
 	private void UpdateDataAndInformReceivers() {
+		Log.d(SRPlayer.TAG, "PlayerService UpdateDataAndInformReceivers");
+
 		Intent updateIntent=new Intent("sr.playerservice.UPDATE");
 		
 		//Fill in the Intent with the data
@@ -462,7 +479,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 
 	public void rightNowUpdate(RightNowChannelInfo info) {
-		LastRetreivedInfo = info; //Save the last retreived info
+		LastRetreivedInfo = info; // Save the last retreived info
+		UpdateDataAndInformReceivers();
 		updateNotify(this.currentStation.getStationName(), info);
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer: this.playerObservers) {

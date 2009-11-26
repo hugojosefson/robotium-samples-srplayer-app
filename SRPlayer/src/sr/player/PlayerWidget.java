@@ -1,6 +1,6 @@
 package sr.player;
-import sr.player.R;
 
+import sr.player.R;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -11,9 +11,7 @@ import android.widget.RemoteViews;
 
 public class PlayerWidget extends AppWidgetProvider {
 	
-	//private static int ChannelIndex = 3;
 	private static String ChannelName = "";
-	//private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp";	
 	
 	private static int ServerStatus=PlayerService.STOP;
 	
@@ -35,6 +33,7 @@ public class PlayerWidget extends AppWidgetProvider {
 	@Override 
     public void onReceive(Context context, Intent intent) 
     { 
+		Log.d(getClass().getSimpleName(), "PlayerWidget onReceive");
          super.onReceive(context, intent); 
          if(intent.getAction().equals("sr.playerwidget.START")) 
          { 

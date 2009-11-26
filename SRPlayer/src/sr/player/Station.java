@@ -19,7 +19,7 @@ package sr.player;
  * parts of the application.
  *
  */
-public class Station {
+public class Station implements Cloneable {
 	private String streamUrl;
 	private String stationName;
 	private String rightNowUrl;
@@ -132,5 +132,10 @@ public class Station {
 		return true;
 	}
 	
-	
+	@Override
+	public Station clone()  {
+		Station newStation = new Station(this.stationName, this.streamUrl, 
+				this.rightNowUrl, this.channelId);
+		return newStation;
+	}
 }

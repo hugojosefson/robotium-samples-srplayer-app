@@ -194,7 +194,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		Log.d(TAG, "startPlaying");
 		if ( this.boundService != null ) {
 				try {
-					boundService.startPlay(SRPlayer.currentStation);
+					boundService.startPlay();
 					startStopButton.setImageResource(R.drawable.loading);
 					setBufferText(-1);
 				} catch (IllegalArgumentException e) {
@@ -291,7 +291,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		Log.d(TAG, "stopPlaying");
 		Log.i(SRPlayer.TAG, "Media Player stop!");
 		this.boundService.stopPlay();
-		clearAllText();
 		this.playState = PLAY_STATE_STOPPED;
 	}
 
@@ -305,8 +304,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 
 	@Override
 	public void onCompletion(MediaPlayer mp) {
-		startStopButton.setImageResource(R.drawable.loading);
-		setBufferText(-1);
+		startStopButton.setImageResource(R.drawable.play);
+		this.playState = PLAY_STATE_STOPPED;
+		// setBufferText(-1);
 	}
 
 	@Override
@@ -338,6 +338,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
 			if ( this.playState != PLAY_STATE_STOPPED) {
 				this.stopPlaying();
+				clearAllText();
+				this.boundService.selectChannel(SRPlayer.currentStation);
 				try {
 					this.startPlaying();
 				} catch (IllegalStateException e) {
@@ -345,6 +347,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			} else {
+				this.clearAllText();
+				this.boundService.selectChannel(SRPlayer.currentStation);
 			}
 		}
 	}
@@ -358,6 +363,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
 		SRPlayer.currentStation.setStreamUrl(urls[0].toString());
 		SRPlayer.currentStation.setStationName(channelInfo[3].toString());
+		this.boundService.selectChannel(SRPlayer.currentStation);
 	}
 
 	Handler viewUpdateHandler = new Handler(){
