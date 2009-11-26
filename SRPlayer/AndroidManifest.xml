@@ -24,6 +24,18 @@
 	               android:resource="@xml/srplayer_widget_info" />
 	</receiver>
 	
+	<receiver android:name="PlayerWidgetS" 
+	 android:label="SR Player 2x1"
+	 >
+	    <intent-filter>
+	        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+	        <action android:name="sr.playerwidgets.START"></action>
+	        <action android:name="sr.playerservice.UPDATE"></action>	         
+	    </intent-filter>
+	    <meta-data android:name="android.appwidget.provider"
+	               android:resource="@xml/srplayer_widgets_info" />
+	</receiver>
+	
 </application>
     <uses-sdk android:minSdkVersion="3" />
 

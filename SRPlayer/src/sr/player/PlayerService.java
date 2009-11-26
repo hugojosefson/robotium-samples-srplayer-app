@@ -118,7 +118,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         case TOGGLE_STREAMING_STATUS :
         	//Request from widget to toggle the current status
         	if (this.isstopped)
+        	{
 				try {
+					Log.i(SRPlayer.TAG, "Widget request to start");
 					startPlay(this.getCurrentStation());
 				} catch (IllegalArgumentException e) {
 					// TODO Auto-generated catch block
@@ -130,8 +132,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+        	}
 			else
+			{
+				Log.i(SRPlayer.TAG, "Widget request to stop");
         		stopPlay();
+			}
         	break;
         }
 	}

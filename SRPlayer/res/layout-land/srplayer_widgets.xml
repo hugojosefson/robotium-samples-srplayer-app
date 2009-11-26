@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgets"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"    
+    android:background="@drawable/widget_bg_png_black"
+    >
+    <TextView
+        android:id="@+id/ChannelNameWS"
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+        android:paddingTop="18dip"
+        android:paddingLeft="70dip"        
+        android:gravity="left"
+        android:text="P3"
+        android:textColor="#FFFFFF"
+        android:textSize="12dip"
+        android:lines="1"
+        android:textStyle="bold"/>
+       
+   	<ImageButton 
+	    android:layout_height="wrap_content" 
+	    android:layout_width="wrap_content" 
+	    android:id="@+id/PlayPauseWS" 
+	    android:layout_marginLeft="15dip"
+	    android:layout_marginTop="5dip" 
+	    android:src="@drawable/play_white"
+	    android:background="#00000000"
+	    >
+    	
+    </ImageButton>
+    
+    <Button 
+	    android:layout_height="fill_parent" 
+	    android:layout_width="fill_parent" 
+	    android:id="@+id/ConfigButtonWS" 
+	    android:layout_marginLeft="70dip"
+	    android:layout_marginTop="0dip" 
+	    android:background="#00000000">
+    	
+    </Button>
+   
+</RelativeLayout>
+
+

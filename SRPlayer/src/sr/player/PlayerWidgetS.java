@@ -9,17 +9,11 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-public class PlayerWidget extends AppWidgetProvider {
+public class PlayerWidgetS extends AppWidgetProvider {
 	
-	//private static int ChannelIndex = 3;
 	private static String ChannelName = "";
-	//private static String playUrl = "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp";	
 	
 	private static int ServerStatus=PlayerService.STOP;
-	
-	//Collected data
-	private static String CurrentProgramTitle = "";
-	private static String NextProgramTitle = "";
 	
 	private static Integer ThisappWidgetId = -1;
 	
@@ -36,7 +30,7 @@ public class PlayerWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) 
     { 
          super.onReceive(context, intent); 
-         if(intent.getAction().equals("sr.playerwidget.START")) 
+         if(intent.getAction().equals("sr.playerwidgets.START")) 
          { 
               Intent ServiceIntent = new Intent(context, PlayerService.class);
           	  ServiceIntent.addFlags(PlayerService.TOGGLE_STREAMING_STATUS);
@@ -50,16 +44,13 @@ public class PlayerWidget extends AppWidgetProvider {
              
         	 //Store the data from the intent
         	 ChannelName = intent.getStringExtra("sr.playerservice.CHANNEL_NAME");
-        	 CurrentProgramTitle = intent.getStringExtra("sr.playerservice.CURRENT_PROGRAM_NAME");
-        	 NextProgramTitle = intent.getStringExtra("sr.playerservice.NEXT_PROGRAM_NAME");
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
-        	 //ChannelIndex = intent.getIntExtra("sr.playerservice.CHANNEL_INDEX", 0);     
         	 Log.d(getClass().getSimpleName(), "Service status = " + String.valueOf(ServerStatus));        
         	 
         	 if (ThisappWidgetId >= 0)
         	 {
 	        	 AppWidgetManager manager = AppWidgetManager.getInstance(context);
-	        	 this.UpdateWidget(context, manager, ThisappWidgetId);
+	        	 UpdateWidget(context, manager, ThisappWidgetId);
         	 }
          }
          
@@ -68,15 +59,13 @@ public class PlayerWidget extends AppWidgetProvider {
 	
 	private void UpdateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) 
 	{
-		Log.d(getClass().getSimpleName(), "Updating view");           	 
-		
 		//Update the graphical interface		
-    	RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.srplayer_widget);
+    	RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.srplayer_widgets);
 		
     	
-    	Intent clickintent=new Intent("sr.playerwidget.START"); 
+    	Intent clickintent=new Intent("sr.playerwidgets.START"); 
     	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, PlayerService.GET_INFO);
-        updateViews.setOnClickPendingIntent(R.id.PlayPauseW, pendingIntentClick); 
+        updateViews.setOnClickPendingIntent(R.id.PlayPauseWS, pendingIntentClick); 
         
         /*
         Intent StartIntent = new Intent(context, PlayerService.class); 
@@ -86,21 +75,19 @@ public class PlayerWidget extends AppWidgetProvider {
         updateViews.setOnClickPendingIntent(R.id.ConfigButton, pendingConfigIntentClick);
         */
                        
-        updateViews.setTextViewText(R.id.ChannelNameW, ChannelName);
-        updateViews.setTextViewText(R.id.CurrentProgNameW, CurrentProgramTitle);
-        updateViews.setTextViewText(R.id.NextProgNameW, NextProgramTitle);
+        updateViews.setTextViewText(R.id.ChannelNameWS, ChannelName);
          
         if (ServerStatus == PlayerService.STOP)
         {
-        	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.play_white);
+        	updateViews.setImageViewResource(R.id.PlayPauseWS, R.drawable.play_white);
         }
         else if (ServerStatus == PlayerService.BUFFER)
         {
-        	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.buffer_white);
+        	updateViews.setImageViewResource(R.id.PlayPauseWS, R.drawable.buffer_white);
         }
         else if (ServerStatus == PlayerService.PLAY)
         {
-        	updateViews.setImageViewResource(R.id.PlayPauseW, R.drawable.pause_white);
+        	updateViews.setImageViewResource(R.id.PlayPauseWS, R.drawable.pause_white);
         }
                 		
 		appWidgetManager.updateAppWidget(appWidgetId, updateViews);
