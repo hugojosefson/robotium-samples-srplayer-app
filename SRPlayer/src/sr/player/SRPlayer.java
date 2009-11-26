@@ -79,6 +79,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
         }
 
         public void onServiceDisconnected(ComponentName className) {
+    		Log.d(TAG, "onCreate");
+
             // This is called when the connection with the service has been
             // unexpectedly disconnected -- that is, its process crashed.
             // Because it is running in our same process, we should never
@@ -174,7 +176,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
-		this.boundService.removePlayerObserver(this);
+		if ( this.boundService != null ) {
+			this.boundService.removePlayerObserver(this);
+		}
 		super.onDestroy();
 	}
 
@@ -259,6 +263,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 
 	private void handleMenuExit() {
+		unbindService(connection);
 		stopService(new Intent(SRPlayer.this,
                     PlayerService.class));
 		this.finish();
