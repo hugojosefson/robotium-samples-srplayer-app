@@ -178,6 +178,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		Log.d(TAG, "onDestroy");
 		if ( this.boundService != null ) {
 			this.boundService.removePlayerObserver(this);
+			unbindService(connection);
 		}
 		super.onDestroy();
 	}
@@ -262,8 +263,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 					}).show();
 	}
 
-	private void handleMenuExit() {
-		unbindService(connection);
+	private void handleMenuExit() {		
 		stopService(new Intent(SRPlayer.this,
                     PlayerService.class));
 		this.finish();
