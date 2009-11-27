@@ -36,6 +36,7 @@
 	               android:resource="@xml/srplayer_widgets_info" />
 	</receiver>
 	
+<activity android:name=".SRPlayerConfiguration"></activity>
 </application>
     <uses-sdk android:minSdkVersion="3" />
 

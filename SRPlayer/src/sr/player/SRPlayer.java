@@ -259,6 +259,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		case SRPlayer.MENU_ABOUT:
 			handleMenuAbout();
 			return true;
+		case SRPlayer.MENU_CONFIG:
+			handleMenuConfig();
+			return true;
 		}
 		return super.onMenuItemSelected(featureId, item);
 	}
@@ -281,6 +284,11 @@ public class SRPlayer extends Activity implements PlayerObserver,
                     PlayerService.class));
 		*/
 		this.finish();
+	}
+	
+	private void handleMenuConfig() {		
+		Intent launchIntent = new Intent(SRPlayer.this, SRPlayerConfiguration.class);
+		SRPlayer.this.startActivity(launchIntent);
 	}
 	
 	private void setBufferText(int percent) {

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/ConfigurationLayout01"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content">
+  
+  <TextView 
+  android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+  android:text="Meeeep!!!" />
+  <LinearLayout android:id="@+id/ConfigurationLayout02"
+  	android:orientation="horizontal"
+  	android:layout_width="wrap_content"
+	android:layout_height="wrap_content" >
+  	<Button android:id="@+id/ConfigurationSaveButton"
+  	android:text="@string/save"
+  	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	></Button>
+  	<Button android:id="@+id/ConfigurationSaveButton"
+  	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	></Button>
+  	
+  </LinearLayout>
+</LinearLayout>

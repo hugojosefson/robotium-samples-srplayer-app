@@ -2,8 +2,7 @@
 <resources>
     
 <string name="app_name">SR Player</string>
-<string name="start">play</string>
-<string name="stop">Stop</string>
+<string name="save">Spara</string>
 <!-- Menu strings -->
 <string name="menu_exit">Exit</string>
 <string name="menu_about">About</string>
