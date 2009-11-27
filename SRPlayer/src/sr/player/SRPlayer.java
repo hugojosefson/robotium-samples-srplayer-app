@@ -211,6 +211,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 					boundService.startPlay();
 					startStopButton.setImageResource(R.drawable.loading);
 					setBufferText(-1);
+					this.playState = PlayerService.BUFFER;
 				} catch (IllegalArgumentException e) {
 					Log.e(SRPlayer.TAG, "Could not start to stream play.", e);
 					Toast.makeText(SRPlayer.this, "Failed to start stream! See log for more details.", 
@@ -316,6 +317,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[pos]);
 			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
 			this.boundService.selectChannel(SRPlayer.currentStation);
+			clearAllText();
 		}
 	}
 
@@ -375,13 +377,15 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		startStopButton.setImageResource(R.drawable.stop);
 		this.playState = PlayerService.PLAY;
 		TextView tv = (TextView) findViewById(R.id.StationName);
-		tv.setText(SRPlayer.currentStation.getStationName());
+	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
 	@Override
 	public void onPlayerStoped() {
 		startStopButton.setImageResource(R.drawable.play);
 		this.playState = PlayerService.STOP;
+		TextView tv = (TextView) findViewById(R.id.StationName);
+	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
 	@Override
@@ -389,4 +393,17 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		// TODO Auto-generated method stub
 		
 	}
+	
+   private void clearAllText() {
+       TextView tv = (TextView) findViewById(R.id.StationName);
+       tv.setText(SRPlayer.currentStation.getStationName());
+       tv = (TextView) findViewById(R.id.ProgramNamn);
+       tv.setText("-");
+       tv = (TextView) findViewById(R.id.NextProgramNamn);
+       tv.setText("-");
+       tv = (TextView) findViewById(R.id.SongNamn);
+       tv.setText("-");
+       tv = (TextView) findViewById(R.id.NextSongNamn);
+       tv.setText("-");
+   }
 }

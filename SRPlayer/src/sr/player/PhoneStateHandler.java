@@ -32,9 +32,6 @@ public class PhoneStateHandler extends PhoneStateListener {
 		this.service = playerService;
 	}
 
-
-
-
 	public void onCallStateChanged(int state, String incomingNumber) {
 		switch (state) {
 		case TelephonyManager.CALL_STATE_OFFHOOK:

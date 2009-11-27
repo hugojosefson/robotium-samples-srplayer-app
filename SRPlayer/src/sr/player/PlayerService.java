@@ -172,7 +172,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 				}
 			} 
 			updateNotify(this.currentStation.getStationName(), null);
-			restartRightNowInfo();	
+			restartRightNowInfo();
+			this.LastRetreivedInfo = null;
 			UpdateDataAndInformReceivers(); //Inform widgets
 		} 		
 	}
@@ -188,7 +189,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			// Display a notification about us starting.  We put an icon in the status bar.
 	        showNotification();
 			this.startStream();
-			
 		} 
 		
 	}
@@ -447,43 +447,45 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		if (LastRetreivedInfo != null)
 		{
 		
-		//Insert the current program name 
-		updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", LastRetreivedInfo.getProgramTitle());
-		
-		//Insert the next program name
-		updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", LastRetreivedInfo.getNextProgramTitle());
-		
-		//Insert the current program info 
-		updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", LastRetreivedInfo.getProgramInfo());
-		
-		//Insert the next program info
-		updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", LastRetreivedInfo.getNextProgramDescription());
-		
-		//Insert the next program info
-		updateIntent.putExtra("sr.playerservice.CURRENT_SONG", LastRetreivedInfo.getSong());
-					
-		//Insert the next song
-		updateIntent.putExtra("sr.playerservice.NEXT_SONG", LastRetreivedInfo.getNextSong());
+			//Insert the current program name 
+			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", LastRetreivedInfo.getProgramTitle());
+			
+			//Insert the next program name
+			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", LastRetreivedInfo.getNextProgramTitle());
+			
+			//Insert the current program info 
+			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", LastRetreivedInfo.getProgramInfo());
+			
+			//Insert the next program info
+			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", LastRetreivedInfo.getNextProgramDescription());
+			
+			//Insert the next program info
+			updateIntent.putExtra("sr.playerservice.CURRENT_SONG", LastRetreivedInfo.getSong());
+						
+			//Insert the next song
+			updateIntent.putExtra("sr.playerservice.NEXT_SONG", LastRetreivedInfo.getNextSong());
+		} else {
+			//Insert the current program name 
+			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", "");
+			
+			//Insert the next program name
+			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", "");
+			
+			//Insert the current program info 
+			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", "");
+			
+			//Insert the next program info
+			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", "");
+			
+			//Insert the next program info
+			updateIntent.putExtra("sr.playerservice.CURRENT_SONG", "");
+						
+			//Insert the next song
+			updateIntent.putExtra("sr.playerservice.NEXT_SONG", "");
 		}
 		
 		//Insert the status
 		updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", this.playerStatus);
-		/*
-		if ( this.playerStatus == STOP )
-		{
-			//Player is stopped
-			updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.STOP);
-		}
-		else 
-		{
-			//Check is the player is buffering or playing
-			if ( this.playerStatus == PLAY )
-				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.PLAY);
-			else
-				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.BUFFER);
-		}
-		*/			
-		
 					
 		//Send a broadcast that the service has new data
     	PendingIntent pendingupdateIntent=PendingIntent.getBroadcast(getBaseContext(), 0, 
