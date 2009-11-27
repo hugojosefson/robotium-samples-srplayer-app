@@ -16,7 +16,6 @@
 package sr.player;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -78,13 +77,18 @@ public class SRPlayer extends Activity implements PlayerObserver,
         	// Set StationName
         	TextView tv = (TextView) findViewById(R.id.StationName);
   			tv.setText(boundService.getCurrentStation().getStationName());
-  			// TODO: Set channel in spinner
+  			// Set channel in spinner
         	Station station = boundService.getCurrentStation();
-        	Log.d(TAG, "onServiceConnected : station = " + station.getStationName());
-
         	CharSequence[] channelInfo = (CharSequence[]) getResources().getTextArray(R.array.channels);
-        	int channelPos = Arrays.binarySearch(channelInfo, station.getStationName());
-        	Log.d(TAG, "onServiceConnected : pos = " + channelPos);
+        	int channelPos = 0;
+        	// Why does binarySearch(CharSequence[], String) not work ?
+    		// = Arrays.binarySearch(channelInfo, station.getStationName());
+        	for(CharSequence cs : channelInfo) {
+        		if ( cs.toString().equals(station.getStationName()) ) {
+        			break;
+        		}
+        		channelPos++;
+        	}
         	((Spinner)findViewById(R.id.channelSelect)).setSelection(channelPos);
         }
 
@@ -327,6 +331,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
              switch (msg.what) {
                   case SRPlayer.MSGUPDATECHANNELINFO:
                 	  	RightNowChannelInfo info = (RightNowChannelInfo) msg.getData().getSerializable("data");
+                	  	if ( info == null ) {
+                	  		return;
+                	  	}
 	                	TextView tv = (TextView) findViewById(R.id.ProgramNamn);
 	              		try {
 	              			tv.setText(info.getProgramTitle() + " " + info.getProgramInfo());
