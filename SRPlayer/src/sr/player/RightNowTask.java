@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimerTask;
@@ -146,14 +147,14 @@ public class RightNowTask extends TimerTask {
         			info.setNextProgramURL(xpp.getText());
         		} else if (xpp.getName().equals("NextProgramStartTime")) {
         			xpp.next();
-        			DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMAN);
-        			Date date;
+        			DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.GERMAN);        			
+        			Date date;        			        		        			        			        		
         			try {
-						date = df.parse(xpp.getText());
+						date = df.parse(xpp.getText());        										
 					} catch (ParseException e) {
 						date = new Date();
 						e.printStackTrace();
-					}
+					}					
 					info.setNextProgramStartTime(date);
         		} 
         	}
