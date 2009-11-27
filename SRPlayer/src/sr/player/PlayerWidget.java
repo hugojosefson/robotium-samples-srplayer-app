@@ -76,15 +76,11 @@ public class PlayerWidget extends AppWidgetProvider {
     	Intent clickintent=new Intent("sr.playerwidget.START"); 
     	PendingIntent pendingIntentClick=PendingIntent.getBroadcast(context, 0, clickintent, PlayerService.GET_INFO);
         updateViews.setOnClickPendingIntent(R.id.PlayPauseW, pendingIntentClick); 
-        
-        /*
-        Intent StartIntent = new Intent(context, PlayerService.class); 
-        StartIntent.putExtra("sr.playerservice.CHANNEL_INDEX", ChannelIndex);        
-        StartIntent.putExtra("sr.playerservice.CHANNEL_NAME", ChannelName);
+                
+        Intent StartIntent = new Intent(context, SRPlayer.class); 
         PendingIntent pendingConfigIntentClick = PendingIntent.getActivity(context, 0, StartIntent, PendingIntent.FLAG_UPDATE_CURRENT);	        	        
-        updateViews.setOnClickPendingIntent(R.id.ConfigButton, pendingConfigIntentClick);
-        */
-                       
+        updateViews.setOnClickPendingIntent(R.id.ConfigButtonW, pendingConfigIntentClick);
+                              
         updateViews.setTextViewText(R.id.ChannelNameW, ChannelName);
         updateViews.setTextViewText(R.id.CurrentProgNameW, CurrentProgramTitle);
         updateViews.setTextViewText(R.id.NextProgNameW, NextProgramTitle);

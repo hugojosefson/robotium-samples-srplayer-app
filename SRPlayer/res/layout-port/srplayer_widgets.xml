@@ -33,7 +33,7 @@
 	    android:layout_height="70dip" 
 	    android:layout_width="fill_parent" 
 	    android:id="@+id/ConfigButtonWS" 
-	    android:layout_marginLeft="75dip"
+	    android:layout_marginLeft="65dip"
 	    android:layout_marginTop="0dip" 
 	    android:background="#00000000">
     	
