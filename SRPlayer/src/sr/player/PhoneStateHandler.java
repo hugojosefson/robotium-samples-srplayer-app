@@ -38,28 +38,31 @@ public class PhoneStateHandler extends PhoneStateListener {
 	public void onCallStateChanged(int state, String incomingNumber) {
 		switch (state) {
 		case TelephonyManager.CALL_STATE_OFFHOOK:
-			Log.d(SRPlayer.TAG, "Offhook state detected");
+			Log.d(getClass().getSimpleName(), "Offhook state detected");
+			if ( service.getPlayerStatus() != PlayerService.STOP ) {
+				WaitingForEndOfCall = true;
+				service.stopPlay();
+			}
 			break;
 		case TelephonyManager.CALL_STATE_RINGING:
-			Log.d(SRPlayer.TAG, "Ringing detected");
-			WaitingForEndOfCall = true;
-			service.stopPlay();
+			Log.d(getClass().getSimpleName(), "Ringing detected");
+			if ( service.getPlayerStatus() != PlayerService.STOP ) {
+				WaitingForEndOfCall = true;
+				service.stopPlay();
+			}
 			break;
 		case TelephonyManager.CALL_STATE_IDLE:
-			Log.d(SRPlayer.TAG, "Idle state detected");
+			Log.d(getClass().getSimpleName(), "Idle state detected");
 			if (WaitingForEndOfCall) {
 				try {
 					service.startPlay();
 				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.e(getClass().getSimpleName(), "Error", e);
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.e(getClass().getSimpleName(), "Error", e);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
+					Log.e(getClass().getSimpleName(), "Error", e);
+				}
 				WaitingForEndOfCall = false;
 			}
 			break;

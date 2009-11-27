@@ -62,11 +62,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private MediaPlayer player;
 	
 	private List<PlayerObserver> playerObservers;
-	private boolean isstopped = true;
-	private boolean isbuffering = false;
+	private int playerStatus = STOP;
 	private NotificationManager mNM;
 	private Notification notification;
-	//private Station currentStation;	
 	private Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
 			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
@@ -89,14 +87,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	@Override
 	public void onCreate() {
 		// super.onCreate();
-		Log.i(SRPlayer.TAG, "PlayService onCreate!");
+		Log.i(getClass().getSimpleName(), "PlayService onCreate!");
 		if ( this.player == null) {
 			this.player = new MediaPlayer();
 		}
 		this.playerObservers = new Vector<PlayerObserver>();
-		mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        // Display a notification about us starting.  We put an icon in the status bar.
-        showNotification();
+		this.mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		rightNowTimer = new Timer();
 		
 		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);            
@@ -106,7 +102,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
 	@Override
 	public void onStart(Intent intent, int startId) {
-		Log.i(SRPlayer.TAG, "PlayService onStart!");
+		Log.i(getClass().getSimpleName(), "PlayService onStart!");
 		switch (intent.getFlags())
         {
         case GET_INFO :
@@ -117,10 +113,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         	break;
         case TOGGLE_STREAMING_STATUS :
         	//Request from widget to toggle the current status
-        	if (this.isstopped)
+        	if ( this.playerStatus == STOP )
         	{
 				try {
-					Log.i(SRPlayer.TAG, "Widget request to start");
+					Log.i(getClass().getSimpleName(), "Widget request to start");
 					startPlay();
 				} catch (IllegalArgumentException e) {
 					// TODO Auto-generated catch block
@@ -135,7 +131,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         	}
 			else
 			{
-				Log.i(SRPlayer.TAG, "Widget request to stop");
+				Log.i(getClass().getSimpleName(), "Widget request to stop");
         		stopPlay();
 			}
         	break;
@@ -144,7 +140,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
 	@Override
 	public void onDestroy() {
-		Log.i(SRPlayer.TAG, "PlayService onDestroy!");
+		Log.i(getClass().getSimpleName(), "PlayService onDestroy!");
 		// Shutdown the player
 		this.stopPlay();
 		// Cancel the persistent notification.
@@ -160,12 +156,21 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 
 	public void selectChannel(Station station) {
-		Log.d(SRPlayer.TAG, "PlayerService selectChannel");
+		Log.d(getClass().getSimpleName(), "PlayerService selectChannel");
 
 		if ( !station.equals(this.currentStation) ) {
-			Log.d(SRPlayer.TAG, "PlayerService not equal");
-
+			Log.d(getClass().getSimpleName(), "PlayerService not equal");
 			this.currentStation = station.clone();
+			if ( this.playerStatus == PLAY ) {
+				stopPlay();
+				try {
+					startPlay();
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} 
 			updateNotify(this.currentStation.getStationName(), null);
 			restartRightNowInfo();	
 			UpdateDataAndInformReceivers(); //Inform widgets
@@ -174,13 +179,16 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	
 	public void startPlay() throws IllegalArgumentException, 
 		IllegalStateException, IOException  {
-		Log.d(SRPlayer.TAG, "PlayerService startPlay");
+		Log.d(getClass().getSimpleName(), "PlayerService startPlay");
 
-		if ( this.isstopped ) {
-			Log.i(SRPlayer.TAG, "Media Player start " + this.currentStation.getStreamUrl());	
+		if ( this.playerStatus == STOP ) {
+			Log.i(getClass().getSimpleName(), "Media Player start " + this.currentStation.getStreamUrl());	
 			updateNotify(this.currentStation.getStationName(), null);
 			restartRightNowInfo();	
+			// Display a notification about us starting.  We put an icon in the status bar.
+	        showNotification();
 			this.startStream();
+			
 		} 
 		
 	}
@@ -194,26 +202,28 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 
 	private void updateNotify(String stationName, RightNowChannelInfo info) {
-		String str = "You have tuned in " + stationName;;
-		if ( info != null ) {
-			if ( ! info.getProgramTitle().trim().equals("") )
-				str += " - " + info.getProgramTitle();
-			else if ( ! info.getSong().trim().equals("") )
-				str += " - " + info.getSong();
+		if ( this.notification != null ) {
+			String str = "You have tuned in " + stationName;;
+			if ( info != null ) {
+				if ( ! info.getProgramTitle().trim().equals("") )
+					str += " - " + info.getProgramTitle();
+				else if ( ! info.getSong().trim().equals("") )
+					str += " - " + info.getSong();
+			}
+			notification.setLatestEventInfo(this, "SR Player",
+	        		str, notification.contentIntent);
+	        mNM.notify(PlayerService.NOTIFY_ID, notification);
 		}
-		notification.setLatestEventInfo(this, "SR Player",
-        		str, notification.contentIntent);
-        mNM.notify(PlayerService.NOTIFY_ID, notification);
 	}
 
 	synchronized private void startStream() throws IllegalArgumentException, IllegalStateException, IOException  {
-		Log.d(SRPlayer.TAG, "PlayerService startStream!");
+		Log.d(getClass().getSimpleName(), "PlayerService startStream!");
 
 		if ( this.player == null ) {
-            Log.d(SRPlayer.TAG, "PlayerService Player is null creating new");
+            Log.d(getClass().getSimpleName(), "PlayerService Player is null creating new");
             this.player = new MediaPlayer();
 		}
-		Log.i(SRPlayer.TAG, "Start stream " + this.currentStation.getStreamUrl());
+		Log.i(getClass().getSimpleName(), "Start stream " + this.currentStation.getStreamUrl());
 		
 		this.player.setDataSource(this.currentStation.getStreamUrl());
 		this.player.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -225,64 +235,64 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.setOnBufferingUpdateListener(this);
 		
 		this.player.prepareAsync();
-		this.isstopped = false;
-		this.isbuffering = true;
+		this.playerStatus = BUFFER;
 		UpdateDataAndInformReceivers(); //Inform widgets
 	}
 	
 	synchronized public void stopPlay() {
-		Log.d(SRPlayer.TAG, "PlayerService stopPlay");
+		Log.d(getClass().getSimpleName(), "PlayerService stopPlay");
 		this.player.stop();
 		this.player.reset();
-		this.isstopped = true;
+		this.playerStatus = STOP;
 		UpdateDataAndInformReceivers(); //Inform widgets
 		notification.setLatestEventInfo(this, "SR Player",
         		"Paused", notification.contentIntent);
-        mNM.notify(PlayerService.NOTIFY_ID, notification);
+		this.mNM.cancel(NOTIFY_ID);
+		this.notification = null;
         if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
         for(PlayerObserver observer : this.playerObservers) {
-			observer.onCompletion(this.player); // Call observers to let them
-												// know that the stream has stopped.
+			observer.onPlayerStoped();	// Call observers to let them
+										// know that the stream has stopped.
 		}
 	}
 	
 	@Override
 	public void onPrepared(MediaPlayer mp) {
-		Log.d(SRPlayer.TAG, "PlayerService onPrepared!");
+		Log.d(getClass().getSimpleName(), "PlayerService onPrepared!");
 		mp.start();
+		this.playerStatus = PLAY; //No longer buffering
 		if ( this.playerObservers != null ) {
-			this.isbuffering = false; //No longer buffering
 			UpdateDataAndInformReceivers(); //Inform widgets
 			for(PlayerObserver observer : this.playerObservers) {
-				observer.onPrepared(mp);
+				observer.onPlayerStarted();
 			}
 		}
 	}
 
 	@Override
 	public void onCompletion(MediaPlayer mp) {
-		Log.d(SRPlayer.TAG, "PlayerService onCompletion!");
+		Log.d(getClass().getSimpleName(), "PlayerService onCompletion!");
 		// Since it seems that glitches in the SR stream is treated by
 		// Android Media Player as if the the stream is completed we need to
 		// restart if this method is triggered unless we pressed stop.
-		if (!this.isstopped) {
-			Log.i(SRPlayer.TAG, "Not stopped restarting !!");
+		if ( this.playerStatus == PLAY ) {
+			Log.i(getClass().getSimpleName(), "Not stopped restarting !!");
 
 			this.player.stop();
 			this.player.reset();
 			try {
 				this.startStream();
 			} catch (IOException e) {
-				Log.e(SRPlayer.TAG, "Error restarting stream!", e);
+				Log.e(getClass().getSimpleName(), "Error restarting stream!", e);
 			}
 		} else {
 
 		}
 		if ( this.playerObservers != null ) {			
 			for(PlayerObserver observer : this.playerObservers) {
-				observer.onError(mp, -1, -1); // Calling onError to set buffer icon
+				observer.onPlayerBuffer(-1); // Calling to set buffer icon
 			}
 		}
 	}
@@ -309,13 +319,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		sb.append(what);
 		sb.append(") ");
 		sb.append(extra);
-		Log.i(SRPlayer.TAG, sb.toString());
+		Log.i(getClass().getSimpleName(), sb.toString());
 		
-		if ( this.playerObservers != null ) {
-			for(PlayerObserver observer : this.playerObservers) {
-				observer.onInfo(mp, what, extra);
-			}
-		}
 		return true;
 	}
 
@@ -342,22 +347,22 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		sb.append(what);
 		sb.append(") ");
 		sb.append(extra);
-		Log.e(SRPlayer.TAG, sb.toString());
+		Log.e(getClass().getSimpleName(), sb.toString());
 		// If we get a Error we will need to restart the stream again.
-		if (!this.isstopped) {
+		if ( this.playerStatus == PLAY ) {
 			this.player.stop();
 			this.player.reset();
 			try {
 				this.startStream();
 			} catch (IOException e) {
-				Log.e(SRPlayer.TAG, "Error restarting stream!", e);
+				Log.e(getClass().getSimpleName(), "Error restarting stream!", e);
 			} 
 		} else {
 
 		}
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer : this.playerObservers) {
-				observer.onError(mp, what, extra);
+				observer.onPlayerBuffer(-1);
 			}
 		}
 		return true;
@@ -366,10 +371,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	
 	@Override
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {
-		Log.d(SRPlayer.TAG, "PlayerService onBufferingUpdate : " + percent + "%");
+		Log.d(getClass().getSimpleName(), "PlayerService onBufferingUpdate : " + percent + "%");
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer : this.playerObservers) {
-				observer.onBufferingUpdate(mp, percent);
+				observer.onPlayerBuffer(percent);
 			}
 		}
 	}
@@ -378,11 +383,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
      * Show a notification while this service is running.
      */
     private void showNotification() {
-        // In this sample, we'll use the same text for the ticker and the expanded notification
+        String str = this.currentStation.getStationName();
         
         // Set the icon, scrolling text and time stamp
-        this.notification = new Notification(R.drawable.icon, "SR Player Started",
-                System.currentTimeMillis());
+        this.notification = new Notification(R.drawable.icon, "Now playing : " + str, 0);
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -390,7 +394,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
         // Set the info for the views that show in the notification panel.
         notification.setLatestEventInfo(this, "SR Player",
-        		"Only static ... no station tuned in", contentIntent);
+        		str, contentIntent);
 		notification.flags |= (Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT);
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
@@ -400,18 +404,18 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public void addPlayerObserver(PlayerObserver playerObserver) {
 		if ( !this.playerObservers.contains(playerObserver)) {
 			this.playerObservers.add(playerObserver);
-			if ( this.isbuffering ) {
+			if ( this.playerStatus == BUFFER ) {
 				// Send indication to the observer that we are buffering
-				playerObserver.onError(this.player, -1, -1);
-			} else if ( this.isstopped ) {
+				playerObserver.onPlayerBuffer(-1);
+			} else if ( this.playerStatus == STOP ) {
 				// Send indication to the observer that we are stopped
-				playerObserver.onCompletion(this.player);
+				playerObserver.onPlayerStoped();
 			} else {
 				// Send indication to the observer that we are playing.
-				playerObserver.onPrepared(this.player);
-				// Also send the last RightNowInfo
-				playerObserver.onRightNowChannelInfoUpdate(this.LastRetreivedInfo);
+				playerObserver.onPlayerStarted();
 			}
+			// Also send the last RightNowInfo
+			playerObserver.onRightNowChannelInfoUpdate(this.LastRetreivedInfo);
 		}
 	}
 
@@ -426,7 +430,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 	
 	private void UpdateDataAndInformReceivers() {
-		Log.d(SRPlayer.TAG, "PlayerService UpdateDataAndInformReceivers");
+		Log.d(getClass().getSimpleName(), "PlayerService UpdateDataAndInformReceivers");
 
 		Intent updateIntent=new Intent("sr.playerservice.UPDATE");
 		
@@ -463,7 +467,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 		
 		//Insert the status
-		if (this.isstopped)
+		updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", this.playerStatus);
+		/*
+		if ( this.playerStatus == STOP )
 		{
 			//Player is stopped
 			updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.STOP);
@@ -471,16 +477,17 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		else 
 		{
 			//Check is the player is buffering or playing
-			if (!this.isbuffering)
+			if ( this.playerStatus == PLAY )
 				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.PLAY);
 			else
 				updateIntent.putExtra("sr.playerservice.PLAYER_STATUS", PlayerService.BUFFER);
 		}
-						
+		*/			
 		
 					
 		//Send a broadcast that the service has new data
-    	PendingIntent pendingupdateIntent=PendingIntent.getBroadcast(getBaseContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    	PendingIntent pendingupdateIntent=PendingIntent.getBroadcast(getBaseContext(), 0, 
+    									updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     	try {
 			pendingupdateIntent.send();
 		} catch (CanceledException e) {
@@ -502,6 +509,13 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 				observer.onRightNowChannelInfoUpdate(info);
 			}
 		}
+	}
+
+	/**
+	 * @return the playerStatus
+	 */
+	public int getPlayerStatus() {
+		return playerStatus;
 	}
 }
 

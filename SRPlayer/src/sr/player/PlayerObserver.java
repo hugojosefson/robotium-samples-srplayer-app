@@ -15,14 +15,12 @@
   */
 package sr.player;
 
-import android.media.MediaPlayer.OnBufferingUpdateListener;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnInfoListener;
-import android.media.MediaPlayer.OnPreparedListener;
 
-public interface PlayerObserver extends OnPreparedListener, OnCompletionListener, 
-										OnInfoListener, OnErrorListener, OnBufferingUpdateListener {
+public interface PlayerObserver  {
 
+	public void onPlayerStarted();
+	public void onPlayerStoped();
+	public void onPlayerBuffer(int percent);
+	
 	public void onRightNowChannelInfoUpdate(RightNowChannelInfo info);
 }

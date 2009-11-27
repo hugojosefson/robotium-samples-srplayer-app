@@ -16,6 +16,7 @@
 package sr.player;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,7 +25,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -58,28 +58,38 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	
-	private static final int PLAY_STATE_STOPPED = 0;
-	private static final int PLAY_STATE_BUFFER = 1;
-	private static final int PLAY_STATE_PLAY = 2;
-	
 	private ImageButton startStopButton;
-	private int playState = PLAY_STATE_STOPPED;
+	private int playState = PlayerService.STOP;
+	boolean isFirstCall = true;
 	
 	public PlayerService boundService;
 	
 	private ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            // This is called when the connection with the service has been
+        	Log.d(TAG, "onServiceConnected");
+
+        	// This is called when the connection with the service has been
             // established, giving us the service object we can use to
             // interact with the service.  Because we have bound to a explicit
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
         	boundService = ((PlayerService.PlayerBinder)service).getService();
         	boundService.addPlayerObserver(SRPlayer.this);
+        	// Set StationName
+        	TextView tv = (TextView) findViewById(R.id.StationName);
+  			tv.setText(boundService.getCurrentStation().getStationName());
+  			// TODO: Set channel in spinner
+        	Station station = boundService.getCurrentStation();
+        	Log.d(TAG, "onServiceConnected : station = " + station.getStationName());
+
+        	CharSequence[] channelInfo = (CharSequence[]) getResources().getTextArray(R.array.channels);
+        	int channelPos = Arrays.binarySearch(channelInfo, station.getStationName());
+        	Log.d(TAG, "onServiceConnected : pos = " + channelPos);
+        	((Spinner)findViewById(R.id.channelSelect)).setSelection(channelPos);
         }
 
         public void onServiceDisconnected(ComponentName className) {
-    		Log.d(TAG, "onCreate");
+    		Log.d(TAG, "onServiceDisconnected");
 
             // This is called when the connection with the service has been
             // unexpectedly disconnected -- that is, its process crashed.
@@ -98,7 +108,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			this.playState = savedInstanceState.getInt("playState");
 			Log.d(TAG, "playstate restored to " + this.playState);
 		} else {
-			this.playState = PLAY_STATE_STOPPED;
+			this.playState = PlayerService.STOP;
 		}
 		startService();
 		setContentView(R.layout.main);
@@ -111,26 +121,25 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			@Override
 			public void onClick(View v) {
 				try {
-					if (SRPlayer.this.playState == PLAY_STATE_STOPPED) {
+					if (SRPlayer.this.playState == PlayerService.STOP) {
 						setBufferText(-1);
 						startStopButton.setImageResource(R.drawable.loading);
 						startPlaying();
 					} else {
 						stopPlaying();
 						startStopButton.setImageResource(R.drawable.play);
-						clearAllText();
 					}
 				} catch (IllegalStateException e) {
-					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PLAY_STATE_STOPPED?"start":"stop") +" to stream play.", e);
+					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PlayerService.STOP?"start":"stop") +" to stream play.", e);
 				} catch (IOException e) {
-					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PLAY_STATE_STOPPED?"start":"stop") +" to stream play.", e);
+					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PlayerService.STOP?"start":"stop") +" to stream play.", e);
 				}
 			}
 		});
 
-		if (this.playState == PLAY_STATE_BUFFER) {
+		if (this.playState == PlayerService.BUFFER) {
 			startStopButton.setImageResource(R.drawable.loading);
-		} if (this.playState == PLAY_STATE_STOPPED) {
+		} if (this.playState == PlayerService.STOP) {
 			startStopButton.setImageResource(R.drawable.play);
 		} else {
 			startStopButton.setImageResource(R.drawable.stop);
@@ -214,8 +223,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 					Log.e(SRPlayer.TAG, "Could not start to stream play.", e);
 					Toast.makeText(SRPlayer.this, "Failed to start stream! See log for more details.", 
 							Toast.LENGTH_LONG).show();
-				} 
-				this.playState = PLAY_STATE_BUFFER;
+				}
 		} else {
 			Toast.makeText(this, "Failed to start service", Toast.LENGTH_LONG).show();
 		}
@@ -264,22 +272,10 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 
 	private void handleMenuExit() {		
-		stopService(new Intent(SRPlayer.this,
+		/* stopService(new Intent(SRPlayer.this,
                     PlayerService.class));
+		*/
 		this.finish();
-	}
-	
-	private void clearAllText() {
-		TextView tv = (TextView) findViewById(R.id.StationName);
-		tv.setText("");
-		tv = (TextView) findViewById(R.id.ProgramNamn);
-		tv.setText("-");
-		tv = (TextView) findViewById(R.id.NextProgramNamn);
-		tv.setText("-");
-		tv = (TextView) findViewById(R.id.SongNamn);
-		tv.setText("-");
-		tv = (TextView) findViewById(R.id.NextSongNamn);
-		tv.setText("-");
 	}
 	
 	private void setBufferText(int percent) {
@@ -296,41 +292,19 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		Log.d(TAG, "stopPlaying");
 		Log.i(SRPlayer.TAG, "Media Player stop!");
 		this.boundService.stopPlay();
-		this.playState = PLAY_STATE_STOPPED;
 	}
 
-	@Override
-	public void onPrepared(MediaPlayer mp) {
-		startStopButton.setImageResource(R.drawable.stop);
-		this.playState = PLAY_STATE_PLAY;
-		TextView tv = (TextView) findViewById(R.id.StationName);
-		tv.setText(SRPlayer.currentStation.getStationName());
-	}
-
-	@Override
-	public void onCompletion(MediaPlayer mp) {
-		startStopButton.setImageResource(R.drawable.play);
-		this.playState = PLAY_STATE_STOPPED;
-		// setBufferText(-1);
-	}
-
-	@Override
-	public boolean onInfo(MediaPlayer mp, int what, int extra) {
-		return true;
-	}
-
-	@Override
-	public boolean onError(MediaPlayer mp, int what, int extra) {
-		startStopButton.setImageResource(R.drawable.loading);
-		setBufferText(-1);
-		return true;
-
-	}
-
+	
 	@Override
 	public void onItemSelected(AdapterView<?> adapter, View view, int pos,
 			long id) {
 		Log.d(TAG, "onItemSelected");
+		
+		if ( isFirstCall ) {
+			isFirstCall = false;
+			return;
+		}
+		// TODO: Why is this selected on start ?
 		Resources res = getResources();
 		CharSequence[] channelInfo = (CharSequence[]) res
 				.getTextArray(R.array.channels);
@@ -341,34 +315,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			SRPlayer.currentStation.setStationName(channelInfo[pos].toString());
 			SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[pos]);
 			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-			if ( this.playState != PLAY_STATE_STOPPED) {
-				this.stopPlaying();
-				clearAllText();
-				this.boundService.selectChannel(SRPlayer.currentStation);
-				try {
-					this.startPlaying();
-				} catch (IllegalStateException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else {
-				this.clearAllText();
-				this.boundService.selectChannel(SRPlayer.currentStation);
-			}
+			this.boundService.selectChannel(SRPlayer.currentStation);
 		}
-	}
-
-	@Override
-	public void onNothingSelected(AdapterView<?> adapter) {
-		// If nothing is selected reset to P1
-		Resources res = getResources();
-		CharSequence[] channelInfo = (CharSequence[]) res
-				.getTextArray(R.array.channels);
-		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
-		SRPlayer.currentStation.setStreamUrl(urls[0].toString());
-		SRPlayer.currentStation.setStationName(channelInfo[3].toString());
-		this.boundService.selectChannel(SRPlayer.currentStation);
 	}
 
 	Handler viewUpdateHandler = new Handler(){
@@ -417,7 +365,28 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 
 	@Override
-	public void onBufferingUpdate(MediaPlayer mp, int percent) {
+	public void onPlayerBuffer(int percent) {
+		startStopButton.setImageResource(R.drawable.loading);
 		setBufferText(percent);
+	}
+
+	@Override
+	public void onPlayerStarted() {
+		startStopButton.setImageResource(R.drawable.stop);
+		this.playState = PlayerService.PLAY;
+		TextView tv = (TextView) findViewById(R.id.StationName);
+		tv.setText(SRPlayer.currentStation.getStationName());
+	}
+
+	@Override
+	public void onPlayerStoped() {
+		startStopButton.setImageResource(R.drawable.play);
+		this.playState = PlayerService.STOP;
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }
