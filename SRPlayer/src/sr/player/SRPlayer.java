@@ -287,7 +287,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 	
 	private void handleMenuConfig() {		
-		Intent launchIntent = new Intent(SRPlayer.this, SRPlayerConfiguration.class);
+		Intent launchIntent = new Intent(SRPlayer.this, SRPlayerPreferences.class);
 		SRPlayer.this.startActivity(launchIntent);
 	}
 	

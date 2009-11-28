@@ -27,6 +27,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnBufferingUpdateListener;
@@ -36,6 +37,7 @@ import android.media.MediaPlayer.OnInfoListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -198,12 +200,20 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.rightNowtask.cancel();
 		}
 		this.rightNowtask = new RightNowTask(this);
-		this.rightNowTimer.schedule(rightNowtask, 0, 2 * _TIME_MINUTE);	
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		String rateStr = prefs.getString("rightNowInfoRetrievalRate", "2");
+		int rate = 2;
+		try {
+			rate = Integer.parseInt(rateStr);
+		} catch (NumberFormatException e) {
+			rate = 2;
+		}
+		this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);	
 	}
 
 	private void updateNotify(String stationName, RightNowChannelInfo info) {
 		if ( this.notification != null ) {
-			String str = "You have tuned in " + stationName;;
+			String str = stationName;;
 			if ( info != null ) {
 				if ( ! info.getProgramTitle().trim().equals("") )
 					str += " - " + info.getProgramTitle();

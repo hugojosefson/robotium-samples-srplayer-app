@@ -7,6 +7,10 @@
 <string name="menu_exit">Exit</string>
 <string name="menu_about">About</string>
 <string name="menu_config">Configure</string>
+<!-- Preferences -->
+<string name="rightNowInfoCategories">Progaminformation</string>
+<string name="rightNowInfoRetrievalRate">Hämntnings frekvens</string>
+<string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information.</string>
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is release under GPL.
