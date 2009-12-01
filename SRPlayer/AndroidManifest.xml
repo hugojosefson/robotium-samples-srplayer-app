@@ -36,6 +36,15 @@
 	               android:resource="@xml/srplayer_widgets_info" />
 	</receiver>
 	
+	<receiver android:name=".MediabuttonReceiver" >
+	    <intent-filter
+	    android:priority="1"
+	    >
+	        <action android:name="android.intent.action.MEDIA_BUTTON" />
+	        
+	    </intent-filter>
+	</receiver>
+	
 <activity android:name=".SRPlayerPreferences"></activity>
 </application>
     <uses-sdk android:minSdkVersion="3" />

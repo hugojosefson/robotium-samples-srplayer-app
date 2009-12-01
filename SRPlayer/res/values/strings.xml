@@ -8,9 +8,13 @@
 <string name="menu_about">About</string>
 <string name="menu_config">Configure</string>
 <!-- Preferences -->
-<string name="rightNowInfoCategories">Progaminformation</string>
-<string name="rightNowInfoRetrievalRate">Hämntnings frekvens</string>
+<string name="rightNowInfoCategories">Programinformation</string>
+<string name="rightNowInfoRetrievalRate">Hämntningsfrekvens</string>
 <string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information.</string>
+<string name="configCategories">Inställningar</string>
+<string name="mediaButtonName">Play/Stop knapp</string>
+<string name="mediaButtonOff">Knapp på handsfree har ingen funktion i SR Player.</string>
+<string name="mediaButtonOn">Knapp på handsfree användas för Play/Stop av SR Player.</string>
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is release under GPL.

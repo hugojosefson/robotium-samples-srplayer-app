@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/rightNowInfoCategories"/>
-    <EditTextPreference android:key="rightNowInfoRetrievalRate"
-        android:title="@string/rightNowInfoRetrievalRate"
-        android:summary="@string/rightNowInfoRetrievalRateSummary"
-        android:defaultValue="2"/>
-        
+<PreferenceCategory android:title="@string/configCategories"/>	
+	<PreferenceScreen 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:title="@string/rightNowInfoCategories"
+	>
+	<PreferenceCategory android:title="@string/rightNowInfoCategories"/>
+	<EditTextPreference android:key="rightNowInfoRetrievalRate"
+	   android:title="@string/rightNowInfoRetrievalRate"
+	   android:summary="@string/rightNowInfoRetrievalRateSummary"
+	   android:defaultValue="2"/>
+	</PreferenceScreen>
+	<CheckBoxPreference
+		android:key="MediaButtonEnable"
+	    android:title="@string/mediaButtonName"
+		android:disableDependentsState="false"
+		android:summaryOff="@string/mediaButtonOff"
+		android:summaryOn="@string/mediaButtonOn"
+	></CheckBoxPreference>
+	
+	        
 </PreferenceScreen>
