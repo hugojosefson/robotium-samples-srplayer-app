@@ -40,6 +40,27 @@ public class PlayerWidget extends AppWidgetProvider {
               Intent ServiceIntent = new Intent(context, PlayerService.class);
           	  ServiceIntent.addFlags(PlayerService.TOGGLE_STREAMING_STATUS);
           	  context.startService(ServiceIntent);
+          	  
+          	  //In order to get better response when pressing the 
+          	  //button. Change the status of the widget.
+          	if (ServerStatus == PlayerService.STOP)
+            {
+          		ServerStatus = PlayerService.BUFFER;
+            }
+            else if (ServerStatus == PlayerService.BUFFER)
+            {
+            	ServerStatus = PlayerService.STOP;
+            }
+            else if (ServerStatus == PlayerService.PLAY)
+            {
+            	ServerStatus = PlayerService.STOP;
+            }
+          	if (ThisappWidgetId >= 0)
+          	{
+          		AppWidgetManager manager = AppWidgetManager.getInstance(context);
+          		this.UpdateWidget(context, manager, ThisappWidgetId);
+          	}
+          	
          }
          if(intent.getAction().equals("sr.playerservice.UPDATE")) 
          { 
