@@ -529,5 +529,20 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public int getPlayerStatus() {
 		return playerStatus;
 	}
+	
+	public int getStationIndex() {
+		Station station = getCurrentStation();
+		CharSequence[] channelInfo = (CharSequence[]) getResources().getTextArray(R.array.channels);
+		int channelPos = 0;
+		for(CharSequence cs : channelInfo) {
+			if ( cs.toString().equals(station.getStationName()) ) {
+				break;
+			}
+			channelPos++;
+		}
+		return channelPos;
+	}
+	
+	
 }
 
