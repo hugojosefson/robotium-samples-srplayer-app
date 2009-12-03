@@ -35,6 +35,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,6 +61,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
 	boolean isFirstCall = true;
+	private int ChannelIndex = 0;
 	
 	public PlayerService boundService;
 	
@@ -89,7 +91,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
         		}
         		channelPos++;
         	}
-        	((Spinner)findViewById(R.id.channelSelect)).setSelection(channelPos);
+        	//((Spinner)findViewById(R.id.channelSelect)).setSelection(channelPos);
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -117,21 +119,31 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		startService();
 		setContentView(R.layout.main);
 
-		startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);
-		Spinner spin = (Spinner) findViewById(R.id.channelSelect);
-		spin.setOnItemSelectedListener(this);
+		startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);		
+		//Spinner spin = (Spinner) findViewById(R.id.channelSelect);
+		//spin.setOnItemSelectedListener(this);
+		
+		RelativeLayout ChangeChannelButton = (RelativeLayout) findViewById(R.id.StationNameButton);
+        ChangeChannelButton.setOnClickListener(new View.OnClickListener() {
+        	@Override
+			public void onClick(View v) {				
+        		ShowDialog();
+			}
+		});
 
-		startStopButton.setOnClickListener(new OnClickListener() {
+		startStopButton.setOnClickListener(new OnClickListener() {        
 			@Override
 			public void onClick(View v) {
 				try {
 					if (SRPlayer.this.playState == PlayerService.STOP) {
 						setBufferText(-1);
-						startStopButton.setImageResource(R.drawable.loading);
+						//startStopButton.setImageResource(R.drawable.loading);
+						startStopButton.setImageResource(R.drawable.buffer_white);
 						startPlaying();
 					} else {
 						stopPlaying();
-						startStopButton.setImageResource(R.drawable.play);
+						//startStopButton.setImageResource(R.drawable.play);
+						startStopButton.setImageResource(R.drawable.play_white);
 					}
 				} catch (IllegalStateException e) {
 					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PlayerService.STOP?"start":"stop") +" to stream play.", e);
@@ -142,11 +154,14 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		});
 
 		if (this.playState == PlayerService.BUFFER) {
-			startStopButton.setImageResource(R.drawable.loading);
+			//startStopButton.setImageResource(R.drawable.loading);
+			startStopButton.setImageResource(R.drawable.buffer_white);
 		} if (this.playState == PlayerService.STOP) {
-			startStopButton.setImageResource(R.drawable.play);
+			//startStopButton.setImageResource(R.drawable.play);
+			startStopButton.setImageResource(R.drawable.play_white);
 		} else {
-			startStopButton.setImageResource(R.drawable.stop);
+			//startStopButton.setImageResource(R.drawable.stop);
+			startStopButton.setImageResource(R.drawable.pause_white);
 		}
 		
 		// Restore save text strings 
@@ -213,7 +228,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		if ( this.boundService != null ) {
 				try {
 					boundService.startPlay();
-					startStopButton.setImageResource(R.drawable.loading);
+					//startStopButton.setImageResource(R.drawable.loading);
+					startStopButton.setImageResource(R.drawable.buffer_white);
 					setBufferText(-1);
 					this.playState = PlayerService.BUFFER;
 				} catch (IllegalArgumentException e) {
@@ -383,13 +399,15 @@ public class SRPlayer extends Activity implements PlayerObserver,
 
 	@Override
 	public void onPlayerBuffer(int percent) {
-		startStopButton.setImageResource(R.drawable.loading);
+		//startStopButton.setImageResource(R.drawable.loading);
+		startStopButton.setImageResource(R.drawable.buffer_white);
 		setBufferText(percent);
 	}
 
 	@Override
 	public void onPlayerStarted() {
-		startStopButton.setImageResource(R.drawable.stop);
+		//startStopButton.setImageResource(R.drawable.stop);
+		startStopButton.setImageResource(R.drawable.pause_white);
 		this.playState = PlayerService.PLAY;
 		TextView tv = (TextView) findViewById(R.id.StationName);
 	    tv.setText(SRPlayer.currentStation.getStationName());
@@ -397,7 +415,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 
 	@Override
 	public void onPlayerStoped() {
-		startStopButton.setImageResource(R.drawable.play);
+		//startStopButton.setImageResource(R.drawable.play);
+		startStopButton.setImageResource(R.drawable.play_white);
 		this.playState = PlayerService.STOP;
 		TextView tv = (TextView) findViewById(R.id.StationName);
 	    tv.setText(SRPlayer.currentStation.getStationName());
@@ -421,4 +440,47 @@ public class SRPlayer extends Activity implements PlayerObserver,
        tv = (TextView) findViewById(R.id.NextSongNamn);
        tv.setText("-");
    }
+   
+    private void ShowDialog()
+	{
+		Resources res = getResources();
+		String[] items = res.getStringArray(R.array.channels);
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
+		builder.setTitle("Välj kanal");		
+		ChannelIndex = this.boundService.getStationIndex();
+		builder.setSingleChoiceItems(items, ChannelIndex, new DialogInterface.OnClickListener() {
+		    public void onClick(DialogInterface dialog, int item) {
+		        dialog.dismiss();
+		        
+		        if (item != ChannelIndex)
+	        	   {
+		           /*
+	        	   SelectedChannel = item;
+	        	   ChangeOfChannel();
+	        	   
+	        	   Intent ServiceIntent = new Intent(getBaseContext(), SRPlayerService.class);
+		           ServiceIntent.putExtra("com.jds.srplayerservice.CHANNEL_INDEX", SelectedChannel);
+				   ServiceIntent.addFlags(SRPlayerWidget.UPDATE_CONFIG);
+		          	  startService(ServiceIntent);
+		          */
+		        	Resources res = getResources();
+		    		CharSequence[] channelInfo = (CharSequence[]) res
+		    				.getTextArray(R.array.channels);
+		    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
+		    		
+		        	SRPlayer.currentStation.setStreamUrl(urls[item].toString());
+					SRPlayer.currentStation.setStationName(channelInfo[item].toString());
+					SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[item]);
+					SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+					boundService.selectChannel(SRPlayer.currentStation);					
+					clearAllText();
+	        	   }
+	        	   
+		    }
+		});
+		AlertDialog alert = builder.create();
+		alert.show();
+
+	}
 }
