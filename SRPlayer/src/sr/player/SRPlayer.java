@@ -32,6 +32,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
@@ -117,14 +118,26 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			this.playState = PlayerService.STOP;
 		}
 		startService();
+		requestWindowFeature  (Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
+		
 
 		startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);		
 		//Spinner spin = (Spinner) findViewById(R.id.channelSelect);
 		//spin.setOnItemSelectedListener(this);
 		
+		/*
 		RelativeLayout ChangeChannelButton = (RelativeLayout) findViewById(R.id.StationNameButton);
         ChangeChannelButton.setOnClickListener(new View.OnClickListener() {
+        	@Override
+			public void onClick(View v) {				
+        		ShowDialog();
+			}
+		});
+        */
+        
+        ImageButton ChangeListButton = (ImageButton) findViewById(R.id.ShowList);
+        ChangeListButton.setOnClickListener(new View.OnClickListener() {
         	@Override
 			public void onClick(View v) {				
         		ShowDialog();

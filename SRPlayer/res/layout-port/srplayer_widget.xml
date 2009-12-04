@@ -74,8 +74,8 @@
 	    android:layout_height="wrap_content" 
 	    android:layout_width="wrap_content" 
 	    android:id="@+id/PlayPauseW" 
-	    android:layout_marginLeft="15dip"
-	    android:layout_marginTop="10dip" 
+	    android:layout_marginLeft="22dip"
+	    android:layout_marginTop="18dip" 
 	    android:src="@drawable/play_white"
 	    android:background="#00000000">
     	

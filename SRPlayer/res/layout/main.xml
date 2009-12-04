@@ -5,7 +5,7 @@
                 android:layout_height="wrap_content" 
                 android:padding="0px"
                 android:orientation="vertical"
-                android:background="@drawable/activity_bg"
+                android:background="@drawable/grey_bg"               
                 >
                 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -15,8 +15,7 @@
     android:orientation="vertical"
     android:layout_marginLeft="10dip"           
     android:layout_marginRight="10dip"
-    android:layout_marginTop="10dip"
-    android:background="@drawable/rl_bg"
+    android:layout_marginTop="5dip"
     android:clickable="true"
     >
 <TextView
@@ -24,7 +23,7 @@
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:text="P3"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         android:textSize="24dip"
         android:textStyle="bold"
         android:layout_centerInParent="true"
@@ -39,7 +38,7 @@
 android:layout_width="fill_parent" 
 android:layout_height="fill_parent"
 android:layout_marginBottom="60px"
-android:layout_marginTop="60px"
+android:layout_marginTop="40px"
 android:layout_marginLeft="4dip"           
 android:layout_marginRight="4dip" 
 android:background="@drawable/text_bg"    
@@ -149,24 +148,32 @@ android:background="@drawable/text_bg"
     android:layout_width="fill_parent"
     android:layout_height="55dip"
     android:orientation="vertical"
-    android:layout_marginLeft="10dip"           
-    android:layout_marginRight="10dip"
-    android:layout_marginBottom="10dip"
-    android:background="@drawable/rl_bg"
+    android:layout_marginLeft="0dip"           
+    android:layout_marginRight="0dip"
+    android:layout_marginBottom="0dip"
     android:layout_alignParentBottom="true"       
 	>
 	<ImageButton 
-    	android:layout_height="fill_parent" 
-	    android:layout_width="fill_parent" 	   
+    	android:layout_height="wrap_content" 
+	    android:layout_width="90dip" 	   
 	    android:id="@+id/BtnStartStop" 
 	    android:src="@drawable/play_white"
 	    android:background="@drawable/button_bg"
-	    android:layout_marginBottom="0dip"
-	    android:paddingRight="0dip"
-	    android:paddingBottom="0dip"
-	    android:layout_alignParentBottom="true"	    
+	    android:padding="20dip"
 	    android:layout_centerInParent="true"
 	    ImageView.ScaleType="centerInside"	    
+	    >
+    </ImageButton> 
+    
+    <ImageButton 
+    	android:layout_height="wrap_content" 
+	    android:layout_width="90dip" 	   
+	    android:id="@+id/ShowList" 
+	    android:src="@drawable/list_white"
+	    android:background="@drawable/button_bg"
+	    android:padding="20dip"
+	    ImageView.ScaleType="centerInside"
+	   	android:layout_toLeftOf="@+id/BtnStartStop"    
 	    >
     </ImageButton>    
     
