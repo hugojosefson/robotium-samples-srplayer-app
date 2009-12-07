@@ -7,6 +7,7 @@
 <string name="menu_exit">Exit</string>
 <string name="menu_about">About</string>
 <string name="menu_config">Configure</string>
+<string name="menu_update_info">Update info</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
 <string name="rightNowInfoRetrievalRate">Hämntningsfrekvens</string>
@@ -93,6 +94,9 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra11.sdp</item>
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra12.sdp</item>
 </string-array>
+<!-- Just fo test -->
+<!--<item>http://mtg-wms1.bahnhof.net:8000/bandit_gbg</item>-->
+<!--<item>http://gold24.xnk.nu:8080/</item>-->
 <integer-array name="channelid">
 <item>132</item>  <!--  P1 -->
 <item>163</item>  <!--  P2 -->
@@ -125,6 +129,6 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>3677</item> <!-- SR Extra 9 / Webbipkanal09 -->
 <item>2679</item> <!-- SR Extra 10 / Webbipkanal10 -->
 <item>3036</item> <!-- SR Extra 11 / Webbipkanal12 -->
-<item>3034</item> <!-- SR Extra 12 / Webbipkanal12 -->
+<item>3034</item> <!-- SR Extra 12 / Webbipkanal11 -->
 </integer-array>
 </resources>

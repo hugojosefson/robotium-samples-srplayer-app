@@ -36,8 +36,6 @@ import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -56,6 +54,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	private static final int MENU_EXIT = 0;
 	private static final int MENU_ABOUT = 1;
 	private static final int MENU_CONFIG = 2;
+	private static final int MENU_UPDATE_INFO = 3;
 	
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	
@@ -63,7 +62,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	private int playState = PlayerService.STOP;
 	boolean isFirstCall = true;
 	private int ChannelIndex = 0;
-	
 	public PlayerService boundService;
 	
 	private ServiceConnection connection = new ServiceConnection() {
@@ -274,6 +272,8 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			setIcon(android.R.drawable.ic_menu_help);
 		menu.add(0, SRPlayer.MENU_CONFIG, 0, R.string.menu_config).
 			setIcon(android.R.drawable.ic_menu_save);
+		menu.add(0, SRPlayer.MENU_UPDATE_INFO, 0, R.string.menu_update_info).
+		setIcon(android.R.drawable.ic_menu_info_details);
 	
 		return true;
 	}
@@ -290,6 +290,9 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			return true;
 		case SRPlayer.MENU_CONFIG:
 			handleMenuConfig();
+			return true;
+		case SRPlayer.MENU_UPDATE_INFO:
+			boundService.restartRightNowInfo();
 			return true;
 		}
 		return super.onMenuItemSelected(featureId, item);
@@ -496,4 +499,5 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		alert.show();
 
 	}
+
 }

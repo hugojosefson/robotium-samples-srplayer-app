@@ -195,7 +195,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		
 	}
 	
-	private void restartRightNowInfo() {
+	public void restartRightNowInfo() {
 		if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
