@@ -67,6 +67,7 @@ public class SRPlayer extends Activity implements PlayerObserver {
 	boolean isExitCalled = false;
 	private int ChannelIndex = 0;
 	public PlayerService boundService;
+	private static int SleepTimerDelay;
 	
 	private ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -174,6 +175,7 @@ public class SRPlayer extends Activity implements PlayerObserver {
 	  			tv.setText(savedInstanceState.getString("songName"));
 	  			tv = (TextView) findViewById(R.id.NextSongNamn);
 	  			tv.setText(savedInstanceState.getString("nextSongName"));
+	  			SleepTimerDelay = savedInstanceState.getInt("SleepTimerDelay");
 	  		} catch (Exception e) {
 	  			Log.e(SRPlayer.TAG, "Problem setting next song name", e);
 	  		}
@@ -193,7 +195,7 @@ public class SRPlayer extends Activity implements PlayerObserver {
 		savedInstanceState.putString("songName", tv.getText().toString());
 		tv = (TextView) findViewById(R.id.NextSongNamn);
 		savedInstanceState.putString("nextSongName", tv.getText().toString());
-		
+		savedInstanceState.putInt("SleepTimerDelay", SleepTimerDelay);
 		super.onSaveInstanceState(savedInstanceState);
 	}
 
@@ -300,7 +302,9 @@ public class SRPlayer extends Activity implements PlayerObserver {
         new TimePickerDialog.OnTimeSetListener() {
 
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            	boundService.StartSleeptimer(60*hourOfDay+minute);
+            	SleepTimerDelay = 60*hourOfDay+minute;
+            	boundService.StartSleeptimer(SleepTimerDelay);
+            	
             }
         };
            
@@ -329,7 +333,10 @@ public class SRPlayer extends Activity implements PlayerObserver {
 			else
 			{
 			TimePickerDialog SelectSleepTimeDialog = new TimePickerDialog(this,
-                    mTimeSetListener, 0, 0, true);
+                    mTimeSetListener, 
+                    SleepTimerDelay/60, 
+                    SleepTimerDelay%60, 
+                    true);
 			SelectSleepTimeDialog.setTitle("Ange tid HH:MM");
 			SelectSleepTimeDialog.show();
 			}
