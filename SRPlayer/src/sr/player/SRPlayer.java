@@ -23,11 +23,13 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,6 +63,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
 	boolean isFirstCall = true;
+	boolean isExitCalled = false;
 	private int ChannelIndex = 0;
 	public PlayerService boundService;
 	
@@ -109,6 +112,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
+		this.isExitCalled = false;
 		if ( savedInstanceState != null ) {
 			this.playState = savedInstanceState.getInt("playState");
 			Log.d(TAG, "playstate restored to " + this.playState);
@@ -136,14 +140,12 @@ public class SRPlayer extends Activity implements PlayerObserver,
         
         ImageButton ChangeListButton = (ImageButton) findViewById(R.id.ShowList);
         ChangeListButton.setOnClickListener(new View.OnClickListener() {
-        	@Override
 			public void onClick(View v) {				
         		ShowDialog();
 			}
 		});
 
 		startStopButton.setOnClickListener(new OnClickListener() {        
-			@Override
 			public void onClick(View v) {
 				try {
 					if (SRPlayer.this.playState == PlayerService.STOP) {
@@ -218,6 +220,14 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		if ( this.boundService != null ) {
 			this.boundService.removePlayerObserver(this);
 			unbindService(connection);
+		}
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		boolean killService = prefs.getBoolean("KillServiceEnable", false);
+		if ( killService && this.isExitCalled ) {
+			// 
+			Log.d(TAG, "Killing service");
+			stopService(new Intent(SRPlayer.this,
+                    PlayerService.class));
 		}
 		super.onDestroy();
 	}
@@ -304,17 +314,15 @@ public class SRPlayer extends Activity implements PlayerObserver,
 			.setMessage(R.string.about_message)
 			.setPositiveButton("OK",
 					new DialogInterface.OnClickListener() {
-						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// Do nothing...
 						}
 					}).show();
 	}
 
-	private void handleMenuExit() {		
-		/* stopService(new Intent(SRPlayer.this,
-                    PlayerService.class));
-		*/
+	private void handleMenuExit() {
+		this.isExitCalled = true;
+		this.stopPlaying();
 		this.finish();
 	}
 	
@@ -340,7 +348,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 
 	
-	@Override
 	public void onItemSelected(AdapterView<?> adapter, View view, int pos,
 			long id) {
 		Log.d(TAG, "onItemSelected");
@@ -366,7 +373,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	}
 
 	Handler viewUpdateHandler = new Handler(){
-        // @Override
         public void handleMessage(Message msg) {
              switch (msg.what) {
                   case SRPlayer.MSGUPDATECHANNELINFO:
@@ -405,7 +411,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
    };
 
    
-	@Override
 	public void onRightNowChannelInfoUpdate(RightNowChannelInfo info) {
 		Message m = new Message();
         m.what = SRPlayer.MSGUPDATECHANNELINFO;
@@ -413,14 +418,12 @@ public class SRPlayer extends Activity implements PlayerObserver,
         SRPlayer.this.viewUpdateHandler.sendMessage(m); 
 	}
 
-	@Override
 	public void onPlayerBuffer(int percent) {
 		//startStopButton.setImageResource(R.drawable.loading);
 		startStopButton.setImageResource(R.drawable.buffer_white);
 		setBufferText(percent);
 	}
 
-	@Override
 	public void onPlayerStarted() {
 		//startStopButton.setImageResource(R.drawable.stop);
 		startStopButton.setImageResource(R.drawable.pause_white);
@@ -429,7 +432,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
-	@Override
 	public void onPlayerStoped() {
 		//startStopButton.setImageResource(R.drawable.play);
 		startStopButton.setImageResource(R.drawable.play_white);
@@ -438,7 +440,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
-	@Override
 	public void onNothingSelected(AdapterView<?> arg0) {
 		// TODO Auto-generated method stub
 		
@@ -463,7 +464,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		String[] items = res.getStringArray(R.array.channels);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
-		builder.setTitle("Välj kanal");		
+		builder.setTitle("VÃ¤lj kanal");		
 		ChannelIndex = this.boundService.getStationIndex();
 		builder.setSingleChoiceItems(items, ChannelIndex, new DialogInterface.OnClickListener() {
 		    public void onClick(DialogInterface dialog, int item) {

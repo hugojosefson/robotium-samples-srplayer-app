@@ -255,9 +255,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.reset();
 		this.playerStatus = STOP;
 		UpdateDataAndInformReceivers(); //Inform widgets
-		notification.setLatestEventInfo(this, "SR Player",
-        		"Paused", notification.contentIntent);
-		this.mNM.cancel(NOTIFY_ID);
+		if ( notification != null ) {
+			notification.setLatestEventInfo(this, "SR Player",
+	        		"Paused", notification.contentIntent);
+			this.mNM.cancel(NOTIFY_ID);
+		}
 		this.notification = null;
         if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
@@ -268,7 +270,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 	}
 	
-	@Override
 	public void onPrepared(MediaPlayer mp) {
 		Log.d(getClass().getSimpleName(), "PlayerService onPrepared!");
 		mp.start();
@@ -281,7 +282,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 	}
 
-	@Override
 	public void onCompletion(MediaPlayer mp) {
 		Log.d(getClass().getSimpleName(), "PlayerService onCompletion!");
 		// Since it seems that glitches in the SR stream is treated by
@@ -307,7 +307,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 	}
 
-	@Override
 	public boolean onInfo(MediaPlayer mp, int what, int extra) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Media Player Info: ");
@@ -334,7 +333,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		return true;
 	}
 
-	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Media Player Error: ");
@@ -379,7 +377,6 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
 	}
 	
-	@Override
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {
 		Log.d(getClass().getSimpleName(), "PlayerService onBufferingUpdate : " + percent + "%");
 		if ( this.playerObservers != null ) {
@@ -542,7 +539,5 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 		return channelPos;
 	}
-	
-	
 }
 

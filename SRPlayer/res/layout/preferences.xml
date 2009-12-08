@@ -18,6 +18,13 @@
 		android:summaryOff="@string/mediaButtonOff"
 		android:summaryOn="@string/mediaButtonOn"
 	></CheckBoxPreference>
+	<CheckBoxPreference
+		android:key="KillServiceEnable"
+	    android:title="@string/KillServiceName"
+		android:disableDependentsState="false"
+		android:summaryOff="@string/KillServiceNameOffSummary"
+		android:summaryOn="@string/KillServiceNameOnSummary"
+	></CheckBoxPreference>
 	
 	        
 </PreferenceScreen>
