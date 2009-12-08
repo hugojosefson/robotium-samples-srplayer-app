@@ -72,7 +72,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
 			132);	
 	private Timer rightNowTimer;
+	private Timer Sleeptimer;
 	private TimerTask rightNowtask;
+	private TimerTask sleepTimertask;
+	private boolean sleepTimerIsRunning = false;
 	private RightNowChannelInfo LastRetreivedInfo;
 
 	
@@ -96,6 +99,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.playerObservers = new Vector<PlayerObserver>();
 		this.mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		rightNowTimer = new Timer();
+		Sleeptimer = new Timer();
 		
 		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);            
         PhoneStateListener phoneListnerHandler = new PhoneStateHandler(this);
@@ -254,6 +258,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.stop();
 		this.player.reset();
 		this.playerStatus = STOP;
+			
 		UpdateDataAndInformReceivers(); //Inform widgets
 		if ( notification != null ) {
 			notification.setLatestEventInfo(this, "SR Player",
@@ -264,10 +269,17 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
-        for(PlayerObserver observer : this.playerObservers) {
-			observer.onPlayerStoped();	// Call observers to let them
+        
+        if ( this.sleepTimertask != null) {
+			this.sleepTimertask.cancel();
+			sleepTimerIsRunning = false;
+		}
+        
+    	for(PlayerObserver observer : this.playerObservers) {
+        	observer.onPlayerStoped();	// Call observers to let them
 										// know that the stream has stopped.
 		}
+	
 	}
 	
 	public void onPrepared(MediaPlayer mp) {
@@ -408,7 +420,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         mNM.notify(PlayerService.NOTIFY_ID, notification);
     }
 
-	public void addPlayerObserver(PlayerObserver playerObserver) {
+	public void addPlayerObserver(PlayerObserver playerObserver) {		
 		if ( !this.playerObservers.contains(playerObserver)) {
 			this.playerObservers.add(playerObserver);
 			if ( this.playerStatus == BUFFER ) {
@@ -539,5 +551,25 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}
 		return channelPos;
 	}
+			
+	public void StartSleeptimer(int Delay) {
+		sleepTimerIsRunning = true;
+		
+		if ( this.sleepTimertask != null) {
+			this.sleepTimertask.cancel();
+		}
+		sleepTimertask = new sleepTimertask(this);
+		Sleeptimer.schedule(sleepTimertask, Delay * _TIME_MINUTE); //Delay is in minutes		
+	}
+	
+	public void StopSleeptimer() {
+		sleepTimertask.cancel();
+		sleepTimerIsRunning = false;
+	}
+	
+	public boolean SleeptimerIsRunning() {
+		return sleepTimerIsRunning;
+	}
+	
 }
 

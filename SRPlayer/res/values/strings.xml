@@ -8,6 +8,8 @@
 <string name="menu_about">About</string>
 <string name="menu_config">Configure</string>
 <string name="menu_update_info">Update info</string>
+<string name="menu_sleeptimer">Start sleeptimer</string>
+<string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
 <string name="rightNowInfoRetrievalRate">Hämntningsfrekvens</string>

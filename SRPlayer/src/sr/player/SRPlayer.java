@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.TimePickerDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -36,14 +37,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 
-public class SRPlayer extends Activity implements PlayerObserver,
-		OnItemSelectedListener {
+public class SRPlayer extends Activity implements PlayerObserver {
 	
 	private static final String _SR_RIGHTNOWINFO_URL = 
 		"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=false";
@@ -57,8 +56,10 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	private static final int MENU_ABOUT = 1;
 	private static final int MENU_CONFIG = 2;
 	private static final int MENU_UPDATE_INFO = 3;
+	private static final int MENU_SLEEPTIMER = 4;
 	
 	protected static final int MSGUPDATECHANNELINFO = 0;
+	protected static final int MSGPLAYERSTOP = 1;
 	
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
@@ -93,7 +94,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
         		}
         		channelPos++;
         	}
-        	//((Spinner)findViewById(R.id.channelSelect)).setSelection(channelPos);
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -125,21 +125,10 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		
 
 		startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);		
-		//Spinner spin = (Spinner) findViewById(R.id.channelSelect);
-		//spin.setOnItemSelectedListener(this);
 		
-		/*
-		RelativeLayout ChangeChannelButton = (RelativeLayout) findViewById(R.id.StationNameButton);
-        ChangeChannelButton.setOnClickListener(new View.OnClickListener() {
-        	@Override
-			public void onClick(View v) {				
-        		ShowDialog();
-			}
-		});
-        */
-        
         ImageButton ChangeListButton = (ImageButton) findViewById(R.id.ShowList);
         ChangeListButton.setOnClickListener(new View.OnClickListener() {
+        	@Override
 			public void onClick(View v) {				
         		ShowDialog();
 			}
@@ -150,12 +139,10 @@ public class SRPlayer extends Activity implements PlayerObserver,
 				try {
 					if (SRPlayer.this.playState == PlayerService.STOP) {
 						setBufferText(-1);
-						//startStopButton.setImageResource(R.drawable.loading);
 						startStopButton.setImageResource(R.drawable.buffer_white);
 						startPlaying();
 					} else {
 						stopPlaying();
-						//startStopButton.setImageResource(R.drawable.play);
 						startStopButton.setImageResource(R.drawable.play_white);
 					}
 				} catch (IllegalStateException e) {
@@ -167,13 +154,10 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		});
 
 		if (this.playState == PlayerService.BUFFER) {
-			//startStopButton.setImageResource(R.drawable.loading);
 			startStopButton.setImageResource(R.drawable.buffer_white);
 		} if (this.playState == PlayerService.STOP) {
-			//startStopButton.setImageResource(R.drawable.play);
 			startStopButton.setImageResource(R.drawable.play_white);
 		} else {
-			//startStopButton.setImageResource(R.drawable.stop);
 			startStopButton.setImageResource(R.drawable.pause_white);
 		}
 		
@@ -283,10 +267,43 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		menu.add(0, SRPlayer.MENU_CONFIG, 0, R.string.menu_config).
 			setIcon(android.R.drawable.ic_menu_save);
 		menu.add(0, SRPlayer.MENU_UPDATE_INFO, 0, R.string.menu_update_info).
-		setIcon(android.R.drawable.ic_menu_info_details);
-	
+			setIcon(android.R.drawable.ic_menu_info_details);
+		if (this.boundService.SleeptimerIsRunning())
+		{
+			menu.add(0, SRPlayer.MENU_SLEEPTIMER, 0, R.string.menu_sleeptimer_cancel).
+			setIcon(R.drawable.ic_menu_sleeptimer_cancel);
+		}
+		else
+		{
+			menu.add(0, SRPlayer.MENU_SLEEPTIMER, 0, R.string.menu_sleeptimer).
+			setIcon(R.drawable.ic_menu_sleeptimer);
+		}
 		return true;
 	}
+	
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		if (this.boundService.SleeptimerIsRunning())
+		{	
+			menu.findItem(MENU_SLEEPTIMER).setIcon(R.drawable.ic_menu_sleeptimer_cancel);
+			menu.findItem(MENU_SLEEPTIMER).setTitle(R.string.menu_sleeptimer_cancel);
+		}
+		else
+		{			
+			menu.findItem(MENU_SLEEPTIMER).setIcon(R.drawable.ic_menu_sleeptimer);
+			menu.findItem(MENU_SLEEPTIMER).setTitle(R.string.menu_sleeptimer);
+		}
+		return true;
+	}
+	
+	private TimePickerDialog.OnTimeSetListener mTimeSetListener =
+        new TimePickerDialog.OnTimeSetListener() {
+
+            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            	boundService.StartSleeptimer(60*hourOfDay+minute);
+            }
+        };
+           
 	
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -304,6 +321,20 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		case SRPlayer.MENU_UPDATE_INFO:
 			boundService.restartRightNowInfo();
 			return true;
+		case SRPlayer.MENU_SLEEPTIMER:
+			if (this.boundService.SleeptimerIsRunning())
+			{
+				this.boundService.StopSleeptimer();
+			}
+			else
+			{
+			TimePickerDialog SelectSleepTimeDialog = new TimePickerDialog(this,
+                    mTimeSetListener, 0, 0, true);
+			SelectSleepTimeDialog.setTitle("Ange tid HH:MM");
+			SelectSleepTimeDialog.show();
+			}
+			return true;
+			
 		}
 		return super.onMenuItemSelected(featureId, item);
 	}
@@ -319,7 +350,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 						}
 					}).show();
 	}
-
+		
 	private void handleMenuExit() {
 		this.isExitCalled = true;
 		this.stopPlaying();
@@ -345,31 +376,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		Log.d(TAG, "stopPlaying");
 		Log.i(SRPlayer.TAG, "Media Player stop!");
 		this.boundService.stopPlay();
-	}
-
-	
-	public void onItemSelected(AdapterView<?> adapter, View view, int pos,
-			long id) {
-		Log.d(TAG, "onItemSelected");
-		
-		if ( isFirstCall ) {
-			isFirstCall = false;
-			return;
-		}
-		// TODO: Why is this selected on start ?
-		Resources res = getResources();
-		CharSequence[] channelInfo = (CharSequence[]) res
-				.getTextArray(R.array.channels);
-		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
-		// Only restart the channel if it is a new channel that is selected.
-		if ( !SRPlayer.currentStation.getStationName().equals(channelInfo[pos].toString()) ) {
-			SRPlayer.currentStation.setStreamUrl(urls[pos].toString());
-			SRPlayer.currentStation.setStationName(channelInfo[pos].toString());
-			SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[pos]);
-			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-			this.boundService.selectChannel(SRPlayer.currentStation);
-			clearAllText();
-		}
 	}
 
 	Handler viewUpdateHandler = new Handler(){
@@ -405,6 +411,12 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	              			Log.e(SRPlayer.TAG, "Problem setting next song name", e);
 	              		}
                        break;
+                  case MSGPLAYERSTOP:
+                	  	playState = PlayerService.STOP;
+              			tv = (TextView) findViewById(R.id.StationName);
+              			tv.setText(SRPlayer.currentStation.getStationName());
+              			startStopButton.setImageResource(R.drawable.play_white);
+                	  break;
              }
              super.handleMessage(msg);
         }
@@ -432,17 +444,11 @@ public class SRPlayer extends Activity implements PlayerObserver,
 	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
-	public void onPlayerStoped() {
-		//startStopButton.setImageResource(R.drawable.play);
-		startStopButton.setImageResource(R.drawable.play_white);
-		this.playState = PlayerService.STOP;
-		TextView tv = (TextView) findViewById(R.id.StationName);
-	    tv.setText(SRPlayer.currentStation.getStationName());
-	}
-
-	public void onNothingSelected(AdapterView<?> arg0) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void onPlayerStoped() {		
+		Message m = new Message();
+        m.what = SRPlayer.MSGPLAYERSTOP;
+        SRPlayer.this.viewUpdateHandler.sendMessage(m); 
 	}
 	
    private void clearAllText() {
@@ -464,7 +470,7 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		String[] items = res.getStringArray(R.array.channels);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
-		builder.setTitle("VÃ¤lj kanal");		
+		builder.setTitle("Välj kanal");		
 		ChannelIndex = this.boundService.getStationIndex();
 		builder.setSingleChoiceItems(items, ChannelIndex, new DialogInterface.OnClickListener() {
 		    public void onClick(DialogInterface dialog, int item) {
@@ -472,15 +478,6 @@ public class SRPlayer extends Activity implements PlayerObserver,
 		        
 		        if (item != ChannelIndex)
 	        	   {
-		           /*
-	        	   SelectedChannel = item;
-	        	   ChangeOfChannel();
-	        	   
-	        	   Intent ServiceIntent = new Intent(getBaseContext(), SRPlayerService.class);
-		           ServiceIntent.putExtra("com.jds.srplayerservice.CHANNEL_INDEX", SelectedChannel);
-				   ServiceIntent.addFlags(SRPlayerWidget.UPDATE_CONFIG);
-		          	  startService(ServiceIntent);
-		          */
 		        	Resources res = getResources();
 		    		CharSequence[] channelInfo = (CharSequence[]) res
 		    				.getTextArray(R.array.channels);

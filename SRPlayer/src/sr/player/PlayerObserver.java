@@ -21,6 +21,5 @@ public interface PlayerObserver  {
 	public void onPlayerStarted();
 	public void onPlayerStoped();
 	public void onPlayerBuffer(int percent);
-	
 	public void onRightNowChannelInfoUpdate(RightNowChannelInfo info);
 }
