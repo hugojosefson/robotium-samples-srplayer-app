@@ -15,11 +15,9 @@ public class PlayerWidget extends AppWidgetProvider {
 	
 	private static int ServerStatus=PlayerService.STOP;
 	
-	//Collected data
-	private static String CurrentProgramTitle = "";
-	private static String NextProgramTitle = "";
-	
 	private static Integer ThisappWidgetId = -1;
+
+	private RightNowChannelInfo rightNowInfo;
 	
 	
 	@Override
@@ -69,11 +67,15 @@ public class PlayerWidget extends AppWidgetProvider {
         	 Log.d(getClass().getSimpleName(), "Service update intent received");        	 
              
         	 //Store the data from the intent
+        	 // sr.playerservice.RIGHT_NOW_INFO
+        	 Object obj = intent.getSerializableExtra("sr.playerservice.RIGHT_NOW_INFO");
+        	 if (obj instanceof RightNowChannelInfo ) {
+        		 this.rightNowInfo = (RightNowChannelInfo)obj;
+        	 } else {
+        		 this.rightNowInfo = null;
+        	 }
         	 ChannelName = intent.getStringExtra("sr.playerservice.CHANNEL_NAME");
-        	 CurrentProgramTitle = intent.getStringExtra("sr.playerservice.CURRENT_PROGRAM_NAME");
-        	 NextProgramTitle = intent.getStringExtra("sr.playerservice.NEXT_PROGRAM_NAME");
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
-        	 //ChannelIndex = intent.getIntExtra("sr.playerservice.CHANNEL_INDEX", 0);     
         	 Log.d(getClass().getSimpleName(), "Service status = " + String.valueOf(ServerStatus));        
         	 
         	 if (ThisappWidgetId >= 0)
@@ -103,8 +105,23 @@ public class PlayerWidget extends AppWidgetProvider {
         updateViews.setOnClickPendingIntent(R.id.ConfigButtonW, pendingConfigIntentClick);
                               
         updateViews.setTextViewText(R.id.ChannelNameW, ChannelName);
-        updateViews.setTextViewText(R.id.CurrentProgNameW, CurrentProgramTitle);
-        updateViews.setTextViewText(R.id.NextProgNameW, NextProgramTitle);
+        String str = "";
+        if ( this.rightNowInfo != null ) {
+			if ( ! this.rightNowInfo.getProgramTitle().trim().equals("") )
+				str = this.rightNowInfo.getProgramTitle();
+			else if ( ! this.rightNowInfo.getSong().trim().equals("") )
+				str = this.rightNowInfo.getSong();
+		}
+        updateViews.setTextViewText(R.id.CurrentProgNameW, str);
+        
+        str = "";
+        if ( this.rightNowInfo != null ) {
+			if ( ! this.rightNowInfo.getNextProgramTitle().trim().equals("") )
+				str = this.rightNowInfo.getNextProgramTitle();
+			else if ( ! this.rightNowInfo.getNextSong().trim().equals("") )
+				str = this.rightNowInfo.getNextSong();
+		}
+        updateViews.setTextViewText(R.id.NextProgNameW, str);
          
         if (ServerStatus == PlayerService.STOP)
         {

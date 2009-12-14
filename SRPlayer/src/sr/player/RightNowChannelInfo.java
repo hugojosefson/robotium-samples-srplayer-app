@@ -36,6 +36,8 @@ public class RightNowChannelInfo implements Serializable {
 	private String nextProgramDescription;
 	private String nextProgramURL;
 	private Date nextProgramStartTime;
+	
+	
 	/**
 	 * @return the programTitle
 	 */

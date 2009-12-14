@@ -466,41 +466,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		if (LastRetreivedInfo != null)
 		{
 		
-			//Insert the current program name 
-			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", LastRetreivedInfo.getProgramTitle());
-			
-			//Insert the next program name
-			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", LastRetreivedInfo.getNextProgramTitle());
-			
-			//Insert the current program info 
-			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", LastRetreivedInfo.getProgramInfo());
-			
-			//Insert the next program info
-			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", LastRetreivedInfo.getNextProgramDescription());
-			
-			//Insert the next program info
-			updateIntent.putExtra("sr.playerservice.CURRENT_SONG", LastRetreivedInfo.getSong());
-						
-			//Insert the next song
-			updateIntent.putExtra("sr.playerservice.NEXT_SONG", LastRetreivedInfo.getNextSong());
+			// Insert RightNow Info
+			updateIntent.putExtra("sr.playerservice.RIGHT_NOW_INFO", LastRetreivedInfo);
 		} else {
-			//Insert the current program name 
-			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_NAME", "");
-			
-			//Insert the next program name
-			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_NAME", "");
-			
-			//Insert the current program info 
-			updateIntent.putExtra("sr.playerservice.CURRENT_PROGRAM_INFO", "");
-			
-			//Insert the next program info
-			updateIntent.putExtra("sr.playerservice.NEXT_PROGRAM_INFO", "");
-			
-			//Insert the next program info
-			updateIntent.putExtra("sr.playerservice.CURRENT_SONG", "");
-						
-			//Insert the next song
-			updateIntent.putExtra("sr.playerservice.NEXT_SONG", "");
+			// Insert RightNow Info
+			updateIntent.putExtra("sr.playerservice.RIGHT_NOW_INFO", "No Info");
 		}
 		
 		//Insert the status

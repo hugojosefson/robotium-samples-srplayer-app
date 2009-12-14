@@ -3,6 +3,7 @@
     
 <string name="app_name">SR Player</string>
 <string name="save">Spara</string>
+<string name="pick_channel">Välj kanal</string>
 <!-- Menu strings -->
 <string name="menu_exit">Stäng av</string>
 <string name="menu_about">About</string>
@@ -60,8 +61,10 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>SR Extra 8</item>
 <item>SR Extra 9</item>
 <item>SR Extra 10</item>
-<item>SR Klassisk Jul</item>
+<item>SR Extra 11</item>
+<item>SR Extra 12</item>
 <item>SR Bjällerklang</item>
+<item>SR Klassisk Jul</item>
 </string-array>
 <string-array name="urls">
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp</item>
@@ -98,6 +101,8 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra10.sdp</item>
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra11.sdp</item>
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra12.sdp</item>
+<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-JulBjallerklang.sdp</item>
+<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-JulKlassisk.sdp</item>
 </string-array>
 <!-- Just fo test -->
 <!--<item>http://mtg-wms1.bahnhof.net:8000/bandit_gbg</item>-->
@@ -133,7 +138,9 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>2390</item> <!-- SR Extra 8 / Webbipkanal08 -->
 <item>3677</item> <!-- SR Extra 9 / Webbipkanal09 -->
 <item>2679</item> <!-- SR Extra 10 / Webbipkanal10 -->
-<item>3036</item> <!-- SR Extra 11 / Webbipkanal12 -->
-<item>3034</item> <!-- SR Extra 12 / Webbipkanal11 -->
+<item>3036</item> <!-- SR Extra 11 / Webbipkanal11 -->
+<item>3034</item> <!-- SR Extra 12 / Webbipkanal12 -->
+<item>3034</item> <!-- SR Jul Bjallerklang -->
+<item>3036</item> <!-- SR Jul Klassisk  -->
 </integer-array>
 </resources>

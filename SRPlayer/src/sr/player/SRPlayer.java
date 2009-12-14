@@ -129,8 +129,7 @@ public class SRPlayer extends Activity implements PlayerObserver {
 		
         ImageButton ChangeListButton = (ImageButton) findViewById(R.id.ShowList);
         ChangeListButton.setOnClickListener(new View.OnClickListener() {
-        	@Override
-			public void onClick(View v) {				
+        	public void onClick(View v) {				
         		ShowDialog();
 			}
 		});
@@ -451,7 +450,6 @@ public class SRPlayer extends Activity implements PlayerObserver {
 	    tv.setText(SRPlayer.currentStation.getStationName());
 	}
 
-	@Override
 	public void onPlayerStoped() {		
 		Message m = new Message();
         m.what = SRPlayer.MSGPLAYERSTOP;
@@ -477,7 +475,7 @@ public class SRPlayer extends Activity implements PlayerObserver {
 		String[] items = res.getStringArray(R.array.channels);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
-		builder.setTitle("Välj kanal");		
+		builder.setTitle(R.string.pick_channel);		
 		ChannelIndex = this.boundService.getStationIndex();
 		builder.setSingleChoiceItems(items, ChannelIndex, new DialogInterface.OnClickListener() {
 		    public void onClick(DialogInterface dialog, int item) {
