@@ -24,14 +24,19 @@ public class Station implements Cloneable {
 	private String stationName;
 	private String rightNowUrl;
 	private int channelId;
+	private int streamType;
+	public static final int NORMAL_STREAM = 0; 
+	public static final int POD_STREAM = 1; 
+		
 	
 	public Station(String stationName, String streamUrl,  String rightNowUrl,
-			int channelId) {
+			int channelId, int streamType) {
 		super();
 		this.streamUrl = streamUrl;
 		this.stationName = stationName;
 		this.rightNowUrl = rightNowUrl;
 		this.channelId = channelId;
+		this.streamType = streamType;
 	}
 
 	/**
@@ -83,6 +88,19 @@ public class Station implements Cloneable {
 		this.channelId = channelId;
 	}
 
+	/**
+	 * @return the streamType
+	 */
+	public int getStreamType() {
+		return this.streamType;
+	}
+	/**
+	 * @param streamType the streaming type to set
+	 */
+	public void setStreamType(int streamType) {
+		this.streamType = streamType;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -135,7 +153,7 @@ public class Station implements Cloneable {
 	@Override
 	public Station clone()  {
 		Station newStation = new Station(this.stationName, this.streamUrl, 
-				this.rightNowUrl, this.channelId);
+				this.rightNowUrl, this.channelId, this.streamType);
 		return newStation;
 	}
 }

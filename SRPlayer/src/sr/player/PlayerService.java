@@ -70,7 +70,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
 			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
-			132);	
+			132,0);	
 	private Timer rightNowTimer;
 	private Timer Sleeptimer;
 	private TimerTask rightNowtask;
@@ -203,16 +203,24 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
-		this.rightNowtask = new RightNowTask(this);
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		String rateStr = prefs.getString("rightNowInfoRetrievalRate", "2");
-		int rate = 2;
-		try {
-			rate = Integer.parseInt(rateStr);
-		} catch (NumberFormatException e) {
-			rate = 2;
+		
+		//If the stream is a NORMAL_STREAM, info about
+		//the strem can be collected in intervals, if 
+		//not, the information is static
+		if (this.currentStation.getStreamType() == Station.NORMAL_STREAM)
+		{
+			this.rightNowtask = new RightNowTask(this);
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+			String rateStr = prefs.getString("rightNowInfoRetrievalRate", "2");
+			int rate = 2;
+			try {
+				rate = Integer.parseInt(rateStr);
+			} catch (NumberFormatException e) {
+				rate = 2;
+			}
+			this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);	
 		}
-		this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);	
+		
 	}
 
 	private void updateNotify(String stationName, RightNowChannelInfo info) {
@@ -299,24 +307,34 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		// Since it seems that glitches in the SR stream is treated by
 		// Android Media Player as if the the stream is completed we need to
 		// restart if this method is triggered unless we pressed stop.
-		if ( this.playerStatus == PLAY ) {
+		if ( this.playerStatus == PLAY ) {			
+			if (this.currentStation.getStreamType() == Station.NORMAL_STREAM)
+			{
 			Log.i(getClass().getSimpleName(), "Not stopped restarting !!");
-
 			this.player.stop();
 			this.player.reset();
-			try {
-				this.startStream();
-			} catch (IOException e) {
-				Log.e(getClass().getSimpleName(), "Error restarting stream!", e);
+			
+				try {
+					this.startStream();
+				} catch (IOException e) {
+					Log.e(getClass().getSimpleName(), "Error restarting stream!", e);
+				}
+			}
+			else
+			{
+				//If the stream is a podcast the stream is completed				
+				stopPlay();
 			}
 		} else {
 
 		}
+		/*
 		if ( this.playerObservers != null ) {			
 			for(PlayerObserver observer : this.playerObservers) {
 				observer.onPlayerBuffer(-1); // Calling to set buffer icon
 			}
 		}
+		*/
 	}
 
 	public boolean onInfo(MediaPlayer mp, int what, int extra) {
@@ -389,12 +407,20 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
 	}
 	
-	public void onBufferingUpdate(MediaPlayer mp, int percent) {
+	public void onBufferingUpdate(MediaPlayer mp, int percent) {		
 		Log.d(getClass().getSimpleName(), "PlayerService onBufferingUpdate : " + percent + "%");
-		if ( this.playerObservers != null ) {
-			for(PlayerObserver observer : this.playerObservers) {
-				observer.onPlayerBuffer(percent);
+		if (this.currentStation.getStreamType() == Station.NORMAL_STREAM)
+		{
+			if ( this.playerObservers != null ) {
+				for(PlayerObserver observer : this.playerObservers) {
+					observer.onPlayerBuffer(percent);
+				}
 			}
+		}
+		else
+		{
+			//Podcast stream. Since it will always buffer the buffer icon
+			//is just shown until prepared
 		}
 	}
 	
@@ -464,8 +490,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		}		
 		
 		if (LastRetreivedInfo != null)
-		{
-		
+		{		
 			// Insert RightNow Info
 			updateIntent.putExtra("sr.playerservice.RIGHT_NOW_INFO", LastRetreivedInfo);
 		} else {

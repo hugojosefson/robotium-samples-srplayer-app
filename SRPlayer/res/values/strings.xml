@@ -143,4 +143,8 @@ Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
 <item>3034</item> <!-- SR Jul Bjallerklang -->
 <item>3036</item> <!-- SR Jul Klassisk  -->
 </integer-array>
+<string name="podcast_categories_feed">http://api.sr.se/poddradio/PoddCategories.aspx</string>
+<string name="podcasts_by_category_feed">http://api.sr.se/poddradio/poddfeed.aspx?CategoryId=</string>
+<string name="podcast_programs_feed">http://api.sr.se/poddradio/poddfeed.aspx</string>
+<string name="podcast_ind_program_feed">http://api.sr.se/rssfeed/rssfeed.aspx?Poddfeed=</string>
 </resources>

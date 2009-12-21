@@ -37,6 +37,21 @@ public class RightNowChannelInfo implements Serializable {
 	private String nextProgramURL;
 	private Date nextProgramStartTime;
 	
+	public RightNowChannelInfo() {
+		super();
+		this.programTitle = ""; 
+		this.programInfo = ""; 
+		this.programURL = ""; 
+		this.iSidorTitle = ""; 
+		this.iSidorInfo = ""; 
+		this.iSidorUrl = ""; 
+		this.song = "";
+		this.nextSong = "";
+		this.nextProgramTitle = "";
+		this.nextProgramDescription = "";
+		this.nextProgramURL = "";
+		this.nextProgramStartTime = null;				
+	}
 	
 	/**
 	 * @return the programTitle

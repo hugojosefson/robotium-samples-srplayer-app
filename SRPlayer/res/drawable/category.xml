@@ -2,12 +2,13 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true" 
     	  android:state_pressed="false" 
-    	  android:drawable="@drawable/spinner_back_selected" />
+    	  android:drawable="@drawable/category_normal"
+    	  />
     <item android:state_focused="true" 
     	  android:state_pressed="true"
-    	  android:drawable="@drawable/spinner_back_pressed" />
+    	  android:drawable="@drawable/category_pressed" />
     <item android:state_focused="false" 
     	  android:state_pressed="true"
-	  android:drawable="@drawable/spinner_back_pressed" />
-    <item android:drawable="@drawable/spinner_back_normal" />
+	  android:drawable="@drawable/category_pressed" />
+    <item android:drawable="@drawable/category_normal" />
 </selector>
