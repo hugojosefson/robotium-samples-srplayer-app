@@ -17,6 +17,8 @@ package sr.player;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import android.app.Activity;
@@ -45,6 +47,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -78,7 +81,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	public PlayerService boundService;
 	private static int SleepTimerDelay;
 	
-	private List<String> Pods = new ArrayList<String>();
+	private List<String> MainListArray = new ArrayList<String>();
     private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();    	
     private int currentPosition = 0;
     private ArrayAdapter<String> PodList; 
@@ -87,6 +90,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	public static final int PROGRAMS = 1;
 	public static final int PROGRAMS_IN_A_CATEGORY = 2;    	
 	public static final int GET_IND_PROGRAMS = 3;
+	public static final int CHANNELS = 4;
+	
 	
 	private int PlayerMode;
 	private static final int LIVE_MODE = 0;
@@ -159,13 +164,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		PlayerMode = this.LIVE_MODE;
 		UpdateBottomButton(PlayerMode);
 		
-		Pods.add("");
+		MainListArray.add("");
         
         Intent intent = this.getIntent();
         CurrentAction = intent.getIntExtra(ACTION, 0);
         
         PodList = new ArrayAdapter<String>(this,
-                R.layout.podlistitem, Pods);                
+                R.layout.podlistitem, MainListArray);                
         UpdateList();
  
         startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);		
@@ -177,7 +182,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
         		if (PlayerMode == LIVE_MODE)
         		{
         		//Live mode
-        		ShowDialog();
+        		Resources res = getResources();        		
+        		List<String> items= Arrays.asList(res.getStringArray(R.array.channels));
+        		MainListArray.clear();
+        		MainListArray.addAll(items);        	
+        		setListAdapter(PodList);        	   	
+        	   	UpdatePlayerVisibility(true);
+        	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
+        	   	tv.setText("Kanaler");
+        	   	CurrentAction = SRPlayer.CHANNELS;
         		}
         		else
         		{
@@ -584,53 +597,18 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
    	}
    	
    }
-   
-    private void ShowDialog()
-	{
-		Resources res = getResources();
-		String[] items = res.getStringArray(R.array.channels);
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
-		builder.setTitle(R.string.pick_channel);		
-		ChannelIndex = this.boundService.getStationIndex();
-		builder.setSingleChoiceItems(items, ChannelIndex, new DialogInterface.OnClickListener() {
-		    public void onClick(DialogInterface dialog, int item) {
-		        dialog.dismiss();
-		        
-		        if (item != ChannelIndex)
-	        	   {
-		        	Resources res = getResources();
-		    		CharSequence[] channelInfo = (CharSequence[]) res
-		    				.getTextArray(R.array.channels);
-		    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
-		    		
-		        	SRPlayer.currentStation.setStreamUrl(urls[item].toString());
-					SRPlayer.currentStation.setStationName(channelInfo[item].toString());
-					SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[item]);
-					SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-					SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
-					boundService.selectChannel(SRPlayer.currentStation);					
-					clearAllText();
-	        	   }
-	        	   
-		    }
-		});
-		AlertDialog alert = builder.create();
-		alert.show();
-
-	}
-
-    public void UpdateArray(List<String> PodStringArray, Object PodObject)
+   public void UpdateArray(List<String> PodStringArray, Object PodObject)
     {        
     	if (PodStringArray == null)
     	{
-    	Pods.clear();
+    	MainListArray.clear();
     	PodInfo.clear();
     	}
     	else
     	{
-    	Pods.clear();        		
-    	Pods.addAll(PodStringArray); 
+    	MainListArray.clear();        		
+    	MainListArray.addAll(PodStringArray); 
     	PodInfo.clear();
     	List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
     	PodInfo.addAll(NewPodInfo);
@@ -695,7 +673,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	 ChannelProgramButton.setText("Kanal");  
     	 
     	 //The player is currently always visible during live
-    	 UpdatePlayerVisibility(false);
+    	 //UpdatePlayerVisibility(false);
      }
      else
      {
@@ -713,9 +691,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
             currentPosition = position;        
-            if (CurrentAction == SRPlayer.CATEGORIES)
-            {
-            	//A specific category has been selected. 
+            
+        	switch (CurrentAction)
+        	{
+        	case SRPlayer.CATEGORIES:
+        		//A specific category has been selected. 
             	//Retreive a list of all programs in the category
             	String CategoryId = PodInfo.get(currentPosition).getID();
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
@@ -724,10 +704,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
                 podcastinfothread.start();  
                 waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
                 CurrentAction = SRPlayer.PROGRAMS_IN_A_CATEGORY;
-            }
-            else if (CurrentAction != SRPlayer.GET_IND_PROGRAMS)
-            {
-            	//A specific program has been selected
+        		break;	
+        	case SRPlayer.PROGRAMS:            	
+        	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
+        		//A specific program has been selected
             	//Retreive a list of all stored podcasts for
             	//that channel
             	String PoddId = PodInfo.get(currentPosition).getPoddID();
@@ -737,11 +717,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
                 podcastinfothread.start();  
                 waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
                 CurrentAction = SRPlayer.GET_IND_PROGRAMS;
-            	
-            }
-            else
-            {
-            	SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
+        		break;
+        	case SRPlayer.GET_IND_PROGRAMS:
+        		SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
 				SRPlayer.currentStation.setStationName(PoddIDLabel);
 				SRPlayer.currentStation.setChannelId(0);
 				SRPlayer.currentStation.setStreamType(Station.POD_STREAM);
@@ -753,7 +731,30 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 				RightNowChannelInfo info = new RightNowChannelInfo();
 				info.setProgramTitle(PodInfo.get(currentPosition).getTitle());
 				info.setProgramInfo(PodInfo.get(currentPosition).getDescription());
-				boundService.rightNowUpdate(info);
-            }
-    }
+				boundService.rightNowUpdate(info);    
+        		break;
+        	case SRPlayer.CHANNELS:
+        		ChannelIndex = this.boundService.getStationIndex();
+        		if (position != ChannelIndex)
+	        	{
+		        	Resources res = getResources();
+		    		CharSequence[] channelInfo = (CharSequence[]) res
+		    				.getTextArray(R.array.channels);
+		    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
+		    		
+		        	SRPlayer.currentStation.setStreamUrl(urls[position].toString());
+					SRPlayer.currentStation.setStationName(channelInfo[position].toString());
+					SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[position]);
+					SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+					SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
+					boundService.selectChannel(SRPlayer.currentStation);					
+					clearAllText();
+					UpdatePlayerVisibility(false);
+	        	}
+        	    break;
+            default:
+            	break;
+        	}
+            
+   }
 }
