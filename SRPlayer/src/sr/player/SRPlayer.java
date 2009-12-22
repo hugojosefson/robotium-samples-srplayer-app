@@ -18,10 +18,8 @@ package sr.player;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -38,6 +36,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -82,7 +81,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	private static int SleepTimerDelay;
 	
 	private List<String> MainListArray = new ArrayList<String>();
-    private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();    	
+    private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
+    private List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
     private ArrayAdapter<String> PodList; 
     
@@ -180,25 +180,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
         	public void onClick(View v) {				
         		//Check if the mode is Live och Podcast
         		if (PlayerMode == LIVE_MODE)
-        		{
+        		{        		
         		//Live mode
-        		Resources res = getResources();        		
-        		List<String> items= Arrays.asList(res.getStringArray(R.array.channels));
-        		MainListArray.clear();
-        		MainListArray.addAll(items);        	
-        		setListAdapter(PodList);        	   	
-        	   	UpdatePlayerVisibility(true);
-        	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
-        	   	tv.setText("Kanaler");
-        	   	CurrentAction = SRPlayer.CHANNELS;
+        		GenerateNewList(SRPlayer.CHANNELS, 0, "", "", false);
         		}
         		else
         		{
         		//Podcast mode	
-        		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_ALL_PROGRAMS, 0);
-                podcastinfothread.start();  
-                waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-                CurrentAction = SRPlayer.PROGRAMS;	
+        		GenerateNewList(SRPlayer.PROGRAMS, 0, "", "", false);
         		}
         		
 			}
@@ -206,7 +195,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
                 
         Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
         PlayerButton.setOnClickListener(new View.OnClickListener() {
-        	public void onClick(View v) {				
+        	public void onClick(View v) {
+        		HistoryList.clear(); //Reset the history
         		UpdatePlayerVisibility(false);
 			}
 		});
@@ -232,12 +222,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		
 		Button CategoriesButton = (Button) findViewById(R.id.PodCatButton);
         CategoriesButton.setOnClickListener(new View.OnClickListener() {
-        	public void onClick(View v) {	
-        		
-        		podcastinfothread = new PodcastInfoThread(SRPlayer.this, 0, 0);
-                podcastinfothread.start();  
-                waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-                CurrentAction = SRPlayer.CATEGORIES;
+        	public void onClick(View v) {	        		
+        		GenerateNewList(SRPlayer.CATEGORIES, 0, "", "", false);
         	}
 		});
         
@@ -612,8 +598,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	PodInfo.clear();
     	List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
     	PodInfo.addAll(NewPodInfo);
-    	Log.d(SRPlayer.TAG, "New PodInfo receviced. Size = " + String.valueOf(PodInfo.size()));		
-		
+    	
     	}
     	
     	Message m = new Message();
@@ -687,12 +672,88 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
      }
     }
     
+    protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist)
+    {
+    	CurrentAction = Action;
+    	
+    	switch (Action)
+    	{
+    	case SRPlayer.PROGRAMS:
+    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_ALL_PROGRAMS, 0);
+            podcastinfothread.start();  
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            
+            //Init the history
+            HistoryList.clear();
+            HistoryList.add(new History(SRPlayer.PROGRAMS,"",""));
+    		break;
+    	case SRPlayer.CHANNELS:
+    		//Live mode
+    		Resources res = getResources();        		
+    		List<String> items= Arrays.asList(res.getStringArray(R.array.channels));
+    		MainListArray.clear();
+    		MainListArray.addAll(items);        	
+    		setListAdapter(PodList);
+    	   	UpdatePlayerVisibility(true);
+    	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
+    	   	tv.setText("Kanaler");
+    	   	
+    	   	//Init the history
+            HistoryList.clear();
+            HistoryList.add(new History(SRPlayer.CHANNELS,"",""));
+            break;
+    	case SRPlayer.CATEGORIES:
+    		//Init the history
+	        HistoryList.clear();
+	        HistoryList.add(new History(SRPlayer.CATEGORIES,"",""));
+	        
+    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CATEGORIES, 0);
+	        podcastinfothread.start();  
+	        waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+	        
+	        break;
+	        
+    	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
+    		//A specific category has been selected. 
+        	//Retreive a list of all programs in the category
+        	PoddIDLabel = Label;
+    		
+    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(ID));
+            podcastinfothread.start();  
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            
+            //Add a new level to the history
+            if (!NoNewHist)
+            	HistoryList.add(new History(SRPlayer.PROGRAMS_IN_A_CATEGORY,ID,Label));
+    		break;
+    		
+    	case GET_IND_PROGRAMS:        		
+    		//A specific program has been selected
+        	//Retreive a list of all stored podcasts for
+        	//that channel
+        	String PoddId = ID;
+        	PoddIDLabel = Label;
+    		
+    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
+            podcastinfothread.start();  
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            
+            if (!NoNewHist)                
+            	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label));
+    		
+    		break;
+    	
+        default:
+        	break;
+    	}
+		
+    }
     
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
             currentPosition = position;        
             
-        	switch (CurrentAction)
+            switch (CurrentAction)
         	{
         	case SRPlayer.CATEGORIES:
         		//A specific category has been selected. 
@@ -700,61 +761,89 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
             	String CategoryId = PodInfo.get(currentPosition).getID();
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
         		
-        		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(CategoryId));
-                podcastinfothread.start();  
-                waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-                CurrentAction = SRPlayer.PROGRAMS_IN_A_CATEGORY;
-        		break;	
-        	case SRPlayer.PROGRAMS:            	
+                GenerateNewList(SRPlayer.PROGRAMS_IN_A_CATEGORY, currentPosition, CategoryId, PoddIDLabel, false);
+                break;	
+        	case SRPlayer.PROGRAMS:        		
         	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
         		//A specific program has been selected
             	//Retreive a list of all stored podcasts for
             	//that channel
-            	String PoddId = PodInfo.get(currentPosition).getPoddID();
+            	
+        		String PoddId = PodInfo.get(currentPosition).getPoddID();
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
-        		
-        		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
-                podcastinfothread.start();  
-                waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-                CurrentAction = SRPlayer.GET_IND_PROGRAMS;
+        		GenerateNewList(SRPlayer.GET_IND_PROGRAMS, currentPosition, PoddId, PoddIDLabel, false);
         		break;
         	case SRPlayer.GET_IND_PROGRAMS:
         		SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
-				SRPlayer.currentStation.setStationName(PoddIDLabel);
-				SRPlayer.currentStation.setChannelId(0);
-				SRPlayer.currentStation.setStreamType(Station.POD_STREAM);
-				// TODO remove rightnow info updates during podcasts
-				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-				boundService.selectChannel(SRPlayer.currentStation);					
-				clearAllText();
-				UpdatePlayerVisibility(false);
-				RightNowChannelInfo info = new RightNowChannelInfo();
-				info.setProgramTitle(PodInfo.get(currentPosition).getTitle());
-				info.setProgramInfo(PodInfo.get(currentPosition).getDescription());
-				boundService.rightNowUpdate(info);    
+    			SRPlayer.currentStation.setStationName(PoddIDLabel);
+    			SRPlayer.currentStation.setChannelId(0);
+    			SRPlayer.currentStation.setStreamType(Station.POD_STREAM);
+    			// TODO remove rightnow info updates during podcasts
+    			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+    			boundService.selectChannel(SRPlayer.currentStation);					
+    			clearAllText();
+    			UpdatePlayerVisibility(false);
+    			RightNowChannelInfo info = new RightNowChannelInfo();
+    			info.setProgramTitle(PodInfo.get(currentPosition).getTitle());
+    			info.setProgramInfo(PodInfo.get(currentPosition).getDescription());
+    			boundService.rightNowUpdate(info);    
+    			HistoryList.clear();
         		break;
         	case SRPlayer.CHANNELS:
         		ChannelIndex = this.boundService.getStationIndex();
         		if (position != ChannelIndex)
-	        	{
-		        	Resources res = getResources();
-		    		CharSequence[] channelInfo = (CharSequence[]) res
-		    				.getTextArray(R.array.channels);
-		    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
-		    		
-		        	SRPlayer.currentStation.setStreamUrl(urls[position].toString());
-					SRPlayer.currentStation.setStationName(channelInfo[position].toString());
-					SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[position]);
-					SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-					SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
-					boundService.selectChannel(SRPlayer.currentStation);					
-					clearAllText();
-					UpdatePlayerVisibility(false);
-	        	}
-        	    break;
+            	{
+    	        	Resources res = getResources();
+    	    		CharSequence[] channelInfo = (CharSequence[]) res
+    	    				.getTextArray(R.array.channels);
+    	    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
+    	    		
+    	        	SRPlayer.currentStation.setStreamUrl(urls[position].toString());
+    				SRPlayer.currentStation.setStationName(channelInfo[position].toString());
+    				SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[position]);
+    				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+    				SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
+    				boundService.selectChannel(SRPlayer.currentStation);					
+    				clearAllText();
+    				
+            	}
+        		UpdatePlayerVisibility(false); //Show the player
+        		HistoryList.clear();
+        		break;
             default:
             	break;
         	}
-            
    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if ((keyCode == KeyEvent.KEYCODE_BACK) && (HistoryList.size() > 0)) {
+        	//Remove the last entry in the history list and execute
+        	//the previous one
+        	
+        	int HistoryIndex = HistoryList.size()-1;        	
+        	HistoryList.remove(HistoryIndex);
+        	if (HistoryIndex == 0)
+        	{
+        	//Return to the player screen
+        	HistoryList.clear();
+        	UpdatePlayerVisibility(false); //Show the player    		
+        	}
+        	else
+        	{
+        	History PrevHistory = HistoryList.get(HistoryIndex-1);    
+        	int PrevAction = PrevHistory.ReadAction();
+        	String PrevID = PrevHistory.ReadID();
+        	String PrevLabel = PrevHistory.ReadLabel();
+        	
+        	GenerateNewList(PrevAction, 0, PrevID, PrevLabel, true);
+        	}
+        		
+        	return true;
+
+        }
+        return super.onKeyDown(keyCode, event);
+
+    } 
 }
