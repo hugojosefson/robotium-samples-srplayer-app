@@ -13,8 +13,11 @@
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
-<string name="rightNowInfoRetrievalRate">Hämntningsfrekvens</string>
-<string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information.</string>
+<string name="rightNowInfoRetrievalRate">Vid spelning</string>
+<string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information vid spelning.</string>
+<string name="rightNowInfoRetrievalPausedRate">Vid Pause</string>
+<string name="rightNowInfoRetrievalPausedRateSummary">Frekvens i minuter för hämtning av program information i pausat läge.</string>
+
 <string name="configCategories">Inställningar</string>
 <string name="mediaButtonName">Play/Stop knapp</string>
 <string name="mediaButtonOff">Knapp på handsfree har ingen funktion i SR Player.</string>

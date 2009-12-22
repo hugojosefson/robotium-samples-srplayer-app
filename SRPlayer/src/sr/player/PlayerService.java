@@ -191,10 +191,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		if ( this.playerStatus == STOP ) {
 			Log.i(getClass().getSimpleName(), "Media Player start " + this.currentStation.getStreamUrl());	
 			updateNotify(this.currentStation.getStationName(), null);
-			restartRightNowInfo();	
 			// Display a notification about us starting.  We put an icon in the status bar.
 	        showNotification();
 			this.startStream();
+			restartRightNowInfo();
 		} 
 		
 	}
@@ -211,13 +211,19 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		{
 			this.rightNowtask = new RightNowTask(this);
 			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-			String rateStr = prefs.getString("rightNowInfoRetrievalRate", "2");
-			int rate = 2;
+			String rateStr;
+			if ( this.playerStatus == STOP ) {
+				rateStr = prefs.getString("rightNowInfoRetrievalPausedRate", "2");
+			} else {
+				rateStr = prefs.getString("rightNowInfoRetrievalRate", "2");
+			}
+			int rate = 0;
 			try {
 				rate = Integer.parseInt(rateStr);
 			} catch (NumberFormatException e) {
 				rate = 2;
 			}
+			Log.d(getClass().getSimpleName(), "Starting rightnow task with " + rate);
 			this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);	
 		}
 		
@@ -274,9 +280,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.mNM.cancel(NOTIFY_ID);
 		}
 		this.notification = null;
-        if ( this.rightNowtask != null) {
-			this.rightNowtask.cancel();
-		}
+        this.restartRightNowInfo();
         
         if ( this.sleepTimertask != null) {
 			this.sleepTimertask.cancel();

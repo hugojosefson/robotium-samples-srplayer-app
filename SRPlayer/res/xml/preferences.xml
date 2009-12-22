@@ -1,15 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:numberpreference="http://schemas.android.com/apk/res/sr.player">
+	
 <PreferenceCategory android:title="@string/configCategories"/>	
 	<PreferenceScreen 
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:title="@string/rightNowInfoCategories"
 	>
 	<PreferenceCategory android:title="@string/rightNowInfoCategories"/>
-	<EditTextPreference android:key="rightNowInfoRetrievalRate"
-	   android:title="@string/rightNowInfoRetrievalRate"
-	   android:summary="@string/rightNowInfoRetrievalRateSummary"
-	   android:defaultValue="2"/>
+	<sr.player.dialogs.NumberPreference
+		android:key="rightNowInfoRetrievalRate"
+	 	android:title="@string/rightNowInfoRetrievalRate"
+	    android:summary="@string/rightNowInfoRetrievalRateSummary"
+	    android:defaultValue="2"
+	    numberpreference:min="0"
+	    numberpreference:max="60"
+	    /> 
+	<sr.player.dialogs.NumberPreference
+		android:key="rightNowInfoRetrievalPausedRate"
+	 	android:title="@string/rightNowInfoRetrievalPausedRate"
+	    android:summary="@string/rightNowInfoRetrievalPausedRateSummary"
+	    android:defaultValue="30"
+	    numberpreference:min="0"
+	    numberpreference:max="120"
+	    /> 
 	</PreferenceScreen>
 	<CheckBoxPreference
 		android:key="MediaButtonEnable"
