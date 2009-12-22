@@ -40,7 +40,6 @@ public class PodcastInfoThread extends Thread {
 		Resources res = this.activity.getResources();
 					
 		if ( allreadyRunning ) {
-			Log.d(SRPlayer.TAG, "PodcastInfoThread allready running terminating.");		
 			this.activity.UpdateArray(null,null);
 			return;
 		}
@@ -68,7 +67,6 @@ public class PodcastInfoThread extends Thread {
 				FeedUrl = FeedUrl + String.valueOf(id);			
 			}
 			
-			Log.d(SRPlayer.TAG, "PodcastInfoThread Feed = " + FeedUrl);
 			url = new URL(FeedUrl);
 			urlStream = url.openStream();
 		} catch (MalformedURLException e) {
@@ -94,14 +92,10 @@ public class PodcastInfoThread extends Thread {
 	        		 if ( xpp.getName().equals("item")) 
 	        		 {
 	        			 parsePodFeed(xpp);
-	        			 //eventType = XmlPullParser.END_DOCUMENT;
-	        			 //continue;
 	        		 }
 	        	 }
 	        	 eventType = xpp.next();
 	         }
-	         Log.d(SRPlayer.TAG, "Sending new PodInfo. Size:  " + PodInfo.size());
-	 		 //this.service.rightNowUpdate(info);
 	         this.activity.UpdateArray(PodList,PodInfo);
 		} catch (XmlPullParserException e) {
 			Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
@@ -160,7 +154,6 @@ public class PodcastInfoThread extends Thread {
         	eventType = xpp.next();
         }
         
-		//Log.d(SRPlayer.TAG, "PodcastInfoThread parseChannel end");		
 	} // end parseChannel
 
 	
