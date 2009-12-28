@@ -33,10 +33,12 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         android:textColor="#000000"
         android:textSize="24dip"
         android:textStyle="bold"
+        android:scrollHorizontally="true"        
         android:layout_centerInParent="true"
         android:layout_alignParentTop="true"
         android:paddingTop="5dip"
         android:paddingBottom="5dip"
+        android:lines="1"        
         />
         
 </RelativeLayout>   
