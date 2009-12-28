@@ -636,9 +636,53 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     		LayoutToShow = (View)findViewById(R.id.PlayerControlsLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
     		
-    		//Hise the listview
+    		//Hide the listview
     		LayoutToHide = (View)findViewById(R.id.ListViewLayout);
-    		LayoutToHide.setVisibility(View.GONE);    	
+    		LayoutToHide.setVisibility(View.GONE);
+    		
+    		//Check the mode 
+    		if (SRPlayer.currentStation.getStreamType() == Station.NORMAL_STREAM)
+    		{
+    			//All text should be visible
+    			LayoutToShow = (View)findViewById(R.id.NextProgramNamnLabel);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.NextProgramNamn);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.SongNamnLabel);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.SongNamn);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.NextSongNamnLabel);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.NextSongNamn);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    		}
+    		else
+    		{
+    			//All text should be visible
+    			LayoutToHide = (View)findViewById(R.id.NextProgramNamnLabel);
+    			LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.NextProgramNamn);
+    			LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.SongNamnLabel);
+    			LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.SongNamn);
+    			LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.NextSongNamnLabel);
+    			LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.NextSongNamn);
+    			LayoutToHide.setVisibility(View.GONE);
+    		}
     	}
     }
     
