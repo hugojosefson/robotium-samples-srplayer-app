@@ -80,8 +80,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	public PlayerService boundService;
 	private static int SleepTimerDelay;
 	
-	private List<String> MainListArray = new ArrayList<String>();
+	private List<String> MainListArray = new ArrayList<String>(); //Just until a custom ArrayAdapter
     private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
+    //private List<PodcastInfo> AllPrograms = new ArrayList<PodcastInfo>();
+    //private List<PodcastInfo> Categories = new ArrayList<PodcastInfo>();
     private List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
     private ArrayAdapter<String> PodList; 
@@ -206,11 +208,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 				try {
 					if (SRPlayer.this.playState == PlayerService.STOP) {
 						setBufferText(-1);
-						startStopButton.setImageResource(R.drawable.buffer_black);
+						startStopButton.setImageResource(R.drawable.buffer_white);
 						startPlaying();
 					} else {
 						stopPlaying();
-						startStopButton.setImageResource(R.drawable.play_black);
+						startStopButton.setImageResource(R.drawable.play_white);
 					}
 				} catch (IllegalStateException e) {
 					Log.e(SRPlayer.TAG, "Could not " +(SRPlayer.this.playState == PlayerService.STOP?"start":"stop") +" to stream play.", e);
@@ -245,11 +247,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		});
 
 		if (this.playState == PlayerService.BUFFER) {
-			startStopButton.setImageResource(R.drawable.buffer_black);
+			startStopButton.setImageResource(R.drawable.buffer_white);
 		} if (this.playState == PlayerService.STOP) {
-			startStopButton.setImageResource(R.drawable.play_black);
+			startStopButton.setImageResource(R.drawable.play_white);
 		} else {
-			startStopButton.setImageResource(R.drawable.pause_black);
+			startStopButton.setImageResource(R.drawable.pause_white);
 		}
 		
 		// Restore save text strings 
@@ -326,7 +328,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 				try {
 					boundService.startPlay();
 					//startStopButton.setImageResource(R.drawable.loading);
-					startStopButton.setImageResource(R.drawable.buffer_black);
+					startStopButton.setImageResource(R.drawable.buffer_white);
 					setBufferText(-1);
 					this.playState = PlayerService.BUFFER;
 				} catch (IllegalArgumentException e) {
@@ -512,7 +514,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
                 	  	playState = PlayerService.STOP;
               			tv = (TextView) findViewById(R.id.PageLabel);
               			tv.setText(SRPlayer.currentStation.getStationName());
-              			startStopButton.setImageResource(R.drawable.play_black);
+              			startStopButton.setImageResource(R.drawable.play_white);
                 	  break;
                   case MSGNEWPODINFO :
                 	  waitingfordata.dismiss();                      
@@ -534,13 +536,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 
 	public void onPlayerBuffer(int percent) {
 		//startStopButton.setImageResource(R.drawable.loading);
-		startStopButton.setImageResource(R.drawable.buffer_black);
+		startStopButton.setImageResource(R.drawable.buffer_white);
 		setBufferText(percent);
 	}
 
 	public void onPlayerStarted() {
 		//startStopButton.setImageResource(R.drawable.stop);
-		startStopButton.setImageResource(R.drawable.pause_black);
+		startStopButton.setImageResource(R.drawable.pause_white);
 		this.playState = PlayerService.PLAY;
 		TextView tv = (TextView) findViewById(R.id.PageLabel);
 	    tv.setText(SRPlayer.currentStation.getStationName());
