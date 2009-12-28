@@ -56,6 +56,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public static final int STOP = 0;	
 	public static final int BUFFER = 1;
 	public static final int PLAY = 2;
+	public static final int PAUSE = 3;
 	
 	
 	// This is the object that receives interactions from clients. See
@@ -135,10 +136,28 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 					e.printStackTrace();
 				}
         	}
+        	else if (this.playerStatus == PAUSE)
+        	{
+        		try {
+					resumePlay();
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	}
 			else
 			{
 				Log.i(getClass().getSimpleName(), "Widget request to stop");
-        		stopPlay();
+        		if (this.currentStation.getStreamType() == Station.NORMAL_STREAM)
+        			stopPlay();
+        		else
+        			pausePlay();
 			}
         	break;
         }
@@ -292,6 +311,53 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 										// know that the stream has stopped.
 		}
 	
+	}
+	
+	synchronized public void pausePlay() {
+		Log.d(getClass().getSimpleName(), "PlayerService stopPlay");
+		this.player.pause();
+		this.playerStatus = PAUSE;
+			
+		UpdateDataAndInformReceivers(); //Inform widgets
+		if ( notification != null ) {
+			notification.setLatestEventInfo(this, "SR Player",
+	        		"Paused", notification.contentIntent);
+			this.mNM.cancel(NOTIFY_ID);
+		}
+		this.notification = null;
+        this.restartRightNowInfo();
+        
+        if ( this.sleepTimertask != null) {
+			this.sleepTimertask.cancel();
+			sleepTimerIsRunning = false;
+		}
+        
+    	for(PlayerObserver observer : this.playerObservers) {
+        	observer.onPlayerStoped();	// Call observers to let them
+										// know that the stream has stopped.
+		}	
+	}
+	
+	public void resumePlay() throws IllegalArgumentException, 
+		IllegalStateException, IOException  {
+		Log.d(getClass().getSimpleName(), "PlayerService startPlay");
+	
+		if ( this.playerStatus == PAUSE ) {
+			Log.i(getClass().getSimpleName(), "Media Player start " + this.currentStation.getStreamUrl());	
+			updateNotify(this.currentStation.getStationName(), null);
+			// Display a notification about us starting.  We put an icon in the status bar.
+	        showNotification();
+			this.player.start();
+			this.playerStatus = PLAY;
+			UpdateDataAndInformReceivers();
+			//restartRightNowInfo();
+		
+			for(PlayerObserver observer : this.playerObservers) {
+	        	observer.onPlayerStarted();	// Call observers to let them
+											// know that the stream has stopped.
+			}	
+		} 
+		
 	}
 	
 	public void onPrepared(MediaPlayer mp) {

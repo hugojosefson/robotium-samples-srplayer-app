@@ -67,6 +67,9 @@ public class PlayerWidgetS extends AppWidgetProvider {
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
         	 Log.d(getClass().getSimpleName(), "Service status = " + String.valueOf(ServerStatus));        
         	 
+        	 if (ServerStatus == PlayerService.PAUSE)
+        		 ServerStatus = PlayerService.STOP;
+        	        	
         	 if (ThisappWidgetId >= 0)
         	 {
 	        	 AppWidgetManager manager = AppWidgetManager.getInstance(context);

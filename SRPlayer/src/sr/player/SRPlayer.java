@@ -327,11 +327,31 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		Log.d(TAG, "startPlaying");
 		if ( this.boundService != null ) {
 				try {
-					boundService.startPlay();
+					if (SRPlayer.currentStation.getStreamType() == Station.NORMAL_STREAM)			
+					{
+						boundService.startPlay();
+					}
+					else
+					{
+						//Check if the curren status is paused
+						if (boundService.getPlayerStatus() == PlayerService.PAUSE)
+						{
+							boundService.resumePlay();
+							startStopButton.setImageResource(R.drawable.pause_white);							
+							this.playState = PlayerService.PLAY;
+						}
+						else
+						{
+							boundService.startPlay();
+							startStopButton.setImageResource(R.drawable.buffer_white);
+							setBufferText(-1);
+							this.playState = PlayerService.BUFFER;
+						}
+						
+					}
+						
 					//startStopButton.setImageResource(R.drawable.loading);
-					startStopButton.setImageResource(R.drawable.buffer_white);
-					setBufferText(-1);
-					this.playState = PlayerService.BUFFER;
+					
 				} catch (IllegalArgumentException e) {
 					Log.e(SRPlayer.TAG, "Could not start to stream play.", e);
 					Toast.makeText(SRPlayer.this, "Failed to start stream! See log for more details.", 
@@ -475,7 +495,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	private void stopPlaying() {
 		Log.d(TAG, "stopPlaying");
 		Log.i(SRPlayer.TAG, "Media Player stop!");
-		this.boundService.stopPlay();
+		
+		//If the stream is a Pod stream, pause it
+		//instead
+		if (SRPlayer.currentStation.getStreamType() == Station.NORMAL_STREAM)			
+			this.boundService.stopPlay();
+		else
+			this.boundService.pausePlay();
 	}
 
 	Handler viewUpdateHandler = new Handler(){

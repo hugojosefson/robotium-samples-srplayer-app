@@ -41,7 +41,7 @@ public class PlayerWidget extends AppWidgetProvider {
           	  
           	  //In order to get better response when pressing the 
           	  //button. Change the status of the widget.
-          	if (ServerStatus == PlayerService.STOP)
+          	if (ServerStatus == PlayerService.STOP) 
             {
           		ServerStatus = PlayerService.BUFFER;
             }
@@ -76,6 +76,10 @@ public class PlayerWidget extends AppWidgetProvider {
         	 }
         	 ChannelName = intent.getStringExtra("sr.playerservice.CHANNEL_NAME");
         	 ServerStatus = intent.getIntExtra("sr.playerservice.PLAYER_STATUS", 0);
+        	 
+        	 if (ServerStatus == PlayerService.PAUSE)
+        		 ServerStatus = PlayerService.STOP;
+        	 
         	 Log.d(getClass().getSimpleName(), "Service status = " + String.valueOf(ServerStatus));        
         	 
         	 if (ThisappWidgetId >= 0)
