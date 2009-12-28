@@ -174,6 +174,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
         PodList = new ArrayAdapter<String>(this,
                 R.layout.podlistitem, MainListArray);                
         UpdateList();
+        UpdatePlayerVisibility(false);
  
         startStopButton = (ImageButton) findViewById(R.id.BtnStartStop);		
 		
@@ -573,7 +574,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
    	TextView tv = (TextView) findViewById(R.id.PageLabel);
    	if (CurrentAction == SRPlayer.PROGRAMS)
    	{
-   		tv.setText("Program A-Ö");
+   		tv.setText("Program A-Ö");   		
    	}
    	else if (CurrentAction == SRPlayer.CATEGORIES)
    	{
@@ -614,7 +615,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	View LayoutToShow = null;
     	TextView tv = (TextView) findViewById(R.id.PageLabel);
 		tv.setText(SRPlayer.currentStation.getStationName());
-    	if (Hide)
+		Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
+		if (Hide)
     	{
     		//Hide the player
     		LayoutToHide = (View)findViewById(R.id.PlayerLayout);
@@ -626,9 +628,20 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     		//Show the listview
     		LayoutToShow = (View)findViewById(R.id.ListViewLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
+    		
+    		PlayerButton.setBackgroundResource(R.drawable.player);
     	}
     	else
-    	{
+    	{    		
+    		PlayerButton.setBackgroundResource(R.drawable.player_pressed);
+    		
+    		Button ProgramButton = (Button) findViewById(R.id.ProgChannelButton);
+			Button CategoryButton = (Button) findViewById(R.id.PodCatButton);			    	
+    		
+			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
+    		CategoryButton.setBackgroundResource(R.drawable.category);
+    		
+    		
     		//Show the player
     		LayoutToShow = (View)findViewById(R.id.PlayerLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
@@ -691,7 +704,19 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
      Button ChannelProgramButton = (Button) findViewById(R.id.ProgChannelButton);
      Button CategoryButton = (Button) findViewById(R.id.PodCatButton);
      ImageButton ModeButton = (ImageButton) findViewById(R.id.ModeButton);
+     boolean ShoulHighlight = false;
      
+     //Check if the ChannelProgramButton should 
+     //be highlighted
+     if ( (HistoryList.size() > 0) && 
+    	  ( 
+    	    ((Mode == LIVE_MODE) && (HistoryList.get(0).ReadAction() == SRPlayer.CHANNELS)) ||
+    	    ((Mode != LIVE_MODE) && (HistoryList.get(0).ReadAction() == SRPlayer.PROGRAMS))
+    	   )
+    	)
+     {
+    	 ShoulHighlight = true; 
+     }     
      
      if (Mode == LIVE_MODE)
      {
@@ -702,9 +727,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	 
     	 //Set the text of the list button to "Kanal"    	
     	 ChannelProgramButton.setText("Kanal");  
-    	 
-    	 //The player is currently always visible during live
-    	 //UpdatePlayerVisibility(false);
+    	     	 
      }
      else
      {
@@ -716,11 +739,19 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	//Set the text of the list button to "Program A-Ö"    	
     	 ChannelProgramButton.setText("Program A-Ö");                  
      }
+     
+     if (ShoulHighlight)    	 
+    	 ChannelProgramButton.setBackgroundResource(R.drawable.channel_prog_select_pressed);
+     else
+    	 ChannelProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
+     
     }
     
     protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist)
     {
     	CurrentAction = Action;
+    	
+       	int HighlightedButton = 0;
     	
     	switch (Action)
     	{
@@ -750,7 +781,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
             break;
     	case SRPlayer.CATEGORIES:
     		//Init the history
-	        HistoryList.clear();
+    		HighlightedButton = 1;
+    		HistoryList.clear();
 	        HistoryList.add(new History(SRPlayer.CATEGORIES,"",""));
 	        
     		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CATEGORIES, 0);
@@ -763,6 +795,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     		//A specific category has been selected. 
         	//Retreive a list of all programs in the category
         	PoddIDLabel = Label;
+        	HighlightedButton = 1;
     		
     		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(ID));
             podcastinfothread.start();  
@@ -779,6 +812,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
         	//that channel
         	String PoddId = ID;
         	PoddIDLabel = Label;
+        	HighlightedButton = -1; //Remain the button that was highlighted before
     		
     		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
             podcastinfothread.start();  
@@ -791,6 +825,26 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	
         default:
         	break;
+    	}
+    	
+    	if (HighlightedButton >= 0)
+    	{
+    		Button ProgramButton = (Button) findViewById(R.id.ProgChannelButton);
+			Button CategoryButton = (Button) findViewById(R.id.PodCatButton);
+			Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
+			PlayerButton.setBackgroundResource(R.drawable.player);
+			
+    		if (HighlightedButton == 0)
+    		{
+    			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select_pressed);
+    			CategoryButton.setBackgroundResource(R.drawable.category);
+    		}
+    		else
+    		{
+    			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
+    			CategoryButton.setBackgroundResource(R.drawable.category_pressed);
+    		}
+    		
     	}
 		
     }
