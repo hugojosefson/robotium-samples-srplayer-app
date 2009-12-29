@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -40,19 +42,21 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-public class SRPlayer extends ListActivity implements PlayerObserver {
+public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.OnSeekBarChangeListener{
 	
 	private static final String _SR_RIGHTNOWINFO_URL = 
 		"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=false";
@@ -71,6 +75,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	protected static final int MSGPLAYERSTOP = 1;
 	protected static final int MSGNEWPODINFO = 2;	
+	protected static final int MSGUPDATESEEK = 3;
 	
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
@@ -107,6 +112,35 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 	private ProgressDialog waitingfordata;
 	    	
 	private String PoddIDLabel;
+	
+	private Timer SeekTimer;
+	private TimerTask SeekTimerTask;
+	
+	public void onProgressChanged(SeekBar seekBar, int progress,
+			boolean fromTouch) {
+		
+	}
+
+	public void onStartTrackingTouch(SeekBar seekBar) {
+		//Stop the automatic update of the seekbar
+		if ( this.SeekTimerTask != null) {
+			this.SeekTimerTask.cancel();
+		} 
+	}
+
+	public void onStopTrackingTouch(SeekBar seekBar) {
+		if (this.boundService != null)
+		{
+			int NewPosition = seekBar.getProgress();
+			this.boundService.SetPosition(NewPosition);
+			
+			if ( this.SeekTimerTask != null) {
+				this.SeekTimerTask.cancel();
+			}
+		    SeekTimerTask = new seekTimerTask(this);
+		    SeekTimer.schedule(SeekTimerTask, 500, 1000);
+		}
+	}
 	
 	private ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -167,6 +201,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		UpdateBottomButton(PlayerMode);
 		
 		MainListArray.add("");
+		
+		SeekTimer = new Timer();
+		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
+		mSeekBar.setOnSeekBarChangeListener(this);
         
         Intent intent = this.getIntent();
         CurrentAction = intent.getIntExtra(ACTION, 0);
@@ -307,6 +345,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 			Log.d(TAG, "Killing service");
 			stopService(new Intent(SRPlayer.this,
                     PlayerService.class));
+		}
+		if ( this.SeekTimerTask != null) {
+			this.SeekTimerTask.cancel();
 		}
 		super.onDestroy();
 	}
@@ -551,11 +592,22 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
                       UpdatePlayerVisibility(true);
                       UpdateList();
                       break;
+                  case MSGUPDATESEEK :
+                	  UpdateSeekBar();
+                	  if (( SeekTimerTask != null) && (playState == PlayerService.STOP)) {
+                		 SeekTimerTask.cancel(); //Cancel after update if player is stopped
+              			} 
+                	  break;
              }
              super.handleMessage(msg);
         }
    };
 
+   public void onSeekReqUpdate() {
+	   Message m = new Message();
+       m.what = SRPlayer.MSGUPDATESEEK;       
+       SRPlayer.this.viewUpdateHandler.sendMessage(m); 
+	}
    
 	public void onRightNowChannelInfoUpdate(RightNowChannelInfo info) {
 		Message m = new Message();
@@ -576,12 +628,22 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 		this.playState = PlayerService.PLAY;
 		TextView tv = (TextView) findViewById(R.id.PageLabel);
 	    tv.setText(SRPlayer.currentStation.getStationName());
+	    
+	    if ( this.SeekTimerTask != null) {
+			this.SeekTimerTask.cancel();
+		}
+	    SeekTimerTask = new seekTimerTask(this);
+	    SeekTimer.schedule(SeekTimerTask, 0, 1000);
 	}
 
 	public void onPlayerStoped() {		
 		Message m = new Message();
         m.what = SRPlayer.MSGPLAYERSTOP;
-        SRPlayer.this.viewUpdateHandler.sendMessage(m); 
+        SRPlayer.this.viewUpdateHandler.sendMessage(m);
+        
+        if ( this.SeekTimerTask != null) {
+			this.SeekTimerTask.cancel();
+		}        
 	}
 	
    private void clearAllText() {
@@ -638,6 +700,50 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
         SRPlayer.this.viewUpdateHandler.sendMessage(m); 
     };
     
+    private void UpdateSeekBar()
+    {
+    	TextView tv;
+    	SeekBar sb = (SeekBar) findViewById(R.id.PlayerSeekBar);
+    	int CurrentTime = 0; 
+		int TimeLeft = 0;    		
+		if ( this.boundService != null )
+		{
+			CurrentTime = this.boundService.GetPosition();
+			TimeLeft = this.boundService.GetDuration();			
+		}
+		tv = (TextView) findViewById(R.id.SeekStartTime);
+		int Minutes, Seconds;
+		if (CurrentTime >= 0)
+		{			
+			Minutes = CurrentTime / (1000 * 60);
+			Seconds = (CurrentTime / 1000) % 60;
+			tv.setText(String.format("%d:%02d",Minutes,Seconds));
+		}
+		else
+		{
+			tv.setText("00:00");
+		}
+		
+		tv = (TextView) findViewById(R.id.SeekEndTime);
+		if (TimeLeft >= 0)
+		{
+			Seconds = (TimeLeft / 1000);
+			sb.setMax(Seconds);
+			Seconds = (CurrentTime / 1000);
+			sb.setProgress(Seconds);			
+			TimeLeft = Math.abs(CurrentTime -  TimeLeft);
+			Minutes = TimeLeft / (1000 * 60);
+			Seconds = (TimeLeft / 1000) % 60;
+			tv.setText(String.format("-%d:%02d",Minutes,Seconds));
+			tv.setVisibility(View.VISIBLE);
+		}
+		else
+		{
+			sb.setProgress(0);
+			tv.setVisibility(View.GONE);
+		}
+    }
+    
     private void UpdatePlayerVisibility(boolean Hide)
     {
     	View LayoutToHide = null;
@@ -645,6 +751,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     	TextView tv = (TextView) findViewById(R.id.PageLabel);
 		tv.setText(SRPlayer.currentStation.getStationName());
 		Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
+		ScrollView sv = (ScrollView) findViewById(R.id.PlayerLayout);
+		ViewGroup.MarginLayoutParams Layout = (MarginLayoutParams) sv.getLayoutParams();
+		
+		
 		if (Hide)
     	{
     		//Hide the player
@@ -659,9 +769,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     		LayoutToShow.setVisibility(View.VISIBLE);
     		
     		PlayerButton.setBackgroundResource(R.drawable.player);
+    		
+    		LayoutToHide = (View)findViewById(R.id.SeekLayout);
+    		LayoutToHide.setVisibility(View.GONE);
     	}
     	else
-    	{    		
+    	{    	
     		PlayerButton.setBackgroundResource(R.drawable.player_pressed);
     		
     		Button ProgramButton = (Button) findViewById(R.id.ProgChannelButton);
@@ -703,6 +816,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     			
     			LayoutToShow = (View)findViewById(R.id.NextSongNamn);
     			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			Layout.bottomMargin = 65;
+    			sv.setLayoutParams(Layout);
+    			
+    			LayoutToHide = (View)findViewById(R.id.SeekLayout);
+        		LayoutToHide.setVisibility(View.GONE);    			
     		}
     		else
     		{
@@ -724,6 +843,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
     			
     			LayoutToHide = (View)findViewById(R.id.NextSongNamn);
     			LayoutToHide.setVisibility(View.GONE);
+    			
+    			Layout.bottomMargin = 100;
+    			sv.setLayoutParams(Layout);
+    			
+    			LayoutToShow = (View)findViewById(R.id.SeekLayout);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			
+    			UpdateSeekBar();
     		}
     	}
     }
