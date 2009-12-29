@@ -330,6 +330,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver {
 					if (SRPlayer.currentStation.getStreamType() == Station.NORMAL_STREAM)			
 					{
 						boundService.startPlay();
+						startStopButton.setImageResource(R.drawable.buffer_white);
+						setBufferText(-1);
+						this.playState = PlayerService.BUFFER;
 					}
 					else
 					{
