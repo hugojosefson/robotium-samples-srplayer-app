@@ -46,7 +46,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 <ScrollView 
 android:layout_width="fill_parent" 
 android:layout_height="fill_parent"
-android:layout_marginBottom="65dip"
+android:layout_marginBottom="100dip"
 android:layout_marginTop="35dip"
 android:layout_marginLeft="4dip"           
 android:layout_marginRight="4dip" 
@@ -174,6 +174,51 @@ android:id="@+id/PlayerLayout"
          
 </RelativeLayout>
 
+<RelativeLayout 
+	android:id="@+id/SeekLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="20dip"
+    android:orientation="vertical"      
+    android:layout_marginBottom="80px"	 
+    android:layout_alignParentBottom="true"   	    
+    >
+
+ <TextView
+        android:id="@+id/SeekStartTime"
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent"
+        android:text="00:00"
+        android:textColor="#000000"
+        android:textSize="12dip"        
+        android:layout_marginLeft="4dip"
+        android:gravity="center_vertical"	
+        />
+  
+	<SeekBar
+		android:id="@+id/PlayerSeekBar"
+		android:layout_marginBottom="0dip"
+		android:layout_marginRight="43dip"
+		android:layout_marginLeft="43dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="20dip"     	    
+	    android:thumb="@drawable/seekthumb"
+	    android:thumbOffset="0dip"    
+	    android:progressDrawable="@drawable/searchbg"
+	    android:secondaryProgress="100"
+	/>      
+    
+    <TextView
+        android:id="@+id/SeekEndTime"
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent"
+        android:text="00:00"
+        android:textColor="#000000"
+        android:textSize="12dip"          
+        android:layout_alignParentRight="true"      
+        android:layout_marginRight="4dip"
+        android:gravity="center_vertical"	
+        />
+</RelativeLayout>
 
 </RelativeLayout> 
 
@@ -193,8 +238,7 @@ android:id="@+id/PlayerLayout"
     	android:layout_height="50dip" 
 	    android:layout_width="fill_parent" 	   
 	    android:id="@+id/BtnStartStop" 
-	    android:src="@drawable/play_white"
-	    android:layout_centerInParent="true"
+	    android:src="@drawable/play_white"	    
 	    android:layout_marginLeft="10dip"           
 	    android:layout_marginRight="10dip"
 	    ImageView.ScaleType="centerInside|center_horizontal"	       
