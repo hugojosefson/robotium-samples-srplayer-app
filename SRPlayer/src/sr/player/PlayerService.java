@@ -525,6 +525,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			} else if ( this.playerStatus == STOP ) {
 				// Send indication to the observer that we are stopped
 				playerObserver.onPlayerStoped();
+			} else if ( this.playerStatus == PAUSE ) {
+					// Send indication to the observer that we are stopped
+				playerObserver.onPlayerStoped();
 			} else {
 				// Send indication to the observer that we are playing.
 				playerObserver.onPlayerStarted();
