@@ -24,6 +24,7 @@ import android.util.Log;
 public class PhoneStateHandler extends PhoneStateListener {
 	private PlayerService service;
 	private boolean WaitingForEndOfCall;
+	private Station CurrenStation;
 	
 	
 	
@@ -38,21 +39,37 @@ public class PhoneStateHandler extends PhoneStateListener {
 			Log.d(getClass().getSimpleName(), "Offhook state detected");
 			if ( service.getPlayerStatus() != PlayerService.STOP ) {
 				WaitingForEndOfCall = true;
-				service.stopPlay();
+				CurrenStation = service.getCurrentStation();
+				if ((CurrenStation.getStreamType() == Station.NORMAL_STREAM) ||
+						(service.getPlayerStatus() == PlayerService.BUFFER))
+					service.stopPlay();
+				else 
+					service.pausePlay();
+						 
+						
+					
 			}
 			break;
 		case TelephonyManager.CALL_STATE_RINGING:
 			Log.d(getClass().getSimpleName(), "Ringing detected");
 			if ( service.getPlayerStatus() != PlayerService.STOP ) {
 				WaitingForEndOfCall = true;
-				service.stopPlay();
+				CurrenStation = service.getCurrentStation();
+				if ((CurrenStation.getStreamType() == Station.NORMAL_STREAM) ||
+						(service.getPlayerStatus() == PlayerService.BUFFER))
+					service.stopPlay();
+				else 
+					service.pausePlay();
 			}
 			break;
 		case TelephonyManager.CALL_STATE_IDLE:
 			Log.d(getClass().getSimpleName(), "Idle state detected");
 			if (WaitingForEndOfCall) {
 				try {
-					service.startPlay();
+					if (service.getPlayerStatus() == PlayerService.PAUSE)
+						service.resumePlay();
+					else
+						service.startPlay();					
 				} catch (IllegalArgumentException e) {
 					Log.e(getClass().getSimpleName(), "Error", e);
 				} catch (IllegalStateException e) {
