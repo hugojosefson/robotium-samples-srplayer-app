@@ -347,7 +347,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			updateNotify(this.currentStation.getStationName(), null);
 			// Display a notification about us starting.  We put an icon in the status bar.
 	        showNotification();
-			this.player.start();
+			this.player.start();			
 			this.playerStatus = PLAY;
 			UpdateDataAndInformReceivers();
 			//restartRightNowInfo();
@@ -636,5 +636,22 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		return sleepTimerIsRunning;
 	}
 	
+	public int GetPosition() {
+		if (this.playerStatus != STOP)
+			return this.player.getCurrentPosition();
+		else
+			return -1;
+	}
+	
+	public int GetDuration() {
+		if (this.playerStatus != STOP)
+			return this.player.getDuration();
+		else
+			return -1;
+	}
+	
+	public void SetPosition(int Seconds) {
+		this.player.seekTo(Seconds*1000);
+	}
 }
 
