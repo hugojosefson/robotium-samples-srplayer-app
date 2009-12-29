@@ -34,10 +34,13 @@ public class PhoneStateHandler extends PhoneStateListener {
 	}
 
 	public void onCallStateChanged(int state, String incomingNumber) {
+		int CurrentPlayerStatus = service.getPlayerStatus();
 		switch (state) {
 		case TelephonyManager.CALL_STATE_OFFHOOK:
 			Log.d(getClass().getSimpleName(), "Offhook state detected");
-			if ( service.getPlayerStatus() != PlayerService.STOP ) {
+			if ((CurrentPlayerStatus != PlayerService.STOP ) && 
+				(CurrentPlayerStatus != PlayerService.PAUSE ))
+			{
 				WaitingForEndOfCall = true;
 				CurrenStation = service.getCurrentStation();
 				if ((CurrenStation.getStreamType() == Station.NORMAL_STREAM) ||
@@ -52,7 +55,9 @@ public class PhoneStateHandler extends PhoneStateListener {
 			break;
 		case TelephonyManager.CALL_STATE_RINGING:
 			Log.d(getClass().getSimpleName(), "Ringing detected");
-			if ( service.getPlayerStatus() != PlayerService.STOP ) {
+			if ((CurrentPlayerStatus != PlayerService.STOP ) && 
+					(CurrentPlayerStatus != PlayerService.PAUSE ))
+			{
 				WaitingForEndOfCall = true;
 				CurrenStation = service.getCurrentStation();
 				if ((CurrenStation.getStreamType() == Station.NORMAL_STREAM) ||
