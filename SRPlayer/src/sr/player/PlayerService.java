@@ -196,6 +196,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 					e.printStackTrace();
 				}
 			} 
+			else if ( this.playerStatus == PAUSE ) {
+				//If the channel changes and the stream is paused.
+				//Stop so that the stream is reset
+				stopPlay();
+			}
 			updateNotify(this.currentStation.getStationName(), null);
 			restartRightNowInfo();
 			this.LastRetreivedInfo = null;

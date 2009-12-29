@@ -168,6 +168,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		}
         		channelPos++;
         	}
+        	UpdateSeekBar();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -729,6 +730,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		{
 			Seconds = (TimeLeft / 1000);
 			sb.setMax(Seconds);
+			sb.setSecondaryProgress(sb.getMax());
 			Seconds = (CurrentTime / 1000);
 			sb.setProgress(Seconds);			
 			TimeLeft = Math.abs(CurrentTime -  TimeLeft);
@@ -740,6 +742,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		else
 		{
 			sb.setProgress(0);
+			sb.setSecondaryProgress(sb.getMax());
 			tv.setVisibility(View.GONE);
 		}
     }
@@ -1009,7 +1012,6 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
             currentPosition = position;        
-            
             switch (CurrentAction)
         	{
         	case SRPlayer.CATEGORIES:
@@ -1030,14 +1032,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
         		GenerateNewList(SRPlayer.GET_IND_PROGRAMS, currentPosition, PoddId, PoddIDLabel, false);
         		break;
-        	case SRPlayer.GET_IND_PROGRAMS:
+        	case SRPlayer.GET_IND_PROGRAMS:        		
         		SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
     			SRPlayer.currentStation.setStationName(PoddIDLabel);
     			SRPlayer.currentStation.setChannelId(0);
     			SRPlayer.currentStation.setStreamType(Station.POD_STREAM);
     			// TODO remove rightnow info updates during podcasts
     			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
-    			boundService.selectChannel(SRPlayer.currentStation);					
+    			boundService.selectChannel(SRPlayer.currentStation);		
     			clearAllText();
     			UpdatePlayerVisibility(false);
     			RightNowChannelInfo info = new RightNowChannelInfo();
@@ -1064,6 +1066,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     				clearAllText();
     				
             	}
+        		
         		UpdatePlayerVisibility(false); //Show the player
         		HistoryList.clear();
         		break;
