@@ -14,20 +14,18 @@
   */
 package sr.player;
 
-/** <code>Station</code> is a value object used to pass station infromation between different
- * parts of the application.
- *
- */
 public class History implements Cloneable {
 	private int Action;
 	private String ID;
 	private String Label;
+	private Object StreamData;
 	
-	public History(int Action, String ID, String Label) {
+	public History(int Action, String ID, String Label, Object StreamData) {
 		super();
 		this.Action = Action;
 		this.ID = ID;
 		this.Label = Label;
+		this.StreamData = StreamData;
 	}
 
 	public int ReadAction()
@@ -43,6 +41,16 @@ public class History implements Cloneable {
 	public String ReadLabel()
 	{
 		return this.Label;
+	}
+	
+	public void SetStreamdata(Object Streamdata)
+	{
+		this.StreamData = Streamdata;
+	}
+	
+	public Object ReadStreamdata()
+	{
+		return this.StreamData;
 	}
 	 
 }

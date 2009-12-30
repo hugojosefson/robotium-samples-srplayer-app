@@ -14,8 +14,7 @@ import android.app.Activity;
 import android.util.Log;
 
 public class PodcastInfoThread extends Thread {
-	private SRPlayer activity;
-	private List<String> PodList = new ArrayList<String>();
+	private SRPlayer activity;	
 	private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
 	private int ListAction;
 	private int id;	
@@ -96,7 +95,7 @@ public class PodcastInfoThread extends Thread {
         if (urlStream == null)
         {
         	allreadyRunning = false;
-			this.activity.UpdateArray(null,null);			
+			this.activity.UpdateArray(null);			
 			return;
         }
         try {
@@ -115,13 +114,13 @@ public class PodcastInfoThread extends Thread {
 	        	 }
 	        	 eventType = xpp.next();
 	         }
-	         this.activity.UpdateArray(PodList,PodInfo);
+	         this.activity.UpdateArray(PodInfo);
 		} catch (XmlPullParserException e) {
 			Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-			this.activity.UpdateArray(null,null);
+			this.activity.UpdateArray(null);
 		} catch (IOException e) {
 			Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-			this.activity.UpdateArray(null,null);
+			this.activity.UpdateArray(null);
 		} finally {
 			try {
 				if ( urlStream != null ) {					
@@ -150,7 +149,6 @@ public class PodcastInfoThread extends Thread {
         	} else if (eventType == XmlPullParser.START_TAG ) {
         		if (xpp.getName().equals("title")) {        			
         			xpp.next();
-        			PodList.add(xpp.getText());
         			NewInfo.setTitle(xpp.getText());
         		} else if (xpp.getName().equals("id")) {
         			xpp.next();

@@ -27,6 +27,7 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -85,13 +86,16 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public PlayerService boundService;
 	private static int SleepTimerDelay;
 	
-	private List<String> MainListArray = new ArrayList<String>(); //Just until a custom ArrayAdapter
+	private List<String> ChannelArray = new ArrayList<String>(); 
     private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
+    private List<PodcastInfo> ProgramArray = new ArrayList<PodcastInfo>();
+    private List<PodcastInfo> CategoryArray = new ArrayList<PodcastInfo>();
     //private List<PodcastInfo> AllPrograms = new ArrayList<PodcastInfo>();
     //private List<PodcastInfo> Categories = new ArrayList<PodcastInfo>();
     private List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
-    private ArrayAdapter<String> PodList; 
+    private ArrayAdapter<String> ChannelList; 
+    private PodcastInfoAdapter PodList;
     
     public static final int CATEGORIES = 0;	
 	public static final int PROGRAMS = 1;
@@ -201,7 +205,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		PlayerMode = this.LIVE_MODE;
 		UpdateBottomButton(PlayerMode);
 		
-		MainListArray.add("");
+		//MainListArray.add("");
+		//PodcastInfo TempInfo = new PodcastInfo();
+		//PodInfo.add(TempInfo);
 		
 		SeekTimer = new Timer();
 		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
@@ -210,8 +216,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         Intent intent = this.getIntent();
         CurrentAction = intent.getIntExtra(ACTION, 0);
         
-        PodList = new ArrayAdapter<String>(this,
-                R.layout.podlistitem, MainListArray);                
+        ChannelList = new ArrayAdapter<String>(this,
+                R.layout.podlistitem, ChannelArray);
+                      
+        PodList = new PodcastInfoAdapter(this,
+                R.layout.podlistitem, (ArrayList<PodcastInfo>) PodInfo);
+                
         UpdateList();
         UpdatePlayerVisibility(false);
  
@@ -224,12 +234,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		if (PlayerMode == LIVE_MODE)
         		{        		
         		//Live mode
-        		GenerateNewList(SRPlayer.CHANNELS, 0, "", "", false);
+        		GenerateNewList(SRPlayer.CHANNELS, 0, "", "", false,null);
         		}
         		else
         		{
         		//Podcast mode	
-        		GenerateNewList(SRPlayer.PROGRAMS, 0, "", "", false);
+        		GenerateNewList(SRPlayer.PROGRAMS, 0, "", "", false,
+        				(ProgramArray.size() > 0) ? ProgramArray : null);
         		}
         		
 			}
@@ -264,8 +275,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		Button CategoriesButton = (Button) findViewById(R.id.PodCatButton);
         CategoriesButton.setOnClickListener(new View.OnClickListener() {
-        	public void onClick(View v) {	        		
-        		GenerateNewList(SRPlayer.CATEGORIES, 0, "", "", false);
+        	public void onClick(View v) {	        		        		
+        		GenerateNewList(SRPlayer.CATEGORIES, 0, "", "", false,
+        				(CategoryArray.size() > 0) ? CategoryArray : null);
         	}
 		});
         
@@ -589,7 +601,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
               			startStopButton.setImageResource(R.drawable.play_white);
                 	  break;
                   case MSGNEWPODINFO :
-                	  waitingfordata.dismiss();                      
+                	  if (waitingfordata != null)
+                		  waitingfordata.dismiss();                      
                       UpdatePlayerVisibility(true);
                       UpdateList();
                       break;
@@ -662,7 +675,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    
    private void UpdateList()
    {
-   	setListAdapter(PodList);
+   	//setListAdapter(PodList);
+	setListAdapter(PodList);
+	   
    	TextView tv = (TextView) findViewById(R.id.PageLabel);
    	if (CurrentAction == SRPlayer.PROGRAMS)
    	{
@@ -679,23 +694,37 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    	
    }
 
-   public void UpdateArray(List<String> PodStringArray, Object PodObject)
+   public void UpdateArray(Object PodObject)
     {        
-    	if (PodStringArray == null)
-    	{
-    	MainListArray.clear();
+    	if (PodObject == null)
+    	{    	
     	PodInfo.clear();
     	}
     	else
     	{
-    	MainListArray.clear();        		
-    	MainListArray.addAll(PodStringArray); 
-    	PodInfo.clear();
-	    	if (PodObject != null)
-	    	{
-	    		List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
-	    		PodInfo.addAll(NewPodInfo);
-	    	}    	
+    	PodInfo.clear();	    	
+	    List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
+	    PodInfo.addAll(NewPodInfo);
+	    	    
+	    if ((CurrentAction == CATEGORIES) && (CategoryArray.size() == 0))
+	    {
+	    	//store the categories list
+	    	CategoryArray.clear();
+	    	CategoryArray.addAll(NewPodInfo);
+	    }
+	    else if ((CurrentAction == PROGRAMS) && (ProgramArray.size() == 0))
+	    {
+	    	//store the program list
+	    	ProgramArray.clear();
+	    	ProgramArray.addAll(NewPodInfo);
+	    }
+	    
+    	}
+    	
+    	int HistSize = HistoryList.size();
+    	if (HistSize > 0)
+    	{
+    		HistoryList.get(HistSize-1).SetStreamdata(PodObject);
     	}
     	
     	Message m = new Message();
@@ -909,47 +938,54 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
      
     }
     
-    protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist)
+    protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist, Object SavedAdapter)
     {
     	CurrentAction = Action;
     	
-       	int HighlightedButton = 0;
-    	
+       	int HighlightedButton = 0;    	       
+       	
     	switch (Action)
     	{
     	case SRPlayer.PROGRAMS:
+    		if (SavedAdapter == null)
+    		{
     		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_ALL_PROGRAMS, 0);
             podcastinfothread.start();  
             waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-            
+    		}
+    		
             //Init the history
             HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.PROGRAMS,"",""));
+            HistoryList.add(new History(SRPlayer.PROGRAMS,"","",SavedAdapter));
     		break;
     	case SRPlayer.CHANNELS:
     		//Live mode
     		Resources res = getResources();        		
     		List<String> items= Arrays.asList(res.getStringArray(R.array.channels));
-    		MainListArray.clear();
-    		MainListArray.addAll(items);        	
-    		setListAdapter(PodList);
+    		
+    		ChannelArray.clear();
+    		ChannelArray.addAll(items);        	
+    		setListAdapter(ChannelList);
     	   	UpdatePlayerVisibility(true);
     	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
     	   	tv.setText("Kanaler");
     	   	
     	   	//Init the history
             HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.CHANNELS,"",""));
+            HistoryList.add(new History(SRPlayer.CHANNELS,"","",SavedAdapter));
             break;
     	case SRPlayer.CATEGORIES:
     		//Init the history
     		HighlightedButton = 1;
     		HistoryList.clear();
-	        HistoryList.add(new History(SRPlayer.CATEGORIES,"",""));
+	        HistoryList.add(new History(SRPlayer.CATEGORIES,"","",SavedAdapter));
 	        
-    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CATEGORIES, 0);
+	        if (SavedAdapter == null)
+    		{    		
+	        podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CATEGORIES, 0);
 	        podcastinfothread.start();  
 	        waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+    		}
 	        
 	        break;
 	        
@@ -959,13 +995,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	PoddIDLabel = Label;
         	HighlightedButton = 1;
     		
-    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(ID));
+        	if (SavedAdapter == null)
+    		{    		
+        	podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(ID));
             podcastinfothread.start();  
             waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-            
+    		}
             //Add a new level to the history
             if (!NoNewHist)
-            	HistoryList.add(new History(SRPlayer.PROGRAMS_IN_A_CATEGORY,ID,Label));
+            	HistoryList.add(new History(SRPlayer.PROGRAMS_IN_A_CATEGORY,ID,Label,SavedAdapter));
     		break;
     		
     	case GET_IND_PROGRAMS:        		
@@ -976,12 +1014,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	PoddIDLabel = Label;
         	HighlightedButton = -1; //Remain the button that was highlighted before
     		
-    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
+        	if (SavedAdapter == null)
+    		{    		
+        	podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
             podcastinfothread.start();  
             waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
-            
+    		}
+        	
             if (!NoNewHist)                
-            	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label));
+            	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label,SavedAdapter));
     		
     		break;
     	
@@ -1008,6 +1049,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
     		
     	}
+    	
+    	if (SavedAdapter != null)
+       	{
+       		UpdateArray(SavedAdapter);           
+       	}
 		
     }
     
@@ -1022,7 +1068,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	String CategoryId = PodInfo.get(currentPosition).getID();
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
         		
-                GenerateNewList(SRPlayer.PROGRAMS_IN_A_CATEGORY, currentPosition, CategoryId, PoddIDLabel, false);
+                GenerateNewList(SRPlayer.PROGRAMS_IN_A_CATEGORY, currentPosition, CategoryId, PoddIDLabel, false,null);
                 break;	
         	case SRPlayer.PROGRAMS:        		
         	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
@@ -1032,7 +1078,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	
         		String PoddId = PodInfo.get(currentPosition).getPoddID();
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
-        		GenerateNewList(SRPlayer.GET_IND_PROGRAMS, currentPosition, PoddId, PoddIDLabel, false);
+        		GenerateNewList(SRPlayer.GET_IND_PROGRAMS, currentPosition, PoddId, PoddIDLabel, false,null);
         		break;
         	case SRPlayer.GET_IND_PROGRAMS:        		
         		SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
@@ -1098,8 +1144,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	int PrevAction = PrevHistory.ReadAction();
         	String PrevID = PrevHistory.ReadID();
         	String PrevLabel = PrevHistory.ReadLabel();
+        	Object PrevObject = PrevHistory.ReadStreamdata();
         	
-        	GenerateNewList(PrevAction, 0, PrevID, PrevLabel, true);
+        	GenerateNewList(PrevAction, 0, PrevID, PrevLabel, true,PrevObject);
         	}
         		
         	return true;
