@@ -17,7 +17,6 @@ package sr.player;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -27,7 +26,6 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -47,7 +45,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.MarginLayoutParams;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -86,15 +83,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public PlayerService boundService;
 	private static int SleepTimerDelay;
 	
-	private List<String> ChannelArray = new ArrayList<String>(); 
-    private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
+	private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
     private List<PodcastInfo> ProgramArray = new ArrayList<PodcastInfo>();
     private List<PodcastInfo> CategoryArray = new ArrayList<PodcastInfo>();
     //private List<PodcastInfo> AllPrograms = new ArrayList<PodcastInfo>();
     //private List<PodcastInfo> Categories = new ArrayList<PodcastInfo>();
     private List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
-    private ArrayAdapter<String> ChannelList; 
     private PodcastInfoAdapter PodList;
     
     public static final int CATEGORIES = 0;	
@@ -204,20 +199,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		PlayerMode = this.LIVE_MODE;
 		UpdateBottomButton(PlayerMode);
-		
-		//MainListArray.add("");
-		//PodcastInfo TempInfo = new PodcastInfo();
-		//PodInfo.add(TempInfo);
-		
+				
 		SeekTimer = new Timer();
 		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
 		mSeekBar.setOnSeekBarChangeListener(this);
         
         Intent intent = this.getIntent();
         CurrentAction = intent.getIntExtra(ACTION, 0);
-        
-        ChannelList = new ArrayAdapter<String>(this,
-                R.layout.podlistitem, ChannelArray);
                       
         PodList = new PodcastInfoAdapter(this,
                 R.layout.podlistitem, (ArrayList<PodcastInfo>) PodInfo);
@@ -675,8 +663,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    
    private void UpdateList()
    {
-   	//setListAdapter(PodList);
-	setListAdapter(PodList);
+   	setListAdapter(PodList);
 	   
    	TextView tv = (TextView) findViewById(R.id.PageLabel);
    	if (CurrentAction == SRPlayer.PROGRAMS)
@@ -961,11 +948,19 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	case SRPlayer.CHANNELS:
     		//Live mode
     		Resources res = getResources();        		
-    		List<String> items= Arrays.asList(res.getStringArray(R.array.channels));
+    		String[] items= res.getStringArray(R.array.channels);
     		
-    		ChannelArray.clear();
-    		ChannelArray.addAll(items);        	
-    		setListAdapter(ChannelList);
+    		PodInfo.clear();	    	
+    	    PodcastInfo ChannelInfo;    	    
+    	    for (String v : items) { 
+    	    	ChannelInfo = new PodcastInfo();
+    	    	ChannelInfo.setTitle(v);
+    	    	PodInfo.add(ChannelInfo);
+    	    }
+    	    
+    		//ChannelArray.clear();
+    		//ChannelArray.addAll(items);        	
+    		setListAdapter(PodList);
     	   	UpdatePlayerVisibility(true);
     	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
     	   	tv.setText("Kanaler");
