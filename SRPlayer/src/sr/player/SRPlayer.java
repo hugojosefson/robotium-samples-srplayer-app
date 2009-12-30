@@ -691,9 +691,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	MainListArray.clear();        		
     	MainListArray.addAll(PodStringArray); 
     	PodInfo.clear();
-    	List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
-    	PodInfo.addAll(NewPodInfo);
-    	
+	    	if (PodObject != null)
+	    	{
+	    		List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
+	    		PodInfo.addAll(NewPodInfo);
+	    	}    	
     	}
     	
     	Message m = new Message();
@@ -722,7 +724,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		}
 		else
 		{
-			tv.setText("00:00");
+			tv.setText("0:00");
 		}
 		
 		tv = (TextView) findViewById(R.id.SeekEndTime);

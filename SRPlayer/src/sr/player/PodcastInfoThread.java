@@ -11,7 +11,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.util.Log;
 
 public class PodcastInfoThread extends Thread {
@@ -20,12 +19,18 @@ public class PodcastInfoThread extends Thread {
 	private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
 	private int ListAction;
 	private int id;	
+	private int RetryCount;
 	private static boolean allreadyRunning = false;
 	
 	public static final int GET_CATEGORIES = 0;	
 	public static final int GET_ALL_PROGRAMS = 1;
 	public static final int GET_PROGRAMS_BY_CATEGORY = 2;
 	public static final int GET_IND_PROGRAMS = 3;
+	
+	public static final String podcast_categories_feed = "http://api.sr.se/poddradio/PoddCategories.aspx";
+	public static final String podcasts_by_category_feed = "http://api.sr.se/poddradio/poddfeed.aspx?CategoryId=";
+	public static final String podcast_programs_feed = "http://api.sr.se/poddradio/poddfeed.aspx";
+	public static final String podcast_ind_program_feed = "http://api.sr.se/rssfeed/rssfeed.aspx?Poddfeed=";
 
 	
 	public PodcastInfoThread(Activity activity, int action, int ID) {
@@ -36,50 +41,64 @@ public class PodcastInfoThread extends Thread {
 	
 	@Override
 	public void run() {
-		//this.activity.UpdateArray(PodList);
-		Resources res = this.activity.getResources();
-					
 		if ( allreadyRunning ) {
-			this.activity.UpdateArray(null,null);
+			//this.activity.UpdateArray(null,null);			
 			return;
 		}
-		PodcastInfoThread.allreadyRunning = true;
-		URL url;
-        InputStream urlStream;
-		try {
-			String FeedUrl;
-			if (ListAction == GET_CATEGORIES)
-			{
-				FeedUrl = res.getString(R.string.podcast_categories_feed);
-			}
-			else if (ListAction == GET_ALL_PROGRAMS)
-			{
-				FeedUrl = res.getString(R.string.podcasts_by_category_feed);
-			}
-			else if (ListAction == GET_PROGRAMS_BY_CATEGORY)
-			{
-				FeedUrl = res.getString(R.string.podcasts_by_category_feed);
-				FeedUrl = FeedUrl + String.valueOf(id);
-			}
-			else //(ListAction == GET_IND_PROGRAMS)
-			{
-				FeedUrl = res.getString(R.string.podcast_ind_program_feed);
-				FeedUrl = FeedUrl + String.valueOf(id);			
-			}
-			
-			url = new URL(FeedUrl);
-			urlStream = url.openStream();
-		} catch (MalformedURLException e) {
-			Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-			PodcastInfoThread.allreadyRunning = false;
-			this.activity.UpdateArray(null,null);
-			return;
-		} catch (IOException e) {
-			Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-			PodcastInfoThread.allreadyRunning = false;
-			this.activity.UpdateArray(null,null);
-			return;
+		allreadyRunning = true;
+		URL url;		
+        InputStream urlStream = null;
+        String FeedUrl = "";
+        if (ListAction == GET_CATEGORIES)
+		{
+			FeedUrl = podcast_categories_feed;
 		}
+		else if (ListAction == GET_ALL_PROGRAMS)
+		{
+			FeedUrl = podcast_programs_feed;
+		}
+		else if (ListAction == GET_PROGRAMS_BY_CATEGORY)
+		{
+			FeedUrl = podcasts_by_category_feed;
+			FeedUrl = FeedUrl + String.valueOf(id);
+		}
+		else //(ListAction == GET_IND_PROGRAMS)
+		{
+			FeedUrl = podcast_ind_program_feed;
+			FeedUrl = FeedUrl + String.valueOf(id);			
+		}        
+        
+        for (RetryCount = 0; RetryCount < 3; RetryCount++)
+        {
+	        try {								
+					url = new URL(FeedUrl);			
+					urlStream = url.openStream();
+					break;
+				} catch (MalformedURLException e) {
+					Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
+					//allreadyRunning = false;
+					//this.activity.UpdateArray(null,null);			
+					//return;
+				} catch (IOException e) {
+					Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
+					//allreadyRunning = false;
+					//String ExtraInfo = "urlStream is null";
+					//if (urlStream != null)
+					//	ExtraInfo = "urlStream is NOT null";
+						
+					//PodList.add("Error getting list. " + ExtraInfo);
+					//this.activity.UpdateArray(PodList,null);
+					//this.activity.UpdateArray(null,null);
+					//return;
+				}
+		
+        }
+        if (urlStream == null)
+        {
+        	allreadyRunning = false;
+			this.activity.UpdateArray(null,null);			
+			return;
+        }
         try {
         	
 			XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -105,16 +124,15 @@ public class PodcastInfoThread extends Thread {
 			this.activity.UpdateArray(null,null);
 		} finally {
 			try {
-				if ( urlStream != null ) {
-					urlStream.close();
+				if ( urlStream != null ) {					
+					urlStream.close();		
+					Log.d(SRPlayer.TAG, "Podinfo stream closed");
 				}
 			} catch (IOException e) { }
 		}
 		
 		
-		PodcastInfoThread.allreadyRunning = false;
-		
-		super.run();
+		allreadyRunning = false;			
 	}
 	
 	private void parsePodFeed(XmlPullParser xpp) throws XmlPullParserException, IOException {
