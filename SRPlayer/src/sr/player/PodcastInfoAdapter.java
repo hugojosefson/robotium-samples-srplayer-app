@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
@@ -27,12 +28,23 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                     LayoutInflater vi = (LayoutInflater)CurrentContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     v = vi.inflate(R.layout.podlistitem, null);
                 }
-                CurrentItem = items.get(position);
+                CurrentItem = items.get(position);                
                 String Title = CurrentItem.getTitle();
-                TextView tt = (TextView) v.findViewById(R.id.text1);
+                String Desciption = CurrentItem.getDescription();
+                TextView tt = (TextView) v.findViewById(R.id.text1);                
                 if (tt != null) 
                 {
-                    tt.setText(Title);
+                    tt.setText(Title);                            		
+                }
+                
+                TextView bt = (TextView) v.findViewById(R.id.text2);
+                if (bt != null) 
+                {
+                	if (Desciption != null)
+                	{
+                		bt.setText(Desciption);
+                		bt.setVisibility(View.VISIBLE);                		                		                		                	
+                	}                	
                 }
                 
                 return v;
