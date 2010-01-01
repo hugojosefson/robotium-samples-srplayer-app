@@ -161,7 +161,7 @@ android:id="@+id/PlayerLayout"
     android:orientation="vertical"
     android:scrollbars="horizontal"   
     android:layout_marginBottom="0px"
-	android:layout_marginTop="40px"    
+	android:layout_marginTop="40dip"    
 	android:visibility="gone"
     >
     
@@ -179,7 +179,7 @@ android:id="@+id/PlayerLayout"
     android:layout_width="fill_parent"
     android:layout_height="20dip"
     android:orientation="vertical"      
-    android:layout_marginBottom="80px"	 
+    android:layout_marginBottom="80dip"	 
     android:layout_alignParentBottom="true"   	    
     >
 

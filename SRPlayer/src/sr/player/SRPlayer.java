@@ -775,6 +775,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		ScrollView sv = (ScrollView) findViewById(R.id.PlayerLayout);
 		ViewGroup.MarginLayoutParams Layout = (MarginLayoutParams) sv.getLayoutParams();
 		
+		final float scale = getBaseContext().getResources().getDisplayMetrics().density;		
 		
 		if (Hide)
     	{
@@ -837,8 +838,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			
     			LayoutToShow = (View)findViewById(R.id.NextSongNamn);
     			LayoutToShow.setVisibility(View.VISIBLE);
-    			
-    			Layout.bottomMargin = 65;
+    			    			 
+    			Layout.bottomMargin = (int) (65 * scale);
     			sv.setLayoutParams(Layout);
     			
     			LayoutToHide = (View)findViewById(R.id.SeekLayout);
@@ -864,8 +865,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			
     			LayoutToHide = (View)findViewById(R.id.NextSongNamn);
     			LayoutToHide.setVisibility(View.GONE);
+    			    			
+    			Layout.bottomMargin = (int) (100 * scale);
+    			sv.setLayoutParams(Layout);
     			
-    			Layout.bottomMargin = 100;
     			sv.setLayoutParams(Layout);
     			
     			LayoutToShow = (View)findViewById(R.id.SeekLayout);
