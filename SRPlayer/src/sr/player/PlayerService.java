@@ -35,6 +35,7 @@ import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnInfoListener;
 import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.OnSeekCompleteListener;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -42,7 +43,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-public class PlayerService extends Service implements OnPreparedListener,
+public class PlayerService extends Service implements OnPreparedListener, OnSeekCompleteListener,
 OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener {
 	private static final long _TIME_MINUTE = 60*1000L;
 
@@ -285,6 +286,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.setOnInfoListener(this);
 		this.player.setOnPreparedListener(this);
 		this.player.setOnBufferingUpdateListener(this);
+		this.player.setOnSeekCompleteListener(this);
 		
 		this.player.prepareAsync();
 		this.playerStatus = BUFFER;
@@ -659,7 +661,14 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 	
 	public void SetPosition(int Seconds) {
-		this.player.seekTo(Seconds*1000);
+		int NewPos = Seconds*1000;		
+		this.player.seekTo(NewPos);
+		Log.d(getClass().getSimpleName(), "New position in msec: " + String.valueOf(NewPos));
+	}
+
+	@Override
+	public void onSeekComplete(MediaPlayer mp) {
+		Log.d(getClass().getSimpleName(), "Seek complete");
 	}
 }
 
