@@ -27,10 +27,9 @@
 <string name="KillServiceNameOnSummary">Stoppar tjänsten. Bör EJ kombineras med widget.</string>
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
-<string name="about_message">SR Player is release under GPL.
-Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn)
-Tack till alla på Swedroid forumet (http://www.swedroid.se/forum/)
-</string>
+<string name="about_message">SR Player is released under GPL.
+Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn). Tack till alla på Swedroid <a href="http://www.swedroid.se/forum/">forumet</a>  
+ Ifall något inte fungerar så börja med att trycka på hjälp nedan.</string>
 <string-array name="channels">
 <item>P1</item>
 <item>P2</item>
