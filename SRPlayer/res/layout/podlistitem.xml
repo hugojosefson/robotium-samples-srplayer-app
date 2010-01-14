@@ -9,7 +9,6 @@
 
 <TextView 
 	android:id="@+id/text1" 
-	xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:textColor="#000000"    
@@ -18,11 +17,15 @@
     android:textSize="20dip"
     android:paddingLeft="10dip"
     android:textStyle="bold"
-    android:text="g"
+    android:scrollHorizontally="true"  	
+    android:ellipsize="marquee"
+  	android:marqueeRepeatLimit="marquee_forever"
+    android:maxLines="1"
     />
+	
+	
 <TextView 
 	android:id="@+id/text2" 
-	xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:textColor="#777777"       
@@ -33,9 +36,9 @@
     android:textStyle="bold"
     android:visibility="gone"
 	android:paddingTop="0dip"    
-    android:lines="1"
     android:scrollHorizontally="true"  
-    android:ellipsize="end"              
-    android:text="B"
+    android:ellipsize="marquee"
+  	android:marqueeRepeatLimit="marquee_forever"  	
+    android:maxLines="1"
     />
 </RelativeLayout>
