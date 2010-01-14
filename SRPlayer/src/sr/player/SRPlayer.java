@@ -26,16 +26,19 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -131,7 +134,30 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		if (this.boundService != null)
 		{
 			int NewPosition = seekBar.getProgress();
-			this.boundService.SetPosition(NewPosition);
+						
+			String SDK = Build.VERSION.SDK; 
+			int SDKVal = 0;
+			try {
+					SDKVal = Integer.valueOf(SDK);						
+			}
+			catch (NumberFormatException e)
+			{
+				SDKVal = 0;
+			}
+						
+			if ( SDKVal >= 4)
+			{
+				Context context = getApplicationContext();
+				CharSequence text = "På grund av en bugg som uppkom i Android 1.6 (Issue 4124) så fungerar det tyvärr inte att spola på din mobil";
+				int duration = Toast.LENGTH_LONG;
+
+				Toast toast = Toast.makeText(context, text, duration);
+				toast.show();
+			}
+			else
+			{
+				this.boundService.SetPosition(NewPosition);				
+			}
 			
 			if ( this.SeekTimerTask != null) {
 				this.SeekTimerTask.cancel();
@@ -199,7 +225,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		PlayerMode = this.LIVE_MODE;
 		UpdateBottomButton(PlayerMode);
-				
+					
 		SeekTimer = new Timer();
 		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
 		mSeekBar.setOnSeekBarChangeListener(this);
@@ -504,16 +530,30 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		return super.onMenuItemSelected(featureId, item);
 	}
 
-	private void handleMenuAbout() {
+	private void handleMenuAbout() {		
+		View view = View.inflate(this, R.layout.about, null);
+		TextView textView = (TextView) view.findViewById(R.id.message);
+		textView.setMovementMethod(LinkMovementMethod.getInstance());
+		textView.setText(R.string.about_message);
 		new AlertDialog.Builder(this)
-			.setTitle(getResources().getText(R.string.about_title))
-			.setMessage(R.string.about_message)
-			.setPositiveButton("OK",
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							// Do nothing...
-						}
-					}).show();
+				.setTitle(getResources().getText(R.string.about_title))		
+		        .setView(view)
+				.setPositiveButton(android.R.string.ok, null)
+		        .setPositiveButton("OK",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								// Do nothing...
+							}
+						})
+				.setNegativeButton("HJÄLP",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								Intent FaqIntent = new Intent(SRPlayer.this, FaqActivity.class);
+								SRPlayer.this.startActivity(FaqIntent);															
+							}
+						})
+				.show();
+			
 	}
 		
 	private void handleMenuExit() {
@@ -1054,6 +1094,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
        	}
 		
     }
+    
+    
     
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
