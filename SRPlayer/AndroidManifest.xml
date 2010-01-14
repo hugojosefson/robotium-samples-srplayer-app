@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="sr.player"
-      android:versionCode="5" android:versionName="0.7">
+      android:versionCode="6" android:versionName="0.7.1">
       
     <supports-screens
           android:largeScreens="true"
@@ -19,6 +19,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".FaqActivity"
+                  android:label="FAQ" android:launchMode="singleInstance"                                   
+                  /> 
         
     <service android:name="PlayerService"></service>
 
