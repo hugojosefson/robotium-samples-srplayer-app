@@ -14,6 +14,8 @@
   */
 package sr.player;
 
+import android.util.Log;
+
 public class History implements Cloneable {
 	private int Action;
 	private String ID;
@@ -25,7 +27,7 @@ public class History implements Cloneable {
 		this.Action = Action;
 		this.ID = ID;
 		this.Label = Label;
-		this.StreamData = StreamData;
+		this.StreamData = StreamData;		
 	}
 
 	public int ReadAction()

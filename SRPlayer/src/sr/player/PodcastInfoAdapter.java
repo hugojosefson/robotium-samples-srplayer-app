@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
@@ -38,12 +39,13 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 }
                 
                 TextView bt = (TextView) v.findViewById(R.id.text2);
+                                
                 if (bt != null) 
                 {
                 	if (Desciption != null)
                 	{
                 		bt.setText(Desciption);
-                		bt.setVisibility(View.VISIBLE);                		                		                		                	
+                		bt.setVisibility(View.VISIBLE);                		                		                		                	                		                		
                 	}                	
                 }
                 

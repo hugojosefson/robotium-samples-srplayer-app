@@ -28,6 +28,8 @@ public class PodcastInfo implements Serializable {
 	private String PoddID;
 	private String Link;
 	private String Description;
+	private int DBIndex;
+	
 	/**
 	 * @return the Title
 	 */
@@ -92,4 +94,18 @@ public class PodcastInfo implements Serializable {
 	public void setDescription(String Description) {
 		this.Description = Description;
 	}
+	
+	/**
+	 * @return the ID
+	 */
+	public int getDBIndex() {
+		return DBIndex;
+	}
+	/**
+	 * @param ID the ID to set
+	 */
+	public void setDBIndex(int DBIndex) {
+		this.DBIndex = DBIndex;
+	}
+
 }

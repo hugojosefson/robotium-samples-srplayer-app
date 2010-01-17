@@ -274,6 +274,23 @@ android:id="@+id/PlayerLayout"
 	<Button 
     	android:layout_height="55dip"     	
 	    android:layout_width="70dip" 	   
+	    android:id="@+id/Favorites" 	    
+	    android:background="@drawable/favorite"		    	    
+	    android:text="Favoriter"
+	    android:textStyle="bold"
+	    android:textSize="10dip"	    	    	    	    	    
+	    android:textColor="#FFFFFF"	    
+	    android:gravity="bottom|center_horizontal"	    
+	    android:layout_alignParentBottom="true"     
+	    android:layout_toRightOf="@+id/PlayerButton"
+		android:visibility="visible"
+	    >
+    </Button>
+	
+	
+	<Button 
+    	android:layout_height="55dip"     	
+	    android:layout_width="70dip" 	   
 	    android:id="@+id/ProgChannelButton" 	    
 	    android:background="@drawable/channel_prog_select"	    	    
 	    android:text="Program A-Ö"
@@ -283,7 +300,7 @@ android:id="@+id/PlayerLayout"
 	    android:gravity="bottom|center_horizontal"	    
 	    android:layout_alignParentBottom="true"
 	    ImageView.ScaleType="centerInside"
-	    android:layout_toRightOf="@+id/PlayerButton"
+	    android:layout_toRightOf="@+id/Favorites"
 	    >
     </Button>
 		
@@ -302,7 +319,7 @@ android:id="@+id/PlayerLayout"
 		android:visibility="visible"
 	    >
     </Button>
-    
+           
     </RelativeLayout>
     
     <ImageButton 

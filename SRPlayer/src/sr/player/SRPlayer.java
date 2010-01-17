@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,12 +41,14 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.Button;
@@ -56,6 +59,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.OnSeekBarChangeListener{
 	
@@ -72,12 +76,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private static final int MENU_CONFIG = 2;
 	private static final int MENU_UPDATE_INFO = 3;
 	private static final int MENU_SLEEPTIMER = 4;
+	public static final int MENU_CONTEXT_ADD_TO_FAVORITES = 20;		
+	public static final int MENU_CONTEXT_DELETE_FAVORITE = 21;
 	
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	protected static final int MSGPLAYERSTOP = 1;
 	protected static final int MSGNEWPODINFO = 2;	
 	protected static final int MSGUPDATESEEK = 3;
-	
+		
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
 	boolean isFirstCall = true;
@@ -100,8 +106,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int PROGRAMS_IN_A_CATEGORY = 2;    	
 	public static final int GET_IND_PROGRAMS = 3;
 	public static final int CHANNELS = 4;
+	public static final int FAVORITES = 5;
+	public static final int FAVORITES_CHANNELS = 6;
+	public static final int FAVORITES_PROGRAMS = 7;
+	public static final int FAVORITES_IND_PROGRAMS = 8;
+	public static final int FAVORITES_CATEGORIES = 9;	
+	public static final int FAVORITES_OFFLINE_PROGRAMS = 10;
 	
-	
+    
+    
 	private int PlayerMode;
 	private static final int LIVE_MODE = 0;
 	private static final int PODCAST_MODE = 1;
@@ -117,6 +130,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	private Timer SeekTimer;
 	private TimerTask SeekTimerTask;
+	
+	//Database variables
+	SRPlayerDBAdapter SRPlayerDB; 
+	private Cursor FavoritesCursor;
 	
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromTouch) {
@@ -259,6 +276,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		
 			}
 		});
+        
+        Button FavoritesButton = (Button) findViewById(R.id.Favorites);
+        FavoritesButton.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {				
+        		//Check if the mode is Live och Podcast        		
+        		GenerateNewList(SRPlayer.FAVORITES, 0, "", "", false,null);        		        	
+			}
+		});               
                 
         Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
         PlayerButton.setOnClickListener(new View.OnClickListener() {
@@ -338,6 +363,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	  			Log.e(SRPlayer.TAG, "Problem setting next song name", e);
 	  		}
 		}
+		
+		//Add a contextmenu for the listview
+		registerForContextMenu(getListView());
+		
+		SRPlayerDB = new SRPlayerDBAdapter(this);
+		SRPlayerDB.open();
 	}
 	
 	@Override
@@ -841,10 +872,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		
     		Button ProgramButton = (Button) findViewById(R.id.ProgChannelButton);
 			Button CategoryButton = (Button) findViewById(R.id.PodCatButton);			    	
+			Button FavoriteButton = (Button) findViewById(R.id.Favorites);			    	
     		
+			
 			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
     		CategoryButton.setBackgroundResource(R.drawable.category);
-    		
+    		FavoriteButton.setBackgroundResource(R.drawable.favorite);
     		
     		//Show the player
     		LayoutToShow = (View)findViewById(R.id.PlayerLayout);
@@ -971,6 +1004,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist, Object SavedAdapter)
     {
     	CurrentAction = Action;
+    	TextView tv;
+    	Cursor FavCursor;
+    	PodcastInfo FavoritesInfo;
     	
        	int HighlightedButton = 0;    	       
        	
@@ -1005,7 +1041,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		//ChannelArray.addAll(items);        	
     		setListAdapter(PodList);
     	   	UpdatePlayerVisibility(true);
-    	   	TextView tv = (TextView) findViewById(R.id.PageLabel);
+    	   	tv = (TextView) findViewById(R.id.PageLabel);
     	   	tv.setText("Kanaler");
     	   	
     	   	//Init the history
@@ -1063,6 +1099,116 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label,SavedAdapter));
     		
     		break;
+    	case FAVORITES:
+    		HighlightedButton = 2;
+    		
+    		PodInfo.clear();	    	    	        	   
+    	    int RowCount;    	        	    
+    	    String RowCountStr = "";
+    	    String SinglerFooter = " favorit är tillagd";
+    	    String MultipleFooter = " favoriter är tillagda";    	       	    
+    	    
+    	    RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.KANAL));
+    	    RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
+    	    
+    	    FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Kanaler");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.KANAL));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
+	    	
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.PROGRAM));
+	    	RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
+    	    
+	    	FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Program");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.PROGRAM));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
+	    	
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT));
+	    	RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
+    	    
+	    	FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Avsnitt");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.AVSNITT));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
+	    	
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.KATEGORI));
+	    	RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
+    	    
+	    	FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Kategorier");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.KATEGORI));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
+	    	
+	    	/*
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT_OFFLINE));
+    	    RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
+    	      	    	 
+	    	FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Kategorier");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.AVSNITT_OFFLINE));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
+    	    */
+	    	
+    		setListAdapter(PodList);
+    	   	UpdatePlayerVisibility(true);
+    	   	tv = (TextView) findViewById(R.id.PageLabel);
+    	   	tv.setText("Favoriter");
+    	   	
+    	   	//Init the history
+            HistoryList.clear();
+            HistoryList.add(new History(SRPlayer.FAVORITES,"","",SavedAdapter));
+            
+    		break;
+    	case FAVORITES_IND_PROGRAMS :    		
+    	case FAVORITES_CHANNELS : 
+    	case FAVORITES_PROGRAMS :     	
+    	case FAVORITES_CATEGORIES : 	
+    	case FAVORITES_OFFLINE_PROGRAMS :
+    		HighlightedButton = -1;
+    		    	    		    	
+    		PodInfo.clear();	    	
+    	    
+    	    FavCursor = SRPlayerDB.fetchFavoritesByType(ID);
+    	    int FavId = 0;
+    	    String FavLabel = ""; 
+    	    String FavLink, FavDesc;
+    	    //Insert the records in the array
+    	    if (FavCursor.moveToFirst())
+    	    {
+    	    	do {
+    	    		FavId = FavCursor.getInt(SRPlayerDBAdapter.INDEX_ID);
+    	    		FavLabel = FavCursor.getString(SRPlayerDBAdapter.INDEX_LABEL);
+    	    		FavLink = FavCursor.getString(SRPlayerDBAdapter.INDEX_LINK);
+    	    		FavDesc = FavCursor.getString(SRPlayerDBAdapter.INDEX_DESC);
+    	    		
+    	    		FavoritesInfo = new PodcastInfo();
+        	    	FavoritesInfo.setTitle(FavLabel);
+        	    	FavoritesInfo.setID(String.valueOf(FavId));
+        	    	FavoritesInfo.setPoddID(String.valueOf(FavId));        	    	
+        	    	FavoritesInfo.setLink(FavLink);
+        	    	FavoritesInfo.setDescription(FavDesc);
+        	    	FavoritesInfo.setDBIndex(FavCursor.getInt(SRPlayerDBAdapter.INDEX_ROWID));
+        	    	PoddIDLabel = FavCursor.getString(SRPlayerDBAdapter.INDEX_NAME);
+        	    	PodInfo.add(FavoritesInfo);
+    	    	} while (FavCursor.moveToNext());
+    	    }
+    	    			
+    		setListAdapter(PodList);
+    	   	UpdatePlayerVisibility(true);
+    	   	tv = (TextView) findViewById(R.id.PageLabel);
+    	   	tv.setText("Favoriter");
+    	   	
+    	   	//Add to the history
+    	   	if (!NoNewHist)
+    	   		HistoryList.add(new History(Action,ID,"Favoriter",SavedAdapter));
+            
+    		break;
     	
         default:
         	break;
@@ -1073,17 +1219,28 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		Button ProgramButton = (Button) findViewById(R.id.ProgChannelButton);
 			Button CategoryButton = (Button) findViewById(R.id.PodCatButton);
 			Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
+			Button FavoritesButton = (Button) findViewById(R.id.Favorites);
 			PlayerButton.setBackgroundResource(R.drawable.player);
 			
-    		if (HighlightedButton == 0)
+    		switch (HighlightedButton)
     		{
+    		case 0:
     			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select_pressed);
     			CategoryButton.setBackgroundResource(R.drawable.category);
-    		}
-    		else
-    		{
+    			FavoritesButton.setBackgroundResource(R.drawable.favorite);
+    			break;
+    		case 1:    		    		
     			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
     			CategoryButton.setBackgroundResource(R.drawable.category_pressed);
+    			FavoritesButton.setBackgroundResource(R.drawable.favorite);
+    			break;
+    		case 2:
+    			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
+    			CategoryButton.setBackgroundResource(R.drawable.category);
+    			FavoritesButton.setBackgroundResource(R.drawable.favorite_pressed);
+    			break;
+    		default:
+    			break;
     		}
     		
     	}
@@ -1100,8 +1257,16 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
             currentPosition = position;        
+            
             switch (CurrentAction)
         	{
+            case SRPlayer.FAVORITES:
+            	String FavoriteType = PodInfo.get(currentPosition).getID();
+            	//PoddIDLabel = PodInfo.get(currentPosition).getTitle();        	            	
+            	
+                GenerateNewList(SRPlayer.FAVORITES_CHANNELS+Integer.parseInt(FavoriteType), currentPosition, FavoriteType, PoddIDLabel, false,null);
+            	break;
+            case SRPlayer.FAVORITES_CATEGORIES:
         	case SRPlayer.CATEGORIES:
         		//A specific category has been selected. 
             	//Retreive a list of all programs in the category
@@ -1110,6 +1275,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		
                 GenerateNewList(SRPlayer.PROGRAMS_IN_A_CATEGORY, currentPosition, CategoryId, PoddIDLabel, false,null);
                 break;	
+        	case SRPlayer.FAVORITES_PROGRAMS:
         	case SRPlayer.PROGRAMS:        		
         	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
         		//A specific program has been selected
@@ -1120,6 +1286,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	PoddIDLabel = PodInfo.get(currentPosition).getTitle();
         		GenerateNewList(SRPlayer.GET_IND_PROGRAMS, currentPosition, PoddId, PoddIDLabel, false,null);
         		break;
+        	case SRPlayer.FAVORITES_IND_PROGRAMS:
         	case SRPlayer.GET_IND_PROGRAMS:        		
         		SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
     			SRPlayer.currentStation.setStationName(PoddIDLabel);
@@ -1136,18 +1303,22 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			boundService.rightNowUpdate(info);    
     			HistoryList.clear();
         		break;
+        	case SRPlayer.FAVORITES_CHANNELS:
         	case SRPlayer.CHANNELS:
         		ChannelIndex = this.boundService.getStationIndex();
-        		if (position != ChannelIndex)
+        		int NewChannelIndex = (CurrentAction == SRPlayer.CHANNELS) ? position : Integer.parseInt(PodInfo.get(currentPosition).getID());
+	    		
+        		if (NewChannelIndex != ChannelIndex)
             	{
     	        	Resources res = getResources();
     	    		CharSequence[] channelInfo = (CharSequence[]) res
     	    				.getTextArray(R.array.channels);
     	    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
     	    		
-    	        	SRPlayer.currentStation.setStreamUrl(urls[position].toString());
-    				SRPlayer.currentStation.setStationName(channelInfo[position].toString());
-    				SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[position]);
+    	    		
+    	        	SRPlayer.currentStation.setStreamUrl(urls[NewChannelIndex].toString());
+    				SRPlayer.currentStation.setStationName(channelInfo[NewChannelIndex].toString());
+    				SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[NewChannelIndex]);
     				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
     				SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
     				boundService.selectChannel(SRPlayer.currentStation);					
@@ -1187,6 +1358,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	Object PrevObject = PrevHistory.ReadStreamdata();
         	
         	GenerateNewList(PrevAction, 0, PrevID, PrevLabel, true,PrevObject);
+        	
         	}
         		
         	return true;
@@ -1195,4 +1367,90 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         return super.onKeyDown(keyCode, event);
 
     } 
+    
+    public void onCreateContextMenu(ContextMenu menu, View v,
+            ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		if (CurrentAction <= SRPlayer.CHANNELS)
+		{
+			menu.add(0, MENU_CONTEXT_ADD_TO_FAVORITES, 0, "Addera till favoriter");
+		}
+		else if (CurrentAction != SRPlayer.FAVORITES)
+		{
+			menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, "Ta bort ifrån favoriter");
+		}
+		
+    }
+    
+    
+
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();		
+		long SelectedIndex = info.id;
+		
+		switch (item.getItemId()) {
+		case MENU_CONTEXT_ADD_TO_FAVORITES:
+			//Lägg till bland favoriter
+			Log.d(TAG, "Add to favorites selected. ID = " + String.valueOf(SelectedIndex));
+			String Selectedtitle = PodInfo.get((int)SelectedIndex).getTitle();
+			String SelectedidStr;
+			int Selectedid = -1;
+			int FavType = 0;
+			
+			switch (CurrentAction)
+        	{
+        	case SRPlayer.CATEGORIES:
+        		FavType = SRPlayerDBAdapter.KATEGORI;
+        		break;    			        	
+        	case SRPlayer.CHANNELS:        		        		
+        		Log.d(TAG, "Channel favorite added. ID set to " + String.valueOf(SelectedIndex));
+        		Selectedid = (int)SelectedIndex; 
+        		FavType = SRPlayerDBAdapter.KANAL;
+        		break;
+        	case SRPlayer.PROGRAMS:            	
+        	case SRPlayer.PROGRAMS_IN_A_CATEGORY:            	
+        		FavType = SRPlayerDBAdapter.PROGRAM;
+        		break;        		
+        	case SRPlayer.GET_IND_PROGRAMS:
+        		FavType = SRPlayerDBAdapter.AVSNITT;
+        		break;
+        	}
+			
+			if (Selectedid <0)
+			{
+				SelectedidStr = PodInfo.get((int)SelectedIndex).getPoddID();
+				if (SelectedidStr == null)
+				{				
+					SelectedidStr = PodInfo.get((int)SelectedIndex).getID();
+		    		if (SelectedidStr == null)
+						Selectedid = 0;
+					else
+						Selectedid = Integer.parseInt(SelectedidStr);
+				}
+				else
+					Selectedid = Integer.parseInt(SelectedidStr);
+			}
+			
+			SRPlayerDB.createFavorite(FavType, 
+					Selectedid, 
+					Selectedtitle, 
+					PodInfo.get((int)SelectedIndex).getLink(),
+					PodInfo.get((int)SelectedIndex).getDescription(),
+					PoddIDLabel);						
+						
+			return true;				
+		case MENU_CONTEXT_DELETE_FAVORITE:
+			Selectedid = PodInfo.get((int)SelectedIndex).getDBIndex();
+    			    							
+			//Delete the favorite and update the array
+			SRPlayerDB.deleteFavorite((long)Selectedid);
+			PodInfo.remove((int)SelectedIndex);
+			setListAdapter(PodList);
+    		
+			return true;
+		default:
+			return super.onContextItemSelected(item);
+		}
+	}
+	
 }
