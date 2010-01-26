@@ -65,8 +65,6 @@ Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn
 <item>SR Extra 10</item>
 <item>SR Extra 11</item>
 <item>SR Extra 12</item>
-<item>SR Bjällerklang</item>
-<item>SR Klassisk Jul</item>
 </string-array>
 <string-array name="urls">
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp</item>
@@ -103,8 +101,6 @@ Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra10.sdp</item>
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra11.sdp</item>
 <item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra12.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-JulBjallerklang.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-JulKlassisk.sdp</item>
 </string-array>
 <!-- Just fo test -->
 <!--<item>http://mtg-wms1.bahnhof.net:8000/bandit_gbg</item>-->
@@ -142,7 +138,5 @@ Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn
 <item>2679</item> <!-- SR Extra 10 / Webbipkanal10 -->
 <item>3036</item> <!-- SR Extra 11 / Webbipkanal11 -->
 <item>3034</item> <!-- SR Extra 12 / Webbipkanal12 -->
-<item>3034</item> <!-- SR Jul Bjallerklang -->
-<item>3036</item> <!-- SR Jul Klassisk  -->
 </integer-array>
 </resources>

@@ -163,6 +163,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         	break;
         }
 	}
+	
+	
 
 	@Override
 	public void onDestroy() {
@@ -473,7 +475,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 				Log.e(getClass().getSimpleName(), "Error restarting stream!", e);
 			} 
 		} else {
-
+			this.player.reset();
 		}
 		if ( this.playerObservers != null ) {
 			for(PlayerObserver observer : this.playerObservers) {
@@ -661,14 +663,22 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 	
 	public void SetPosition(int Seconds) {
-		int NewPos = Seconds*1000;		
-		this.player.seekTo(NewPos);
-		Log.d(getClass().getSimpleName(), "New position in msec: " + String.valueOf(NewPos));
+		int NewPos = Seconds*1000;
+		if (this.playerStatus != STOP)
+		{
+			this.player.seekTo(NewPos);
+			Log.d(getClass().getSimpleName(), "New position in msec: " + String.valueOf(NewPos));
+		}
+		
 	}
 
 	@Override
 	public void onSeekComplete(MediaPlayer mp) {
 		Log.d(getClass().getSimpleName(), "Seek complete");
+	}
+	
+	public void NewPodcastToDownload() {
+		//TODO
 	}
 }
 

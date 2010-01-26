@@ -30,12 +30,13 @@ public class PodcastInfoThread extends Thread {
 	public static final String podcasts_by_category_feed = "http://api.sr.se/poddradio/poddfeed.aspx?CategoryId=";
 	public static final String podcast_programs_feed = "http://api.sr.se/poddradio/poddfeed.aspx";
 	public static final String podcast_ind_program_feed = "http://api.sr.se/rssfeed/rssfeed.aspx?Poddfeed=";
-
+	private int type;
 	
 	public PodcastInfoThread(Activity activity, int action, int ID) {
 		this.activity = (SRPlayer) activity;
 		ListAction = action;
 		id = ID;
+		
 	}
 	
 	@Override
@@ -51,20 +52,24 @@ public class PodcastInfoThread extends Thread {
         if (ListAction == GET_CATEGORIES)
 		{
 			FeedUrl = podcast_categories_feed;
+			type = SRPlayerDBAdapter.KATEGORI;
 		}
 		else if (ListAction == GET_ALL_PROGRAMS)
 		{
 			FeedUrl = podcast_programs_feed;
+			type = SRPlayerDBAdapter.PROGRAM;
 		}
 		else if (ListAction == GET_PROGRAMS_BY_CATEGORY)
 		{
 			FeedUrl = podcasts_by_category_feed;
 			FeedUrl = FeedUrl + String.valueOf(id);
+			type = SRPlayerDBAdapter.PROGRAM;
 		}
 		else //(ListAction == GET_IND_PROGRAMS)
 		{
 			FeedUrl = podcast_ind_program_feed;
 			FeedUrl = FeedUrl + String.valueOf(id);			
+			type = SRPlayerDBAdapter.AVSNITT;
 		}        
         
         for (RetryCount = 0; RetryCount < 3; RetryCount++)
@@ -138,6 +143,7 @@ public class PodcastInfoThread extends Thread {
 		//Log.d(SRPlayer.TAG, "PodcastInfoThread parseChannel");		
 		int eventType = xpp.next();
 		PodcastInfo NewInfo = new PodcastInfo();
+		NewInfo.setType(type);
 		
         while( eventType != XmlPullParser.END_DOCUMENT) {
         	if (eventType == XmlPullParser.END_TAG ) {
@@ -165,6 +171,10 @@ public class PodcastInfoThread extends Thread {
         		else if (xpp.getName().equals("description")) {
         			xpp.next();        			
         			NewInfo.setDescription(xpp.getText());        			
+        		}
+        		else if (xpp.getName().equals("guid")) {
+        			xpp.next();        			
+        			NewInfo.setGuid(xpp.getText());        			
         		}
         	}
         	eventType = xpp.next();

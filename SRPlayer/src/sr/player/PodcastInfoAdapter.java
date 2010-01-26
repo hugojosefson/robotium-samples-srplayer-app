@@ -3,6 +3,8 @@ package sr.player;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,13 +41,27 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 }
                 
                 TextView bt = (TextView) v.findViewById(R.id.text2);
-                                
-                if (bt != null) 
+                if (CurrentItem.getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
+                {                	
+                	if ((Integer.parseInt(CurrentItem.getID())) == SRPlayerDBAdapter.AKTIV_NEDLADDNING)
+                	{
+                		bt.setText("Nedladdning pågår...");
+                	}
+                	else
+                	{	                		
+                		bt.setText("Avsnitt i kö för nedladdning...");
+                	}
+                	
+            		bt.setVisibility(View.VISIBLE);
+            		bt.setTextColor(Color.RED);
+                }
+                else if (bt != null) 
                 {
                 	if (Desciption != null)
                 	{
                 		bt.setText(Desciption);
-                		bt.setVisibility(View.VISIBLE);                		                		                		                	                		                		
+                		bt.setVisibility(View.VISIBLE);
+                		bt.setTextColor(Color.BLACK);
                 	}                	
                 }
                 

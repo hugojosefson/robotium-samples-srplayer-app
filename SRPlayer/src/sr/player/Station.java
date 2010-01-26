@@ -26,7 +26,8 @@ public class Station implements Cloneable {
 	private int channelId;
 	private int streamType;
 	public static final int NORMAL_STREAM = 0; 
-	public static final int POD_STREAM = 1; 
+	public static final int POD_STREAM = 1;
+	public static final int OFFLINE_STREAM = 2;
 		
 	
 	public Station(String stationName, String streamUrl,  String rightNowUrl,

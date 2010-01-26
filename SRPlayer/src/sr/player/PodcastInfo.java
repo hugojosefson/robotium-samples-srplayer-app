@@ -29,6 +29,9 @@ public class PodcastInfo implements Serializable {
 	private String Link;
 	private String Description;
 	private int DBIndex;
+	private String guid;
+	private int type;
+	
 	
 	/**
 	 * @return the Title
@@ -108,4 +111,29 @@ public class PodcastInfo implements Serializable {
 		this.DBIndex = DBIndex;
 	}
 
+	/**
+	 * @return the guid
+	 */
+	public String getGuid() {
+		return guid;
+	}
+	/**
+	 * @param set the guid
+	 */
+	public void setGuid(String guid) {
+		this.guid = guid;
+	}
+	
+	/**
+	 * @return the guid
+	 */
+	public int getType() {
+		return type;
+	}
+	/**
+	 * @param set the guid
+	 */
+	public void setType(int type) {
+		this.type = type;
+	}
 }

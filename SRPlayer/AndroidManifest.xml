@@ -24,6 +24,7 @@
                   /> 
         
     <service android:name="PlayerService"></service>
+    <service android:name="DownloadPodcastService"></service>
 
 	<receiver android:name="PlayerWidget" 
 	 android:label="SR Player 4x1"
