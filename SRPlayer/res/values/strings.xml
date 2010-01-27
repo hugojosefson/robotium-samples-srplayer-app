@@ -11,6 +11,9 @@
 <string name="menu_update_info">Update info</string>
 <string name="menu_sleeptimer">Start sleeptimer</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
+<string name="menu_add_to_favorite">Addera till favoriter</string>
+<string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
+<string name="menu_listen_offline">Lyssna offline"</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
 <string name="rightNowInfoRetrievalRate">Vid spelning</string>
@@ -25,6 +28,14 @@
 <string name="KillServiceName">Beteende för "Stäng av"</string>
 <string name="KillServiceNameOffSummary">Stänger fönstret och pausa spelaren.</string>
 <string name="KillServiceNameOnSummary">Stoppar tjänsten. Bör EJ kombineras med widget.</string>
+
+<string name="ProgramListLabel">Program A-Ö</string>
+<string name="SingleFavoriteAdded"> favorit är tillagd</string>
+<string name="MultipleFavoriteAdded"> favoriter är tillagda</string>
+<string name="OfflineAddedText">"Avsnittet är tillagt till listan över avsnitt som skall laddas ner. Efter lyckad nerladdning återfinns det under favoriter."</string>
+
+<string name="PodlistProgressText">Hämtar lista</string>
+
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is released under GPL.

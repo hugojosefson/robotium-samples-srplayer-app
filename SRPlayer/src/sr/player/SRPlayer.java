@@ -829,7 +829,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    	TextView tv = (TextView) findViewById(R.id.PageLabel);
    	if (CurrentAction == SRPlayer.PROGRAMS)
    	{
-   		tv.setText("Program A-Ö");   		
+   		tv.setText(R.string.ProgramListLabel);   		
    	}
    	else if (CurrentAction == SRPlayer.CATEGORIES)
    	{
@@ -1081,7 +1081,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	 CategoryButton.setVisibility(View.VISIBLE);
     	 
     	//Set the text of the list button to "Program A-Ö"    	
-    	 ChannelProgramButton.setText("Program A-Ö");                  
+    	 ChannelProgramButton.setText(R.string.ProgramListLabel);                  
      }
      
      if (ShoulHighlight)    	 
@@ -1108,12 +1108,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		{
     		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_ALL_PROGRAMS, 0);
             podcastinfothread.start();  
-            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
     		}
     		
             //Init the history
             HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.PROGRAMS,"","Program A-Ö",SavedAdapter));
+            HistoryList.add(new History(SRPlayer.PROGRAMS,"",getResources().getString(R.string.ProgramListLabel),SavedAdapter));
     		break;
     	case SRPlayer.CHANNELS:
     		//Live mode
@@ -1149,7 +1149,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		{    		
 	        podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CATEGORIES, 0);
 	        podcastinfothread.start();  
-	        waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+	        waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
     		}
 	        
 	        break;
@@ -1164,7 +1164,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		{    		
         	podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.PROGRAMS_IN_A_CATEGORY, Integer.valueOf(ID));
             podcastinfothread.start();  
-            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
     		}
             //Add a new level to the history
             if (!NoNewHist)
@@ -1183,7 +1183,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		{    		
         	podcastinfothread = new PodcastInfoThread(SRPlayer.this, SRPlayer.GET_IND_PROGRAMS, Integer.valueOf(PoddId));
             podcastinfothread.start();  
-            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player","Hämtar lista");
+            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
     		}
         	
             if (!NoNewHist)                
@@ -1196,8 +1196,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		PodInfo.clear();	    	    	        	   
     	    int RowCount;    	        	    
     	    String RowCountStr = "";
-    	    String SinglerFooter = " favorit är tillagd";
-    	    String MultipleFooter = " favoriter är tillagda";    	       	    
+    	    String SinglerFooter = getResources().getString(R.string.SingleFavoriteAdded);
+    	    String MultipleFooter = getResources().getString(R.string.MultipleFavoriteAdded);    	       	    
     	    
     	    RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.KANAL));
     	    RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	    
@@ -1498,11 +1498,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		super.onCreateContextMenu(menu, v, menuInfo);
 		if (CurrentAction <= SRPlayer.CHANNELS)
 		{			
-			menu.add(0, MENU_CONTEXT_ADD_TO_FAVORITES, 0, "Addera till favoriter");
+			menu.add(0, MENU_CONTEXT_ADD_TO_FAVORITES, 0, R.string.menu_add_to_favorite);
 			switch (CurrentAction)
         	{
 			case SRPlayer.GET_IND_PROGRAMS:
-				menu.add(0, MENU_CONTEXT_DOWNLOAD, 0, "Lyssna Offline");
+				menu.add(0, MENU_CONTEXT_DOWNLOAD, 0, R.string.menu_listen_offline);
 				break;
 			default:
 				break;
@@ -1510,10 +1510,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		}
 		else if (CurrentAction != SRPlayer.FAVORITES)
 		{
-			menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, "Ta bort ifrån favoriter");
+			menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, R.string.menu_remove_from_favorite);
 			if (CurrentAction == FAVORITES_IND_PROGRAMS)
 			{
-				menu.add(0, MENU_CONTEXT_DOWNLOAD, 0, "Lyssna Offline");
+				menu.add(0, MENU_CONTEXT_DOWNLOAD, 0, R.string.menu_listen_offline);
 			}
 		}
 		
@@ -1618,11 +1618,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	{
 		startService(new Intent(SRPlayer.this, DownloadPodcastService.class));
 		
-		Context context = getApplicationContext();
-		CharSequence text = "Avsnittet är tillagt till listan över avsnitt som skall laddas ner. Efter lyckad nerladdning återfinns det under favoriter.";
+		Context context = getApplicationContext();		
 		int duration = Toast.LENGTH_LONG;
 
-		Toast toast = Toast.makeText(context, text, duration);
+		Toast toast = Toast.makeText(context, R.string.OfflineAddedText, duration);
 		toast.show();
 	}
 	
