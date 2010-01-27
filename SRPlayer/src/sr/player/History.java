@@ -14,9 +14,15 @@
   */
 package sr.player;
 
+import java.io.Serializable;
+
 import android.util.Log;
 
-public class History implements Cloneable {
+public class History implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2010012700001L;
 	private int Action;
 	private String ID;
 	private String Label;

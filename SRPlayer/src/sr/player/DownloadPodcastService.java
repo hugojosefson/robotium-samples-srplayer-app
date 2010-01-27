@@ -25,6 +25,7 @@ public class DownloadPodcastService extends Service {
 			
 	private Timer timer = new Timer();
 	private boolean AlreadyRunning;
+	private boolean Abort;
 	private SRPlayerDBAdapter SRPlayerDB; 
 	private Cursor PodList;
 	
@@ -43,6 +44,7 @@ public class DownloadPodcastService extends Service {
 			
 	@Override
 	public void onStart(Intent intent, int startId) {
+		Abort = false;
 		if (AlreadyRunning == false)
 		{
 		//Due to long executiontimes the
@@ -51,8 +53,16 @@ public class DownloadPodcastService extends Service {
         public void run() {DownloadNewPodcasts();}
       }, 0);
 		};
-	}
+	}	
 				
+	@Override
+	public void onDestroy() {
+		Abort = true;
+		super.onDestroy();
+	}
+
+
+
 	private void DownloadNewPodcasts()
 	{
 		AlreadyRunning = true;		
@@ -65,7 +75,7 @@ public class DownloadPodcastService extends Service {
 		
 		for(;;)
 		{			
-			if (PodList.getCount() == 0)
+			if ((PodList.getCount() == 0) || (Abort))
 				break;
 			
 			if (PodList.moveToFirst())
@@ -112,15 +122,24 @@ public class DownloadPodcastService extends Service {
 		                
 		                // Get the data	                
 		                int numRead;
-		                while ((numRead = in.read(buffer)) != -1) {
+		                while ((numRead = in.read(buffer)) != -1)
+		                {
 		                    out.write(buffer, 0, numRead);
+		                    if (Abort)
+		                    	break;
 		                }            
 		                out.flush();
 		                
 		                //The entire file has been written
-		                Log.d(SRPlayer.TAG, "Download of podcast complete");
-		                		               
-		                SRPlayerDB.podcastDownloadCompleteUpdate(rowId, outfile);
+		                if (!Abort)
+		                {
+		                	Log.d(SRPlayer.TAG, "Download of podcast complete");		                		              
+		                	SRPlayerDB.podcastDownloadCompleteUpdate(rowId, outfile);
+		                }
+		                else
+		                {
+		                	Log.d(SRPlayer.TAG, "Download of podcast aborted");
+		                }
 		            		            
 		            } catch (MalformedURLException e) {								            			            
 		            	failure = true;		            	
