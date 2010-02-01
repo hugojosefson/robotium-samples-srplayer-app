@@ -31,6 +31,8 @@ public class PodcastInfo implements Serializable {
 	private int DBIndex;
 	private String guid;
 	private int type;
+	private int filesize;
+	private int bytesdownloaded;
 	
 	
 	/**
@@ -135,5 +137,31 @@ public class PodcastInfo implements Serializable {
 	 */
 	public void setType(int type) {
 		this.type = type;
+	}
+	
+	/**
+	 * @return the filesize
+	 */
+	public int getFilesize() {
+		return filesize;
+	}
+	/**
+	 * @param set the filesize
+	 */
+	public void setFilesize(int filesize) {
+		this.filesize = filesize;
+	}
+	
+	/**
+	 * @return the bytesdownloaded
+	 */
+	public int getBytesdownloaded() {
+		return bytesdownloaded;
+	}
+	/**
+	 * @param set the bytesdownloaded
+	 */
+	public void setBytesdownloaded(int bytesdownloaded) {
+		this.bytesdownloaded = bytesdownloaded;
 	}
 }

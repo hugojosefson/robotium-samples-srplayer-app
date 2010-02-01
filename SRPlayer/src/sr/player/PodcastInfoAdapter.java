@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
@@ -39,17 +40,42 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 {
                     tt.setText(Title);                            		
                 }
-                
+                                                               
                 TextView bt = (TextView) v.findViewById(R.id.text2);
+                ProgressBar pb = (ProgressBar) v.findViewById(R.id.progress);
+                pb.setVisibility(View.GONE);
                 if (CurrentItem.getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
                 {                	
                 	if ((Integer.parseInt(CurrentItem.getID())) == SRPlayerDBAdapter.AKTIV_NEDLADDNING)
                 	{
-                		bt.setText("Nedladdning pågår...");
+                		
+                		
+                		//Calculate the progress
+                		int BytesDownloaded = CurrentItem.getBytesdownloaded();
+                		int FileSize = CurrentItem.getFilesize();
+                		double FileSizeMB = ((double)FileSize)/1000000;
+                		double BytesDownloadedMB = ((double)BytesDownloaded)/1000000;
+                		
+                		String CurrDownloadText = CurrentContext.getResources().getString(R.string.CurrentDownloadDesc);
+                		                		
+                		if ((FileSize > 0) && (BytesDownloaded > 0))
+                		{                			
+                			CurrDownloadText = String.format("%s (%.1fMB/%.1fMB)", CurrDownloadText,BytesDownloadedMB,FileSizeMB);
+                			//CurrDownloadText = CurrDownloadText + " (" + BytesDownloadedMB + "MB/" + FileSizeMB + "MB)";
+                			pb.setMax(FileSize);
+                			pb.setProgress(BytesDownloaded);
+                		}
+                		else
+                		{
+                			Log.d(SRPlayer.TAG,"Incorrect size/bytes downloaded");
+                			pb.setProgress(0);
+                		}
+                		bt.setText(CurrDownloadText);
+                		pb.setVisibility(View.VISIBLE);
                 	}
                 	else
                 	{	                		
-                		bt.setText("Avsnitt i kö för nedladdning...");
+                		bt.setText(R.string.QueueDownloadDesc);
                 	}
                 	
             		bt.setVisibility(View.VISIBLE);
@@ -64,7 +90,10 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 		bt.setTextColor(Color.BLACK);
                 	}                	
                 }
-                
+                else
+                {
+                	bt.setVisibility(View.GONE);
+                }	
                 return v;
         }
 }

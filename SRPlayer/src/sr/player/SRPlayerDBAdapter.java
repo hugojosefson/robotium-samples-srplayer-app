@@ -28,6 +28,8 @@ public class SRPlayerDBAdapter {
     public static final String KEY_DESC = "desc";
     public static final String KEY_NAME = "name";
     public static final String KEY_GUID = "guid";
+    public static final String KEY_FILESIZE = "filesize";
+    public static final String KEY_BYTESDOWNLOADED = "bytesdownloaded";
     
     public static final int INDEX_ROWID = 0;
     public static final int INDEX_TYPE = 1;    
@@ -37,6 +39,8 @@ public class SRPlayerDBAdapter {
     public static final int INDEX_DESC = 5;
     public static final int INDEX_NAME = 6;
     public static final int INDEX_GUID = 7;
+    public static final int INDEX_FILESIZE = 8;
+    public static final int INDEX_BYTESDOWNLOADED = 9;
         
     public static final int KANAL = 0;
     public static final int PROGRAM = 1;
@@ -44,6 +48,7 @@ public class SRPlayerDBAdapter {
     public static final int KATEGORI = 3;
     public static final int AVSNITT_ATT_LADDA_NER = 10;
     public static final int AVSNITT_OFFLINE = 4;
+    public static final int DOWNLOAD_QUEUE = 5;
     
     public static final int KÖAD_FÖR_NEDLADDNING = 0;
     public static final int AKTIV_NEDLADDNING = 1;
@@ -59,11 +64,12 @@ public class SRPlayerDBAdapter {
     private static final String DATABASE_CREATE =
             "create table favorites (_id integer primary key autoincrement, "
                     + "type integer not null, id integer, label string not null, " 
-                    + "link string, desc string, name string, guid string);";
+                    + "link string, desc string, name string, guid string, "
+                    + "filesize int, bytesdownloaded int);";
 
     private static final String DATABASE_NAME = "user_data.db";
     private static final String DATABASE_TABLE = "favorites";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     private final Context mCtx;
 
@@ -83,9 +89,19 @@ public class SRPlayerDBAdapter {
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
-                    + newVersion + ", which will destroy all old data");
-            db.execSQL("DROP TABLE IF EXISTS favorites");
-            onCreate(db);
+                    + newVersion);
+            if (oldVersion == 3)
+            {
+            	//Add three columns
+            	db.execSQL("ALTER TABLE favorites ADD COLUMN filesize INT");
+            	db.execSQL("ALTER TABLE favorites ADD COLUMN bytesdownloaded INT");
+            }
+            else
+            {
+            	db.execSQL("DROP TABLE IF EXISTS favorites");
+            	onCreate(db);
+            }
+            
         }
     }
 
@@ -110,7 +126,7 @@ public class SRPlayerDBAdapter {
      */
     public SRPlayerDBAdapter open() throws SQLException {
         mDbHelper = new DatabaseHelper(mCtx);
-        mDb = mDbHelper.getWritableDatabase();
+        mDb = mDbHelper.getWritableDatabase();        
         return this;
     }
     
@@ -136,6 +152,8 @@ public class SRPlayerDBAdapter {
         initialValues.put(KEY_DESC, Desc);
         initialValues.put(KEY_NAME, Name);
         initialValues.put(KEY_GUID, guid);
+        initialValues.put(KEY_FILESIZE, -1);
+        initialValues.put(KEY_BYTESDOWNLOADED, 0);
         
         
         return mDb.insert(DATABASE_TABLE, null, initialValues);
@@ -160,7 +178,7 @@ public class SRPlayerDBAdapter {
     public Cursor fetchAllFavorites() {
 
     	return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TYPE,
-                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID}, null, null, null, null, KEY_LABEL);
+                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, null, null, null, null, KEY_LABEL);
     }
 
     /**
@@ -171,7 +189,7 @@ public class SRPlayerDBAdapter {
     public Cursor fetchPodcastsToDownload() {
 
     	return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TYPE,
-                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID}, "type =" + String.valueOf(AVSNITT_ATT_LADDA_NER), null, null, null, KEY_ROWID);
+                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, "type =" + String.valueOf(AVSNITT_ATT_LADDA_NER), null, null, null, KEY_ROWID);
     }
     
     /**
@@ -182,7 +200,7 @@ public class SRPlayerDBAdapter {
     public Cursor fetchFavoritesByType(String Type) {
 
     	return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TYPE,
-                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID}, "type =" + Type, null, null, null, KEY_LABEL);
+                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, "type =" + Type, null, null, null, KEY_LABEL);
     }
 
     /**
@@ -215,7 +233,7 @@ public class SRPlayerDBAdapter {
         Cursor mCursor =
 
                 mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                        KEY_TYPE, KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID}, KEY_ROWID + "=" + rowId, null,
+                        KEY_TYPE, KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, KEY_ROWID + "=" + rowId, null,
                         null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
@@ -235,8 +253,7 @@ public class SRPlayerDBAdapter {
         args.put(KEY_LINK, Link);
         args.put(KEY_DESC, Desc);
         args.put(KEY_NAME, Name);
-        args.put(KEY_GUID, guid);
-        
+        args.put(KEY_GUID, guid);        
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
@@ -250,6 +267,30 @@ public class SRPlayerDBAdapter {
         ContentValues args = new ContentValues();
         args.put(KEY_TYPE, AVSNITT_OFFLINE);
         args.put(KEY_LINK, FilePath);
+        
+        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+    
+    /**
+     *  Move favorite to OFFLINE_AVSNITT
+     *  When a podcast has been downloaded the database is so that the podcast can be found in the gui
+     *  This is done by chaning the type to AVSNITT_OFFLINE and changing the link to the filepath
+     */
+    public boolean SetFileSize(long rowId, int Size) {
+        ContentValues args = new ContentValues();
+        args.put(KEY_FILESIZE, Size);        
+        
+        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+    
+    /**
+     *  Move favorite to OFFLINE_AVSNITT
+     *  When a podcast has been downloaded the database is so that the podcast can be found in the gui
+     *  This is done by chaning the type to AVSNITT_OFFLINE and changing the link to the filepath
+     */
+    public boolean SetBytesDownloaded(long rowId, int BytesDownloaded) {
+        ContentValues args = new ContentValues();
+        args.put(KEY_BYTESDOWNLOADED, BytesDownloaded);        
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
