@@ -13,6 +13,8 @@
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <string name="menu_add_to_favorite">Addera till favoriter</string>
 <string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
+<string name="menu_delete_episode">Radera avsnitt</string>
+<string name="menu_delete_from_queue">Ta bort ifrån kö</string>
 <string name="menu_listen_offline">Lyssna offline"</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
@@ -33,6 +35,15 @@
 <string name="SingleFavoriteAdded"> favorit är tillagd</string>
 <string name="MultipleFavoriteAdded"> favoriter är tillagda</string>
 <string name="OfflineAddedText">"Avsnittet är tillagt till listan över avsnitt som skall laddas ner. Efter lyckad nerladdning återfinns det under favoriter."</string>
+<string name="CurrentDownloadDesc">Nedladdning pågår...</string>
+<string name="QueueDownloadDesc">Avsnitt i kö för nedladdning...</string>
+
+<string name="download_queue_label">Kö</string>
+<string name="offline_epdisode_label">Offline</string>
+<string name="epdisode_label">Avsnitt</string>
+<string name="category_label">Kategori</string>
+<string name="program_label">Program</string>
+<string name="channel_label">Kanal</string>
 
 <string name="PodlistProgressText">Hämtar lista</string>
 
