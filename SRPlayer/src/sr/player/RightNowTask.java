@@ -102,64 +102,62 @@ public class RightNowTask extends TimerTask {
 	}
 
 	private void parseChannel(XmlPullParser xpp, RightNowChannelInfo info) throws XmlPullParserException, IOException {
-		Log.d(SRPlayer.TAG, "RightNowTask parseChannel");		
-		int eventType = xpp.next();
-        while( eventType != XmlPullParser.END_DOCUMENT) {
-        	if (eventType == XmlPullParser.END_TAG ) {
-        		if (xpp.getName().equals("Channel")) {
+		Log.d(SRPlayer.TAG, "RightNowTask parseChannel");
+		
+		int eventType = xpp.getEventType();
+		String CurrentTag=""; 
+		while (eventType != XmlPullParser.END_DOCUMENT) {          			
+			if(eventType == XmlPullParser.START_TAG) {          
+				CurrentTag = xpp.getName();}
+			else if(eventType == XmlPullParser.END_TAG) {              				         
+				if (xpp.getName().equals("Channel")) {
         			Log.d(SRPlayer.TAG, "RightNowTask parseChannel end channel");
         			return;
         		}
-        	} else if (eventType == XmlPullParser.START_TAG ) {
-        		if (xpp.getName().equals("ProgramTitle")) {        			
-        			xpp.next();
-        			info.setProgramTitle(xpp.getText());
-        		} else if (xpp.getName().equals("ProgramInfo")) {
-        			xpp.next();
-        			info.setProgramInfo(xpp.getText());
-        		} else if (xpp.getName().equals("ProgramURL")) {
-        			xpp.next();
-        			info.setProgramURL(xpp.getText().trim());
-        		} else if (xpp.getName().equals("IsidorTitle")) {
-        			xpp.next();
-        			info.setiSidorTitle(xpp.getText().trim());
-        		} else if (xpp.getName().equals("IsidorInfo")) {
-        			xpp.next();
-        			info.setiSidorInfo(xpp.getText().trim());
-        		} else if (xpp.getName().equals("IsidorURL")) {
-        			xpp.next();
-        			info.setiSidorUrl(xpp.getText().trim());
-        		} else if (xpp.getName().equals("Song")) {
-        			xpp.next();
-        			info.setSong(xpp.getText().trim());
-        		} else if (xpp.getName().equals("NextSong")) {
-        			xpp.next();
-        			info.setNextSong(xpp.getText().trim());
-        		} else if (xpp.getName().equals("NextProgramTitle")) {
-        			xpp.next();
-        			info.setNextProgramTitle(xpp.getText());
-        		} else if (xpp.getName().equals("NextProgramDescription")) {
-        			xpp.next();
-        			info.setNextProgramDescription(xpp.getText());
-        		} else if (xpp.getName().equals("NextProgramURL")) {
-        			xpp.next();
-        			info.setNextProgramURL(xpp.getText());
-        		} else if (xpp.getName().equals("NextProgramStartTime")) {
-        			xpp.next();
+				else CurrentTag = "none";
+			} 
+			else if(eventType == XmlPullParser.TEXT) {              				
+				String CurrentText = xpp.getText();
+				//Log.d(SRPlayer.TAG, "Text for tag:  " + CurrentTag + " is "+ CurrentText);
+				if (CurrentTag.equals("ProgramTitle")) {        			        			
+        			info.setProgramTitle(CurrentText);
+        		} else if (CurrentTag.equals("ProgramInfo")) {        			
+        			info.setProgramInfo(CurrentText);
+        		} else if (CurrentTag.equals("ProgramURL")) {        			
+        			info.setProgramURL(CurrentText.trim());
+        		} else if (CurrentTag.equals("IsidorTitle")) {        			
+        			info.setiSidorTitle(CurrentText.trim());
+        		} else if (CurrentTag.equals("IsidorInfo")) {        			
+        			info.setiSidorInfo(CurrentText.trim());
+        		} else if (CurrentTag.equals("IsidorURL")) {        			
+        			info.setiSidorUrl(CurrentText.trim());
+        		} else if (CurrentTag.equals("Song")) {        			
+        			info.setSong(CurrentText.trim());
+        		} else if (CurrentTag.equals("NextSong")) {        			
+        			info.setNextSong(CurrentText.trim());
+        		} else if (CurrentTag.equals("NextProgramTitle")) {        			
+        			info.setNextProgramTitle(CurrentText);
+        		} else if (CurrentTag.equals("NextProgramDescription")) {        			
+        			info.setNextProgramDescription(CurrentText);
+        		} else if (CurrentTag.equals("NextProgramURL")) {        			
+        			info.setNextProgramURL(CurrentText);
+        		} else if (CurrentTag.equals("NextProgramStartTime")) {        			
         			DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.GERMAN);        			
         			Date date;        			        		        			        			        		
         			try {
-						date = df.parse(xpp.getText());        										
+						date = df.parse(CurrentText);        										
 					} catch (ParseException e) {
 						date = new Date();
 						e.printStackTrace();
 					}					
 					info.setNextProgramStartTime(date);
-        		} 
-        	}
-        	eventType = xpp.next();
-        }
-		Log.d(SRPlayer.TAG, "RightNowTask parseChannel end");		
+        		}
+			}			
+			eventType = xpp.next();         
+		}
+		Log.d(SRPlayer.TAG, "RightNowTask parseChannel");
+		return;
+					
 	} // end parseChannel
-
+	
 }
