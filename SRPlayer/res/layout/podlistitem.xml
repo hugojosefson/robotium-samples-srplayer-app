@@ -41,4 +41,16 @@
   	android:marqueeRepeatLimit="marquee_forever"  	
     android:maxLines="1"
     />
+
+<ProgressBar
+	android:id="@+id/progress"
+	android:layout_width="fill_parent"
+	style="?android:attr/progressBarStyleHorizontal"	
+	android:visibility="gone"
+	android:layout_height="10dip"
+	android:layout_below="@id/text2"
+	android:paddingLeft="10dip"
+	android:paddingRight="10dip"
+	android:paddingBottom="3dip"
+	/>
 </RelativeLayout>
