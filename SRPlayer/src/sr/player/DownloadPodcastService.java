@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -58,6 +59,7 @@ public class DownloadPodcastService extends Service {
 	@Override
 	public void onDestroy() {
 		Abort = true;
+		AlreadyRunning = false;
 		super.onDestroy();
 	}
 
@@ -81,7 +83,7 @@ public class DownloadPodcastService extends Service {
 			if (PodList.moveToFirst())
 		    {
 				//Log.d(SRPlayer.TAG, "Found new podcast to download");
-				buffer = new byte[1024];
+				buffer = new byte[8096];
 		    	do {
 		    		failure = false;
 		    			    		
@@ -95,7 +97,7 @@ public class DownloadPodcastService extends Service {
 		    		}
 		    		
 		    		//Extract the filename
-		    		File file = new File(address);  
+		    		File file = new File(address);		    		
 		            String filename = file.getName();
 		    			    		 	    		
 		    		root = Environment.getExternalStorageDirectory();					
@@ -116,25 +118,35 @@ public class DownloadPodcastService extends Service {
 		                // Open an output stream that is a file on the SD
 		                out = new BufferedOutputStream(new FileOutputStream(outfile));            
 		                conn = url.openConnection();
-		                in = conn.getInputStream();     
-		                		                
-		                SRPlayerDB.podcastSetAsCurrentDownloading(rowId);
+		                int Size = conn.getContentLength();
+		                
+		                in = conn.getInputStream();
+		                SRPlayerDB.SetFileSize(rowId, Size);	                			                
+		                SRPlayerDB.podcastSetAsCurrentDownloading(rowId);		                
 		                
 		                // Get the data	                
-		                int numRead;
+		                int numRead,totalBytesRead,diffBytesRead;
+		                totalBytesRead = 0;
+		                diffBytesRead = 0;
 		                while ((numRead = in.read(buffer)) != -1)
 		                {
 		                    out.write(buffer, 0, numRead);
+		                    totalBytesRead += numRead;
+		                    if ((totalBytesRead - diffBytesRead) > 100000)
+		                    {
+		                    	diffBytesRead = totalBytesRead;
+		                    	SRPlayerDB.SetBytesDownloaded(rowId, totalBytesRead);
+		                    }
 		                    if (Abort)
 		                    	break;
-		                }            
-		                out.flush();
+		                }            		                
+		                SRPlayerDB.SetBytesDownloaded(rowId, totalBytesRead);
 		                
 		                //The entire file has been written
 		                if (!Abort)
 		                {
 		                	Log.d(SRPlayer.TAG, "Download of podcast complete");		                		              
-		                	SRPlayerDB.podcastDownloadCompleteUpdate(rowId, outfile);
+		                	SRPlayerDB.podcastDownloadCompleteUpdate(rowId, outfile);		                	 		                
 		                }
 		                else
 		                {
@@ -156,14 +168,7 @@ public class DownloadPodcastService extends Service {
 						if (failure)
 						{
 							Log.d(SRPlayer.TAG, "Failure downloading podcast");
-							SRPlayerDB.deleteFavorite(rowId);	
-								
-							Context context = getApplicationContext();
-							CharSequence text = "Fel uppstod då Offline avsnitt skulle laddas ner. Avsnitter tas bort ifrån listan.";
-							int duration = Toast.LENGTH_LONG;
-	
-							Toast toast = Toast.makeText(context, text, duration);
-							toast.show();
+							SRPlayerDB.deleteFavorite(rowId);									
 						}
 						
 		                try {
