@@ -71,7 +71,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private Notification notification;
 	private Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
-			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
+			"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all",
 			132,0);	
 	private Timer rightNowTimer;
 	private Timer Sleeptimer;

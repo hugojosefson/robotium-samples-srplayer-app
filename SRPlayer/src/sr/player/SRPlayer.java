@@ -76,10 +76,10 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.OnSeekBarChangeListener{
 	
 	private static final String _SR_RIGHTNOWINFO_URL = 
-		"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=false";
+		"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all";
 	private static Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
-			"http://api.sr.se/rightnowinfo/RightNowInfoAll.aspx?FilterInfo=true",
+			"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all",
 			132,0);
 	public static final String TAG = "SRPlayer";
 	
@@ -96,6 +96,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	protected static final int MSGPLAYERSTOP = 1;
 	protected static final int MSGNEWPODINFO = 2;	
 	protected static final int MSGUPDATESEEK = 3;
+	protected static final int MSGDOWNLOADTIMERELAPS = 4;
 		
 	private ImageButton startStopButton;
 	private int playState = PlayerService.STOP;
@@ -113,7 +114,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     private static List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
     private PodcastInfoAdapter PodList;
-    
+        
     public static final int CATEGORIES = 0;	
 	public static final int PROGRAMS = 1;
 	public static final int PROGRAMS_IN_A_CATEGORY = 2;    	
@@ -125,9 +126,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int FAVORITES_IND_PROGRAMS = 8;
 	public static final int FAVORITES_CATEGORIES = 9;	
 	public static final int FAVORITES_OFFLINE_PROGRAMS = 10;
-	
-    
-    
+	public static final int DOWNLOAD_QUEUE = 11;
+	       
 	private int PlayerMode;
 	private static final int LIVE_MODE = 0;
 	private static final int PODCAST_MODE = 1;
@@ -142,7 +142,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private String PoddIDLabel;
 	
 	private Timer SeekTimer;
+	private Timer downloadTimer;
 	private TimerTask SeekTimerTask;
+	private TimerTask downloadTimerTask;
 	
 	//Database variables
 	SRPlayerDBAdapter SRPlayerDB; 
@@ -265,6 +267,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		setContentView(R.layout.main);
 
 		SeekTimer = new Timer();
+		downloadTimer = new Timer();
 		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
 		mSeekBar.setOnSeekBarChangeListener(this);
         
@@ -365,7 +368,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		}
 		
 		SRPlayerDB = new SRPlayerDBAdapter(this);
-		SRPlayerDB.open();
+		SRPlayerDB.open();		
 		
 		// Restore save text strings
 		if ( savedInstanceState != null ) {
@@ -438,6 +441,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	@Override
 	protected void onStop() {
 		Log.d(TAG,"OnStop");
+		if ( this.downloadTimerTask != null) {
+			this.downloadTimerTask.cancel();
+		}
 		super.onStop();
 	}
 
@@ -490,6 +496,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		if ( this.SeekTimerTask != null) {
 			this.SeekTimerTask.cancel();
 		}
+		
+		if ( this.downloadTimerTask != null) {
+			this.downloadTimerTask.cancel();
+		}
+		
 		SRPlayerDB.close();
 		super.onDestroy();
 	}
@@ -757,6 +768,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
                 	  if (( SeekTimerTask != null) && (playState == PlayerService.STOP)) {
                 		 SeekTimerTask.cancel(); //Cancel after update if player is stopped
               			} 
+                	  break;
+                  case MSGDOWNLOADTIMERELAPS :
+                	  UpdateDownloadList();
                 	  break;
              }
              super.handleMessage(msg);
@@ -1099,8 +1113,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	PodcastInfo FavoritesInfo;
     	boolean DifferentLabelsForEachEpisode = false;
     	
-       	int HighlightedButton = 0;    	       
+       	int HighlightedButton = 0;
        	
+       	if ( this.downloadTimerTask != null) {
+			this.downloadTimerTask.cancel();
+		}
+       	       	       	
     	switch (Action)
     	{
     	case SRPlayer.PROGRAMS:
@@ -1128,9 +1146,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	    	PodInfo.add(ChannelInfo);
     	    }
     	    
-    		//ChannelArray.clear();
-    		//ChannelArray.addAll(items);        	
     		setListAdapter(PodList);
+    		    		    	
     	   	UpdatePlayerVisibility(true);
     	   	tv = (TextView) findViewById(R.id.PageLabel);
     	   	tv.setText("Kanaler");
@@ -1235,15 +1252,23 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	    	FavoritesInfo.setDescription(RowCountStr);
 	    	PodInfo.add(FavoritesInfo);
 	    		    	
-	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT_OFFLINE));
-	    	RowCount = RowCount + SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER));
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT_OFFLINE));	    	
     	    RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);    	        	   
     	      	    	 
 	    	FavoritesInfo = new PodcastInfo();
 	    	FavoritesInfo.setTitle("Offline avsnitt");
 	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.AVSNITT_OFFLINE));
 	    	FavoritesInfo.setDescription(RowCountStr);
-	    	PodInfo.add(FavoritesInfo);    	    
+	    	PodInfo.add(FavoritesInfo);
+	    	
+	    	RowCount = SRPlayerDB.fetchCountByType(String.valueOf(SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER));
+	    	RowCountStr = String.format("%d %s", RowCount,(RowCount == 1) ? SinglerFooter : MultipleFooter);
+	    	
+	    	FavoritesInfo = new PodcastInfo();
+	    	FavoritesInfo.setTitle("Nedladdningskö");
+	    	FavoritesInfo.setID(String.valueOf(SRPlayerDBAdapter.DOWNLOAD_QUEUE));
+	    	FavoritesInfo.setDescription(RowCountStr);
+	    	PodInfo.add(FavoritesInfo);
 	    	
     		setListAdapter(PodList);
     	   	UpdatePlayerVisibility(true);
@@ -1255,8 +1280,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             HistoryList.add(new History(SRPlayer.FAVORITES,"","Favoriter",SavedAdapter));
             
     		break;
-    	case FAVORITES_IND_PROGRAMS :    		
-    	case FAVORITES_OFFLINE_PROGRAMS :
+    	case DOWNLOAD_QUEUE:
+    		DifferentLabelsForEachEpisode = true;
+    		downloadTimerTask = new downloadTimerTask(this);
+    	    downloadTimer.schedule(downloadTimerTask, 0, 1000);
+    	    ID = String.valueOf(SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER);
+    	    startService(new Intent(SRPlayer.this, DownloadPodcastService.class));
+    	case FAVORITES_OFFLINE_PROGRAMS :    		
+    	case FAVORITES_IND_PROGRAMS :
     		DifferentLabelsForEachEpisode = true;
     	case FAVORITES_CHANNELS : 
     	case FAVORITES_PROGRAMS :     	
@@ -1266,14 +1297,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		    	    		    	
     		PodInfo.clear();
     		String CurrentID = ID;
-    		boolean SecondLap = false;
-    	    
-    		for (;;)
+    		    		
+    		if (CurrentAction == DOWNLOAD_QUEUE)
     		{
-    		if (SecondLap)
     			FavCursor = SRPlayerDB.fetchPodcastsToDownload();
+    		}
     		else
+    		{
     			FavCursor = SRPlayerDB.fetchFavoritesByType(CurrentID);
+    		}
     	    int FavId = 0;
     	    String FavLabel = ""; 
     	    String FavLink, FavDesc, FavGuid;
@@ -1297,6 +1329,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	    	FavoritesInfo.setDBIndex(FavCursor.getInt(SRPlayerDBAdapter.INDEX_ROWID));
         	    	FavoritesInfo.setType(Integer.parseInt(CurrentID));
         	    	FavoritesInfo.setGuid(FavGuid);
+        	    	FavoritesInfo.setBytesdownloaded(FavCursor.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED));
+        	    	FavoritesInfo.setFilesize(FavCursor.getInt(SRPlayerDBAdapter.INDEX_FILESIZE));
         	    	PoddIDLabel = FavCursor.getString(SRPlayerDBAdapter.INDEX_NAME);
         	    	if (DifferentLabelsForEachEpisode)
         	    		//The episodes in the list is not from the same program
@@ -1305,26 +1339,44 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	    	else        	    		
         	    		FavoritesInfo.setPoddID(String.valueOf(FavId));
         	    	
-        	    	PodInfo.add(FavoritesInfo);
+        	    	PodInfo.add(FavoritesInfo);        	    	        	    	
     	    	} while (FavCursor.moveToNext());
     	    }
     	    FavCursor.close();
-    		if ((Action != FAVORITES_OFFLINE_PROGRAMS) || SecondLap) 
-    			break;
-    		else    			
-    			CurrentID = String.valueOf(SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER);
     		
-    		SecondLap = true;
-    		}
-    	    
-    		setListAdapter(PodList);
+    		
+    		
+    		setListAdapter(PodList);    		
+    		
     	   	UpdatePlayerVisibility(true);
-    	   	tv = (TextView) findViewById(R.id.PageLabel);
-    	   	tv.setText("Favoriter");
-    	   	
+    	   	tv = (TextView) findViewById(R.id.PageLabel);    	   	    	   	
+    	   	String FavoriteLabel = "Favoriter - ";
+    	   	    	   	
+    	   	switch (CurrentAction)
+    	   	{
+	    	case DOWNLOAD_QUEUE:
+	    		FavoriteLabel += getResources().getString(R.string.download_queue_label);
+	    		break;
+	    	case FAVORITES_OFFLINE_PROGRAMS :    		
+	    		FavoriteLabel += getResources().getString(R.string.offline_epdisode_label);
+	    		break;
+	    	case FAVORITES_IND_PROGRAMS :
+	    		FavoriteLabel += getResources().getString(R.string.epdisode_label);
+	    		break;
+	    	case FAVORITES_CHANNELS : 
+	    		FavoriteLabel += getResources().getString(R.string.channel_label);
+	    		break;
+	    	case FAVORITES_PROGRAMS :     	
+	    		FavoriteLabel += getResources().getString(R.string.program_label);
+	    		break;
+	    	case FAVORITES_CATEGORIES :
+	    		FavoriteLabel += getResources().getString(R.string.category_label);
+	    		break;
+    	   	}
+    	   	tv.setText(FavoriteLabel);
     	   	//Add to the history
     	   	if (!NoNewHist)
-    	   		HistoryList.add(new History(Action,ID,"Favoriter",SavedAdapter));
+    	   		HistoryList.add(new History(Action,ID,FavoriteLabel,SavedAdapter));
             
     		break;
     	
@@ -1393,6 +1445,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		
                 GenerateNewList(SRPlayer.PROGRAMS_IN_A_CATEGORY, currentPosition, CategoryId, PoddIDLabel, false,null);
                 break;	
+        	case SRPlayer.DOWNLOAD_QUEUE:
+        		break;
         	case SRPlayer.FAVORITES_PROGRAMS:
         	case SRPlayer.PROGRAMS:        		
         	case SRPlayer.PROGRAMS_IN_A_CATEGORY:
@@ -1510,11 +1564,24 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		}
 		else if (CurrentAction != SRPlayer.FAVORITES)
 		{
-			menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, R.string.menu_remove_from_favorite);
+			if (CurrentAction == SRPlayer.FAVORITES_OFFLINE_PROGRAMS)
+			{
+				menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, R.string.menu_delete_episode);
+			}
+			else if (CurrentAction == SRPlayer.DOWNLOAD_QUEUE)
+			{
+				menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, R.string.menu_delete_from_queue);
+			}
+			else
+			{
+				menu.add(0, MENU_CONTEXT_DELETE_FAVORITE, 0, R.string.menu_remove_from_favorite);
+			}
+			
 			if (CurrentAction == FAVORITES_IND_PROGRAMS)
 			{
 				menu.add(0, MENU_CONTEXT_DOWNLOAD, 0, R.string.menu_listen_offline);
 			}
+			
 		}
 		
     }
@@ -1623,6 +1690,80 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 
 		Toast toast = Toast.makeText(context, R.string.OfflineAddedText, duration);
 		toast.show();
+	}
+	
+	public void onDownloadTimerElapse()
+	{
+		Message m = new Message();
+        m.what = SRPlayer.MSGDOWNLOADTIMERELAPS;
+        SRPlayer.this.viewUpdateHandler.sendMessage(m);
+	}
+	
+	public void UpdateDownloadList()
+	{
+		PodcastInfo FavoritesInfo = new PodcastInfo();
+		
+		int PodInfoSize = PodInfo.size();
+		int LoopVar = 0;
+		int DBIndex = 0;
+		int DeleteIndex = -1;
+		boolean DataChanged = false;
+		Cursor FavCursor = null;
+		for (LoopVar = 0; LoopVar < PodInfoSize; LoopVar++)
+		{
+			DBIndex = PodInfo.get(LoopVar).getDBIndex();
+			FavCursor = SRPlayerDB.fetchFavorite((long)DBIndex);		
+			if (FavCursor.moveToFirst())
+		    {
+				//Check if either the database or the PodInfo says that it is an
+				//active download
+				if (PodInfo.get(LoopVar).getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
+				{
+					if ((Integer.parseInt(PodInfo.get(LoopVar).getID())) == SRPlayerDBAdapter.AKTIV_NEDLADDNING)
+                	{
+						//The podinfo says that this program is current being downloaded. Verify that this is
+						//still the case
+						if (FavCursor.getInt(SRPlayerDBAdapter.INDEX_TYPE) == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
+						{
+							//Still being downloaded
+							PodInfo.get(LoopVar).setBytesdownloaded(FavCursor.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED));
+							PodInfo.get(LoopVar).setFilesize(FavCursor.getInt(SRPlayerDBAdapter.INDEX_FILESIZE));
+							DataChanged = true;
+						}
+						else
+						{
+							//Download is complete. Update link and type
+							PodInfo.get(LoopVar).setLink(FavCursor.getString(SRPlayerDBAdapter.INDEX_LINK));
+							PodInfo.get(LoopVar).setType(SRPlayerDBAdapter.AVSNITT_OFFLINE);
+							PodInfo.get(LoopVar).setDescription(FavCursor.getString(SRPlayerDBAdapter.INDEX_DESC));
+							DataChanged = true;
+							DeleteIndex = LoopVar; 
+						}
+                	}
+					else if ((FavCursor.getInt(SRPlayerDBAdapter.INDEX_TYPE) == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER) &&
+							(FavCursor.getInt(SRPlayerDBAdapter.INDEX_ID) == SRPlayerDBAdapter.AKTIV_NEDLADDNING))
+					{
+							//Next in queue ready to be downloaded. Update the type
+							PodInfo.get(LoopVar).setBytesdownloaded(FavCursor.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED));
+							PodInfo.get(LoopVar).setFilesize(FavCursor.getInt(SRPlayerDBAdapter.INDEX_FILESIZE));
+							PodInfo.get(LoopVar).setID(String.valueOf(SRPlayerDBAdapter.AKTIV_NEDLADDNING));
+							DataChanged = true;
+					}
+				}	
+				
+		    }
+			FavCursor.close();
+		}
+		
+		if (DataChanged)
+		{
+			PodList.notifyDataSetChanged();
+			if (DeleteIndex >= 0)
+				PodInfo.remove(DeleteIndex);
+		}
+		
+		if (FavCursor != null)
+			FavCursor.close();
 	}
 	
 	
