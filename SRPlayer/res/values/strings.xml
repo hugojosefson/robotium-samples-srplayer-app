@@ -10,6 +10,7 @@
 <string name="menu_config">Configure</string>
 <string name="menu_update_info">Update info</string>
 <string name="menu_sleeptimer">Start sleeptimer</string>
+<string name="menu_help">Hjälp</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <string name="menu_add_to_favorite">Addera till favoriter</string>
 <string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
@@ -19,9 +20,9 @@
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
 <string name="rightNowInfoRetrievalRate">Vid spelning</string>
-<string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information vid spelning.</string>
+<string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information vid spelning (0=aldrig).</string>
 <string name="rightNowInfoRetrievalPausedRate">Vid Pause</string>
-<string name="rightNowInfoRetrievalPausedRateSummary">Frekvens i minuter för hämtning av program information i pausat läge.</string>
+<string name="rightNowInfoRetrievalPausedRateSummary">Frekvens i minuter för hämtning av program information i pausat läge (0=aldrig).</string>
 
 <string name="configCategories">Inställningar</string>
 <string name="mediaButtonName">Play/Stop knapp</string>
@@ -50,115 +51,5 @@
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is released under GPL.
-Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn). Tack till alla på Swedroid <a href="http://www.swedroid.se/forum/">forumet</a>  
- Ifall något inte fungerar så börja med att trycka på hjälp nedan.</string>
-<string-array name="channels">
-<item>P1</item>
-<item>P2</item>
-<item>P2 Musik</item>
-<item>P3</item>
-<item>P3 Rockster</item>
-<item>P3 Star</item>
-<item>P3 Street</item>
-<item>P3 Svea</item>
-<item>P4 med Radiosporten</item>
-<item>P4 Radio Stockholm</item>
-<item>Din gata 100,6</item>
-<item>SR Metropol</item>
-<!-- Added in 0.1.2 -->
-<item>Sisuradio</item>
-<item>Sameradion</item>
-<item>SR C</item>
-<item>SR Klassiskt</item>
-<item>SR Minnen</item>
-<item>SR Atlas</item>
-<item>SR Världen</item>
-<item>Radioapans knattekanal</item>
-<item>SR Extra 1</item>
-<!-- Added in 0.2 -->
-<item>SR Extra 2</item>
-<item>SR Extra 3</item>
-<item>SR Extra 4</item>
-<item>SR Extra 5</item>
-<item>SR Extra 6</item>
-<item>SR Extra 7</item>
-<item>SR Extra 8</item>
-<item>SR Extra 9</item>
-<item>SR Extra 10</item>
-<item>SR Extra 11</item>
-<item>SR Extra 12</item>
-</string-array>
-<string-array name="urls">
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P2.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P2musik.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Rockster.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Star.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Street.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P3Svea.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P4.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-P4Stockholm.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-DinGata.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Metropol.sdp</item>
-<!-- Added in 0.1.2 -->
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Sisuradio.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-sapmi.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-SRc.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Klassiskt.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Minnen.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Atlas.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Varlden.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-Knatte.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra01.sdp</item>
-<!-- Added in 0.2 -->
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra02.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra03.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra04.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra05.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra06.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra07.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra08.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra09.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra10.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra11.sdp</item>
-<item>rtsp://lyssna-mp4.sr.se/live/mobile/SR-extra12.sdp</item>
-</string-array>
-<!-- Just fo test -->
-<!--<item>http://mtg-wms1.bahnhof.net:8000/bandit_gbg</item>-->
-<!--<item>http://gold24.xnk.nu:8080/</item>-->
-<integer-array name="channelid">
-<item>132</item>  <!--  P1 -->
-<item>163</item>  <!--  P2 -->
-<item>2562</item> <!--  P2 Musik -->
-<item>164</item> <!-- P3 -->
-<item>1604</item> <!-- P3 Rockster -->
-<item>1607</item> <!-- P3 Star -->
-<item>1606</item> <!-- P3 Street -->
-<item>1605</item> <!-- P3 Svea -->
-<item>179</item> <!-- P4 med Radiosporten --> 
-<item>701</item> <!-- P4 Radio Stockholm -->
-<item>2576</item> <!-- Din Gata 100,6 -->
-<item>2842</item> <!-- SR Metropol 93,8 -->
-<item>226</item> <!-- Sisuradio -->
-<item>224</item> <!-- Sameradion -->
-<item>1265</item> <!-- SR C -->
-<item>1603</item> <!-- SR Klassiskt -->
-<item>1602</item> <!-- SR Minnen -->
-<item>2618</item> <!-- SR Atlas -->
-<item>2619</item> <!-- SR Världen -->
-<item>2755</item> <!-- Radioapans knattekanal -->
-<item>2383</item> <!-- SR Extra 1 / Webbipkanal01 -->
-<item>2384</item> <!-- SR Extra 2 / Webbipkanal02 -->
-<item>2385</item> <!-- SR Extra 3 / Webbipkanal03 -->
-<item>2386</item> <!-- SR Extra 4 / Webbipkanal04 -->
-<item>2387</item> <!-- SR Extra 5 / Webbipkanal05 -->
-<item>2388</item> <!-- SR Extra 6 / Webbipkanal06 -->
-<item>2389</item> <!-- SR Extra 7 / Webbipkanal07 -->
-<item>2390</item> <!-- SR Extra 8 / Webbipkanal08 -->
-<item>3677</item> <!-- SR Extra 9 / Webbipkanal09 -->
-<item>2679</item> <!-- SR Extra 10 / Webbipkanal10 -->
-<item>3036</item> <!-- SR Extra 11 / Webbipkanal11 -->
-<item>3034</item> <!-- SR Extra 12 / Webbipkanal12 -->
-</integer-array>
+Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn). Tack till alla på Swedroid <a href="http://www.swedroid.se/forum/">forumet</a>.</string>
 </resources>
