@@ -26,7 +26,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.PendingIntent.CanceledException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -36,6 +38,7 @@ import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnInfoListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.media.MediaPlayer.OnSeekCompleteListener;
+import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -79,6 +82,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private TimerTask sleepTimertask;
 	private boolean sleepTimerIsRunning = false;
 	private RightNowChannelInfo LastRetreivedInfo;
+	private ConnectionStateReceiver connectionStateReceiver;
 
 	
 	/**
@@ -106,6 +110,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);            
         PhoneStateListener phoneListnerHandler = new PhoneStateHandler(this);
 		tm.listen(phoneListnerHandler, PhoneStateListener.LISTEN_CALL_STATE);
+		
+		connectionStateReceiver = new ConnectionStateReceiver();		
+        IntentFilter networkIntentFilter = new IntentFilter();        
+        networkIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);        
+        getBaseContext().registerReceiver(connectionStateReceiver, networkIntentFilter);
 	}
 
 	@Override
@@ -116,7 +125,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         case GET_INFO :
         	//Request from widget to get updated information
         	if (LastRetreivedInfo == null)
-        		restartRightNowInfo(); //No info retreived. Request to retreive it
+        		restartRightNowInfo(false); //No info retreived. Request to retreive it
         	UpdateDataAndInformReceivers();
         	break;
         case TOGGLE_STREAMING_STATUS :
@@ -175,6 +184,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         mNM.cancel(PlayerService.NOTIFY_ID);
         // Cancel the rightNowTasks
 		rightNowTimer.cancel();
+		
+		if (connectionStateReceiver != null)
+		{		
+			getBaseContext().unregisterReceiver(connectionStateReceiver);
+		}
+		
 		super.onDestroy();
 	}
 
@@ -205,7 +220,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 				stopPlay();
 			}
 			updateNotify(this.currentStation.getStationName(), null);
-			restartRightNowInfo();
+			restartRightNowInfo(true);
 			this.LastRetreivedInfo = null;
 			UpdateDataAndInformReceivers(); //Inform widgets
 		} 		
@@ -221,12 +236,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			// Display a notification about us starting.  We put an icon in the status bar.
 	        showNotification();
 			this.startStream();
-			restartRightNowInfo();
+			restartRightNowInfo(false);
 		} 
 		
 	}
 	
-	public void restartRightNowInfo() {
+	public void restartRightNowInfo(boolean ForceUpdate) {
 		if ( this.rightNowtask != null) {
 			this.rightNowtask.cancel();
 		}
@@ -251,7 +266,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 				rate = 2;
 			}
 			Log.d(getClass().getSimpleName(), "Starting rightnow task with " + rate);
-			this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);	
+			if (rate > 0)
+				this.rightNowTimer.schedule(rightNowtask, 0, rate * _TIME_MINUTE);
+			else if (ForceUpdate)
+				this.rightNowTimer.schedule(rightNowtask, 0);
 		}
 		
 	}
@@ -308,7 +326,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.mNM.cancel(NOTIFY_ID);
 		}
 		this.notification = null;
-        this.restartRightNowInfo();
+        this.restartRightNowInfo(false);
         
         if ( this.sleepTimertask != null) {
 			this.sleepTimertask.cancel();
@@ -334,7 +352,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.mNM.cancel(NOTIFY_ID);
 		}
 		this.notification = null;
-        this.restartRightNowInfo();
+        this.restartRightNowInfo(false);
         
         if ( this.sleepTimertask != null) {
 			this.sleepTimertask.cancel();
@@ -359,7 +377,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			this.player.start();			
 			this.playerStatus = PLAY;
 			UpdateDataAndInformReceivers();
-			//restartRightNowInfo();
+			//restartRightNowInfo(false);
 		
 			for(PlayerObserver observer : this.playerObservers) {
 	        	observer.onPlayerStarted();	// Call observers to let them
@@ -615,18 +633,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	public int getPlayerStatus() {
 		return playerStatus;
 	}
-	
-	public int getStationIndex() {
-		Station station = getCurrentStation();
-		CharSequence[] channelInfo = (CharSequence[]) getResources().getTextArray(R.array.channels);
-		int channelPos = 0;
-		for(CharSequence cs : channelInfo) {
-			if ( cs.toString().equals(station.getStationName()) ) {
-				break;
-			}
-			channelPos++;
-		}
-		return channelPos;
+			
+	public int getChannelID()
+	{
+		return getCurrentStation().getChannelId();
 	}
 			
 	public void StartSleeptimer(int Delay) {
