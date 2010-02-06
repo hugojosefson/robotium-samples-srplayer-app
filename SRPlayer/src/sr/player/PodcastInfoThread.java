@@ -30,11 +30,13 @@ public class PodcastInfoThread extends Thread {
 	public static final int GET_ALL_PROGRAMS = 1;
 	public static final int GET_PROGRAMS_BY_CATEGORY = 2;
 	public static final int GET_IND_PROGRAMS = 3;
+	public static final int GET_CHANNEL_LIST = 4;
 	
 	public static final String podcast_categories_feed = "http://api.sr.se/api/poddradio/PoddCategories.aspx";
 	public static final String podcasts_by_category_feed = "http://api.sr.se/api/poddradio/poddfeed.aspx?CategoryId=";
 	public static final String podcast_programs_feed = "http://api.sr.se/api/poddradio/poddfeed.aspx";
 	public static final String podcast_ind_program_feed = "http://api.sr.se/api/rssfeed/rssfeed.aspx?Poddfeed=";
+	public static final String channel_list_feed = "http://api.sr.se/api/channels/channels.aspx";
 	private int type;
 	
 	public PodcastInfoThread(Activity activity, int action, int ID) {
@@ -54,6 +56,7 @@ public class PodcastInfoThread extends Thread {
 		URL url;		
         InputStream urlStream = null;
         String FeedUrl = "";
+         
         if (ListAction == GET_CATEGORIES)
 		{
 			FeedUrl = podcast_categories_feed;
@@ -70,6 +73,11 @@ public class PodcastInfoThread extends Thread {
 			FeedUrl = FeedUrl + String.valueOf(id);
 			type = SRPlayerDBAdapter.PROGRAM;
 		}
+		else if (ListAction == GET_CHANNEL_LIST)
+		{
+			FeedUrl = channel_list_feed;
+			type = SRPlayerDBAdapter.KANAL;
+		}
 		else //(ListAction == GET_IND_PROGRAMS)
 		{
 			FeedUrl = podcast_ind_program_feed;
@@ -85,20 +93,10 @@ public class PodcastInfoThread extends Thread {
 					break;
 				} catch (MalformedURLException e) {
 					Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-					//allreadyRunning = false;
-					//this.activity.UpdateArray(null,null);			
-					//return;
+					
 				} catch (IOException e) {
 					Log.e(SRPlayer.TAG, "Error getting Podcast Feed", e);
-					//allreadyRunning = false;
-					//String ExtraInfo = "urlStream is null";
-					//if (urlStream != null)
-					//	ExtraInfo = "urlStream is NOT null";
-						
-					//PodList.add("Error getting list. " + ExtraInfo);
-					//this.activity.UpdateArray(PodList,null);
-					//this.activity.UpdateArray(null,null);
-					//return;
+					
 				}
 		
         }
@@ -117,9 +115,14 @@ public class PodcastInfoThread extends Thread {
 	         int eventType = xpp.getEventType();
 	         while( eventType != XmlPullParser.END_DOCUMENT) {
 	        	 if (eventType == XmlPullParser.START_TAG) {
-	        		 if ( xpp.getName().equals("item")) 
+	        		 String CurrName = xpp.getName();
+	        		 if ( CurrName.equals("item")) 
 	        		 {
 	        			 parsePodFeed(xpp);
+	        		 }	        		 
+	        		 else if ((ListAction == GET_CHANNEL_LIST) && ( CurrName.equals("channel"))) 
+	        		 {
+	        			 parseChannelFeed(xpp);
 	        		 }
 	        	 }
 	        	 eventType = xpp.next();
@@ -144,14 +147,69 @@ public class PodcastInfoThread extends Thread {
 		allreadyRunning = false;			
 	}
 	
+	private void parseChannelFeed(XmlPullParser xpp) throws XmlPullParserException, IOException {		
+		PodcastInfo NewInfo = new PodcastInfo();
+		NewInfo.setType(type);
+		int eventType = xpp.getEventType();
+		String CurrentTag=""; 
+		String CurrentID,CurrentName;
+		boolean ValidStream = false;
+		String CurrentType="";
+		while (eventType != XmlPullParser.END_DOCUMENT) {          			
+			if(eventType == XmlPullParser.START_TAG)
+			{				          
+				CurrentTag = xpp.getName();				
+				if (CurrentTag.equals("channel")) {
+					//Retreive the id and the name
+					CurrentID = xpp.getAttributeValue(null, "id");
+					CurrentName = xpp.getAttributeValue(null, "name");
+					NewInfo.setTitle(CurrentName);
+					NewInfo.setID(CurrentID);
+				}				
+				else if (CurrentTag.equals("url")) {        			        			        	
+					//Check if the channel has support for 3gp
+					CurrentType = xpp.getAttributeValue(null, "type");									
+        		} 
+
+			}
+			else if(eventType == XmlPullParser.END_TAG) {              				         
+				if (xpp.getName().equals("channel")) {
+					if (ValidStream)
+						PodInfo.add(NewInfo);
+        			return;
+        		}
+				else CurrentTag = "none";
+			} 
+			else if(eventType == XmlPullParser.TEXT) {              				
+				String CurrentText = xpp.getText();
+				if (CurrentTag.equals("url")) {
+					if (CurrentType.equals("3gp"))
+					{
+						ValidStream = true;
+						NewInfo.setLink(CurrentText);
+					}
+				}
+				
+								
+			}			
+			eventType = xpp.next();         
+		}
+		//Log.d(SRPlayer.TAG, "RightNowTask parseChannel");
+		return;
+
+	} // end parseChannel
+
+	
 	private void parsePodFeed(XmlPullParser xpp) throws XmlPullParserException, IOException {		
 		PodcastInfo NewInfo = new PodcastInfo();
 		NewInfo.setType(type);
 		int eventType = xpp.getEventType();
 		String CurrentTag=""; 
 		while (eventType != XmlPullParser.END_DOCUMENT) {          			
-			if(eventType == XmlPullParser.START_TAG) {				          
-				CurrentTag = xpp.getName();}
+			if(eventType == XmlPullParser.START_TAG)
+			{				          
+				CurrentTag = xpp.getName();				
+			}
 			else if(eventType == XmlPullParser.END_TAG) {              				         
 				if (xpp.getName().equals("item")) {        			
         			PodInfo.add(NewInfo);
