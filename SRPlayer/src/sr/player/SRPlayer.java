@@ -15,15 +15,10 @@
   */
 package sr.player;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,7 +26,6 @@ import java.util.TimerTask;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.app.Service;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,20 +33,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -77,6 +66,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	private static final String _SR_RIGHTNOWINFO_URL = 
 		"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all";
+	private static final String _SR_RIGHTNOWINFO_IND_URL =
+		"http://api.sr.se/api/rightnowinfo/Rightnowinfo.aspx?unit=";
 	private static Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
 			"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all",
@@ -88,6 +79,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private static final int MENU_CONFIG = 2;
 	private static final int MENU_UPDATE_INFO = 3;
 	private static final int MENU_SLEEPTIMER = 4;
+	private static final int MENU_HELP = 5;
 	public static final int MENU_CONTEXT_ADD_TO_FAVORITES = 20;		
 	public static final int MENU_CONTEXT_DOWNLOAD = 22;
 	public static final int MENU_CONTEXT_DELETE_FAVORITE = 21;
@@ -102,19 +94,18 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private int playState = PlayerService.STOP;
 	boolean isFirstCall = true;
 	boolean isExitCalled = false;
-	private int ChannelIndex = 0;
 	public PlayerService boundService;
 	private static int SleepTimerDelay;
 	
 	private List<PodcastInfo> PodInfo = new ArrayList<PodcastInfo>();
     private List<PodcastInfo> ProgramArray = new ArrayList<PodcastInfo>();
     private List<PodcastInfo> CategoryArray = new ArrayList<PodcastInfo>();
-    //private List<PodcastInfo> AllPrograms = new ArrayList<PodcastInfo>();
-    //private List<PodcastInfo> Categories = new ArrayList<PodcastInfo>();
+    private List<PodcastInfo> ChannelArray = new ArrayList<PodcastInfo>();
     private static List<History> HistoryList = new ArrayList<History>();
     private int currentPosition = 0;
     private PodcastInfoAdapter PodList;
         
+    public static final int PLAYER = -1;
     public static final int CATEGORIES = 0;	
 	public static final int PROGRAMS = 1;
 	public static final int PROGRAMS_IN_A_CATEGORY = 2;    	
@@ -128,14 +119,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int FAVORITES_OFFLINE_PROGRAMS = 10;
 	public static final int DOWNLOAD_QUEUE = 11;
 	       
-	private int PlayerMode;
+	private static int PlayerMode;
 	private static final int LIVE_MODE = 0;
 	private static final int PODCAST_MODE = 1;
 	
 	
 	public static final String ACTION = "ACTION";
-	private int CurrentAction;
-	private int SelectedCategory = -1;
+	private static int CurrentAction;
 	PodcastInfoThread podcastinfothread;
 	private ProgressDialog waitingfordata;
 	    	
@@ -148,7 +138,6 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	//Database variables
 	SRPlayerDBAdapter SRPlayerDB; 
-	private Cursor FavoritesCursor;	
 			
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromTouch) {
@@ -211,24 +200,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	boundService = ((PlayerService.PlayerBinder)service).getService();
         	boundService.addPlayerObserver(SRPlayer.this);
         	// Set StationName, but only if the historlist is empty
-        	if (HistoryList.isEmpty())
-        	{
+        	if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
+        	{        		
         		TextView tv = (TextView) findViewById(R.id.PageLabel);
         		tv.setText(boundService.getCurrentStation().getStationName());
         	}
         	
   			// Set channel in spinner
-        	Station station = boundService.getCurrentStation();
-        	CharSequence[] channelInfo = (CharSequence[]) getResources().getTextArray(R.array.channels);
-        	int channelPos = 0;
-        	// Why does binarySearch(CharSequence[], String) not work ?
-    		// = Arrays.binarySearch(channelInfo, station.getStationName());
-        	for(CharSequence cs : channelInfo) {
-        		if ( cs.toString().equals(station.getStationName()) ) {
-        			break;
-        		}
-        		channelPos++;
-        	}
+        	Station station = boundService.getCurrentStation();        	
         	UpdateSeekBar();
         	
         	//TODO If the current stream is a podcast/offline. Retreive the text from saved data
@@ -258,7 +237,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			this.playState = savedInstanceState.getInt("playState");
 			Log.d(TAG, "playstate restored to " + this.playState);			
 		} else {
-			this.playState = PlayerService.STOP;
+			this.playState = PlayerService.STOP;			
 		}
 		startService();
 		
@@ -270,10 +249,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		downloadTimer = new Timer();
 		SeekBar mSeekBar = (SeekBar) findViewById(R.id.PlayerSeekBar);
 		mSeekBar.setOnSeekBarChangeListener(this);
-        
-        Intent intent = this.getIntent();
-        CurrentAction = intent.getIntExtra(ACTION, 0);
-                      
+                              
         PodList = new PodcastInfoAdapter(this,
                 R.layout.podlistitem, (ArrayList<PodcastInfo>) PodInfo);
                                        
@@ -286,7 +262,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		if (PlayerMode == LIVE_MODE)
         		{        		
         		//Live mode
-        		GenerateNewList(SRPlayer.CHANNELS, 0, "", "", false,null);
+        		GenerateNewList(SRPlayer.CHANNELS, 0, "", "", false,
+        				(ChannelArray.size() > 0) ? ChannelArray : null);
         		}
         		else
         		{
@@ -309,7 +286,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
         PlayerButton.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
-        		HistoryList.clear(); //Reset the history
+        		//HistoryList.clear(); //Reset the history
         		UpdatePlayerVisibility(false);
 			}
 		});
@@ -373,6 +350,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		// Restore save text strings
 		if ( savedInstanceState != null ) {
 			try {
+				Log.d(TAG,"savedInstanceState is not null");
 	  			TextView tv = (TextView) findViewById(R.id.PageLabel);
 	  			tv.setText(savedInstanceState.getString("stationNamn"));
 	  			tv = (TextView) findViewById(R.id.ProgramNamn);
@@ -383,21 +361,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	  			tv.setText(savedInstanceState.getString("songName"));
 	  			tv = (TextView) findViewById(R.id.NextSongNamn);
 	  			tv.setText(savedInstanceState.getString("nextSongName"));
-	  			
-	  			
-	  			//The system can't marshal the class HistoryList need to find another
-	  			//solution for saving the historylist
-	  			
-	  			//ArrayList<Parcelable> TempHistoryList = savedInstanceState.getParcelableArrayList("historylist");
+	  				  				  		
 	  			ArrayList<History> HistoryList = (ArrayList<History>) savedInstanceState.getSerializable("historylist");
 	  			if ((HistoryList != null) && (!HistoryList.isEmpty()))
 	  			{
-	  				//Log.d(TAG,"TempHistoryList size is: " + String.valueOf(TempHistoryList.size()));
-		  			//HistoryList.clear(); //Reset the history
-		  			//HistoryList.addAll(TempHistoryList);	  			
-		  			int HistoryIndex = HistoryList.size();        		        	
+	  				//Log.d(TAG,"Current action is " +  CurrentAction);	  				
+	  				int HistoryIndex = HistoryList.size();        		        	
 		        	History CurrentHistory = HistoryList.get(HistoryIndex-1);    
-		        	CurrentAction = CurrentHistory.ReadAction();
+		        	CurrentAction = CurrentHistory.ReadAction();		        	
 		        	String CurrID = CurrentHistory.ReadID();
 		        	PoddIDLabel = CurrentHistory.ReadLabel();
 		        	Object CurrObject = CurrentHistory.ReadStreamdata();	        	
@@ -451,7 +422,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public void onSaveInstanceState(Bundle savedInstanceState) {		
 		savedInstanceState.putInt("playState", this.playState);
 		TextView tv = (TextView) findViewById(R.id.PageLabel);
-		savedInstanceState.putString("stationName", tv.getText().toString());
+		savedInstanceState.putString("stationNamn", tv.getText().toString());
 		tv = (TextView) findViewById(R.id.ProgramNamn);
 		savedInstanceState.putString("programNamn", tv.getText().toString());
 		tv = (TextView) findViewById(R.id.NextProgramNamn);
@@ -487,7 +458,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
                     PlayerService.class));
 			stopService(new Intent(SRPlayer.this,
                     DownloadPodcastService.class));
-			
+			//Since the service is also killed, 
+			//clear the history
+			HistoryList.clear();
+			PlayerMode = LIVE_MODE;				
+			currentStation = new Station("P1", 
+					"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
+					"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all",
+					132,0);
 		}
 		else
 		{			
@@ -590,6 +568,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			menu.add(0, SRPlayer.MENU_SLEEPTIMER, 0, R.string.menu_sleeptimer).
 			setIcon(R.drawable.ic_menu_sleeptimer);
 		}
+		menu.add(0, SRPlayer.MENU_HELP, 0, R.string.menu_help).
+		setIcon(android.R.drawable.ic_menu_help);
 		return true;
 	}
 	
@@ -633,7 +613,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			handleMenuConfig();
 			return true;
 		case SRPlayer.MENU_UPDATE_INFO:
-			boundService.restartRightNowInfo();
+			boundService.restartRightNowInfo(true);
+			return true;
+		case SRPlayer.MENU_HELP:			
+			Intent FaqIntent = new Intent(SRPlayer.this, FaqActivity.class);
+			SRPlayer.this.startActivity(FaqIntent);
 			return true;
 		case SRPlayer.MENU_SLEEPTIMER:
 			if (this.boundService.SleeptimerIsRunning())
@@ -669,13 +653,6 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
 								// Do nothing...
-							}
-						})
-				.setNegativeButton("HJÄLP",
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int which) {
-								Intent FaqIntent = new Intent(SRPlayer.this, FaqActivity.class);
-								SRPlayer.this.startActivity(FaqIntent);															
 							}
 						})
 				.show();
@@ -750,7 +727,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
                        break;
                   case MSGPLAYERSTOP:
                 	  	playState = PlayerService.STOP;
-              			if (HistoryList.isEmpty())
+              			if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
               			{
                 	  	tv = (TextView) findViewById(R.id.PageLabel);
               			tv.setText(SRPlayer.currentStation.getStationName());
@@ -800,7 +777,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		//startStopButton.setImageResource(R.drawable.stop);
 		startStopButton.setImageResource(R.drawable.pause_white);
 		this.playState = PlayerService.PLAY;
-		if (HistoryList.isEmpty())
+		if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
 		{
 		TextView tv = (TextView) findViewById(R.id.PageLabel);
 	    tv.setText(SRPlayer.currentStation.getStationName());
@@ -860,26 +837,32 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     {        
     	if (PodObject == null)
     	{    	
-    	PodInfo.clear();
+    		PodInfo.clear();
     	}
     	else
     	{
-    	PodInfo.clear();	    	
-	    List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
-	    PodInfo.addAll(NewPodInfo);
-	    	    
-	    if ((CurrentAction == CATEGORIES) && (CategoryArray.size() == 0))
-	    {
-	    	//store the categories list
-	    	CategoryArray.clear();
-	    	CategoryArray.addAll(NewPodInfo);
-	    }
-	    else if ((CurrentAction == PROGRAMS) && (ProgramArray.size() == 0))
-	    {
-	    	//store the program list
-	    	ProgramArray.clear();
-	    	ProgramArray.addAll(NewPodInfo);
-	    }
+	    	PodInfo.clear();	    	
+		    List<PodcastInfo> NewPodInfo = (List<PodcastInfo>)PodObject;
+		    PodInfo.addAll(NewPodInfo);
+		    	    
+		    if ((CurrentAction == CATEGORIES) && (CategoryArray.size() == 0))
+		    {
+		    	//store the categories list
+		    	CategoryArray.clear();
+		    	CategoryArray.addAll(NewPodInfo);
+		    }
+		    else if ((CurrentAction == PROGRAMS) && (ProgramArray.size() == 0))
+		    {
+		    	//store the program list
+		    	ProgramArray.clear();
+		    	ProgramArray.addAll(NewPodInfo);
+		    }
+		    else if ((CurrentAction == CHANNELS) && (ChannelArray.size() == 0))
+		    {
+		    	//store the program list
+		    	ChannelArray.clear();
+		    	ChannelArray.addAll(NewPodInfo);
+		    }
 	    
     	}
     	
@@ -1121,6 +1104,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
        	       	       	
     	switch (Action)
     	{
+    	case SRPlayer.PLAYER:
+    		//Just show the player    		    	   	
+    		UpdatePlayerVisibility(false);
+    		break;
     	case SRPlayer.PROGRAMS:
     		if (SavedAdapter == null)
     		{
@@ -1134,23 +1121,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             HistoryList.add(new History(SRPlayer.PROGRAMS,"",getResources().getString(R.string.ProgramListLabel),SavedAdapter));
     		break;
     	case SRPlayer.CHANNELS:
-    		//Live mode
-    		Resources res = getResources();        		
-    		String[] items= res.getStringArray(R.array.channels);
-    		
-    		PodInfo.clear();	    	
-    	    PodcastInfo ChannelInfo;    	    
-    	    for (String v : items) { 
-    	    	ChannelInfo = new PodcastInfo();
-    	    	ChannelInfo.setTitle(v);
-    	    	PodInfo.add(ChannelInfo);
-    	    }
-    	    
-    		setListAdapter(PodList);
-    		    		    	
-    	   	UpdatePlayerVisibility(true);
-    	   	tv = (TextView) findViewById(R.id.PageLabel);
-    	   	tv.setText("Kanaler");
+    		//Live mode    		
+    		PoddIDLabel = "Kanaler";
+    	   	if (SavedAdapter == null)
+    		{
+	    		podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CHANNEL_LIST, 0);
+	            podcastinfothread.start();  
+	            waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
+    		}
     	   	
     	   	//Init the history
             HistoryList.clear();
@@ -1472,7 +1450,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			SRPlayer.currentStation.setStationName(PoddIDLabel);
     			SRPlayer.currentStation.setChannelId(0);
     			SRPlayer.currentStation.setStreamType((CurrentAction != FAVORITES_OFFLINE_PROGRAMS) ? Station.POD_STREAM : Station.OFFLINE_STREAM);    			
-    			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+    			SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);    			
     			boundService.selectChannel(SRPlayer.currentStation);		
     			clearAllText();
     			UpdatePlayerVisibility(false);
@@ -1480,25 +1458,22 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			info.setProgramTitle(PodInfo.get(currentPosition).getTitle());
     			info.setProgramInfo(PodInfo.get(currentPosition).getDescription());
     			boundService.rightNowUpdate(info);    
-    			HistoryList.clear();
+    			//HistoryList.clear(); Dont clear. Add to player to history instead
+    			HistoryList.add(new History(SRPlayer.PLAYER,"",PoddIDLabel,null));
+    			CurrentAction = SRPlayer.PLAYER;
         		break;
         	case SRPlayer.FAVORITES_CHANNELS:
         	case SRPlayer.CHANNELS:
-        		ChannelIndex = this.boundService.getStationIndex();
-        		int NewChannelIndex = (CurrentAction == SRPlayer.CHANNELS) ? position : Integer.parseInt(PodInfo.get(currentPosition).getID());
-	    		
-        		if (NewChannelIndex != ChannelIndex)
-            	{
-    	        	Resources res = getResources();
-    	    		CharSequence[] channelInfo = (CharSequence[]) res
-    	    				.getTextArray(R.array.channels);
-    	    		CharSequence[] urls = (CharSequence[]) res.getTextArray(R.array.urls);
-    	    		
-    	    		
-    	        	SRPlayer.currentStation.setStreamUrl(urls[NewChannelIndex].toString());
-    				SRPlayer.currentStation.setStationName(channelInfo[NewChannelIndex].toString());
-    				SRPlayer.currentStation.setChannelId(res.getIntArray(R.array.channelid)[NewChannelIndex]);
-    				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+        		//ChannelIndex = this.boundService.getStationIndex();
+        		//int NewChannelIndex = (CurrentAction == SRPlayer.CHANNELS) ? position : Integer.parseInt(PodInfo.get(currentPosition).getID());        		
+        		if (this.boundService.getChannelID() != Integer.parseInt(PodInfo.get(currentPosition).getID()))
+            	{    	        	
+        			SRPlayer.currentStation.setStreamUrl(PodInfo.get(currentPosition).getLink());
+    				SRPlayer.currentStation.setStationName(PodInfo.get(currentPosition).getTitle());
+    				SRPlayer.currentStation.setChannelId(Integer.parseInt(PodInfo.get(currentPosition).getID()));
+    				//SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
+    				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_IND_URL+PodInfo.get(currentPosition).getID());
+    				
     				SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
     				boundService.selectChannel(SRPlayer.currentStation);					
     				clearAllText();
@@ -1506,7 +1481,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             	}
         		
         		UpdatePlayerVisibility(false); //Show the player
-        		HistoryList.clear();
+        		CurrentAction = SRPlayer.PLAYER;
+        		//HistoryList.clear();
+        		HistoryList.add(new History(SRPlayer.PLAYER,"",SRPlayer.currentStation.getStationName(),null));
         		break;
             default:
             	break;
