@@ -1,12 +1,15 @@
 package sr.player;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Timer;
@@ -18,6 +21,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
@@ -30,15 +34,16 @@ public class DownloadPodcastService extends Service {
 	private SRPlayerDBAdapter SRPlayerDB; 
 	private Cursor PodList;
 	
-	String address;		
+	String address,guid;		
 	String filename;
-	File root;					
+	File root;		
+	int bytesDownloaded;
 	File subdirectory;		
 	String outfile;
 	byte[] buffer;
 	
 	BufferedOutputStream out;
-    URLConnection conn;
+    HttpURLConnection conn;
     InputStream in;
     URL url;
     long rowId;
@@ -87,7 +92,9 @@ public class DownloadPodcastService extends Service {
 		    	do {
 		    		failure = false;
 		    			    		
-		    		address = PodList.getString(SRPlayerDBAdapter.INDEX_GUID); //The GUID contains the unique ID and path to the file
+		    		guid = PodList.getString(SRPlayerDBAdapter.INDEX_GUID); //The GUID contains the unique ID and path to the file
+		    		address = PodList.getString(SRPlayerDBAdapter.INDEX_LINK); //The GUID contains the unique ID and path to the file
+		    		//bytesDownloaded = PodList.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED); //The GUID contains the unique ID and path to the file
 		    		rowId = PodList.getLong(SRPlayerDBAdapter.INDEX_ROWID);
 		    		if (address == null)
 		    		{
@@ -97,7 +104,7 @@ public class DownloadPodcastService extends Service {
 		    		}
 		    		
 		    		//Extract the filename
-		    		File file = new File(address);		    		
+		    		File file = new File(guid);		    		
 		            String filename = file.getName();
 		    			    		 	    		
 		    		root = Environment.getExternalStorageDirectory();					
@@ -108,25 +115,66 @@ public class DownloadPodcastService extends Service {
 		    			subdirectory.mkdir();
 		    		}		
 		    		outfile = subdirectory.getAbsolutePath() + "/" + filename;
+		    		File newfile = new File(outfile);
+		    		bytesDownloaded = (int)newfile.length();
 		    		
 		    		out = null;
 		            conn = null;
 		            in = null;
 		            try {   
 		            	Log.d(SRPlayer.TAG, "Starting download of " + address);
-		                url = new URL(address);
-		                // Open an output stream that is a file on the SD
-		                out = new BufferedOutputStream(new FileOutputStream(outfile));            
-		                conn = url.openConnection();
-		                int Size = conn.getContentLength();
+		                url = new URL(address);		                          
+		                //conn = url.openConnection();
+		                int Size = 0;		                
+		                boolean ShallAppend = false;		                
+		                
+		                conn = 
+		                	(HttpURLConnection)url.openConnection
+		                	();
+		                if (bytesDownloaded > 0) 
+		                {
+		                	conn.addRequestProperty("Range", "bytes=" + 
+		                			bytesDownloaded +
+		                	"-");
+		                }
+		                else
+		                {
+		                	ShallAppend = false;		                
+		                }
+		                
+		                conn.connect();
+		                int responseCode = conn.getResponseCode();
+		                switch (responseCode) 
+		                {
+		                case HttpURLConnection.HTTP_OK:
+		                	bytesDownloaded = 0;
+		                	Size = conn.getContentLength();
+		                	ShallAppend = false;
+		                	Log.d(SRPlayer.TAG, "Restarting from the beginning");
+		                	break;
+		                case HttpURLConnection.HTTP_PARTIAL:
+		                	// The server supports resume
+		                	Size = conn.getContentLength() + 
+		                	bytesDownloaded;
+		                	ShallAppend = true;
+		                	Log.d(SRPlayer.TAG, "Appending file");
+		                	//Looper.prepare();
+							//Toast.makeText(getApplicationContext(), "Appending to " + bytesDownloaded + " bytes", Toast.LENGTH_LONG).show();	 Looper.loop();
+		                	break;		   
+		                }
+		                
+		                //Size = conn.getContentLength();
 		                
 		                in = conn.getInputStream();
+		                // Open an output stream that is a file on the SD
+		                out = new BufferedOutputStream(new FileOutputStream(outfile,ShallAppend)); 
+		                		              		                
 		                SRPlayerDB.SetFileSize(rowId, Size);	                			                
 		                SRPlayerDB.podcastSetAsCurrentDownloading(rowId);		                
 		                
 		                // Get the data	                
 		                int numRead,totalBytesRead,diffBytesRead;
-		                totalBytesRead = 0;
+		                totalBytesRead = bytesDownloaded;
 		                diffBytesRead = 0;
 		                while ((numRead = in.read(buffer)) != -1)
 		                {
@@ -159,11 +207,20 @@ public class DownloadPodcastService extends Service {
 					} catch (FileNotFoundException e) {					
 						failure = true;
 						e.printStackTrace();
+					} catch (SocketException e) {
+						//Probably a problem with the data connection
+						//try again when the data connection is restored						
+						Abort = true; 						
+						e.printStackTrace();
+						//Looper.prepare();
+						//Toast.makeText(getApplicationContext(), "Nedladdaning avbruten", Toast.LENGTH_LONG).show();	 Looper.loop();
 					} catch (IOException e) {						
 						//TODO this problem can be due to the fact that 
 						//not data connection is available. How should is be handled??
 						failure = true;
 						e.printStackTrace();
+						Looper.prepare();
+						Toast.makeText(getApplicationContext(), "Nedladdaning avbruten", Toast.LENGTH_LONG).show();	 Looper.loop();
 					} finally {
 						if (failure)
 						{
