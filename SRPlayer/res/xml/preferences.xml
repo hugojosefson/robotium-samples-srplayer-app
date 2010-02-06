@@ -22,7 +22,7 @@
 	    android:summary="@string/rightNowInfoRetrievalPausedRateSummary"
 	    android:defaultValue="30"
 	    numberpreference:min="0"
-	    numberpreference:max="120"
+	    numberpreference:max="2000"
 	    /> 
 	</PreferenceScreen>
 	<CheckBoxPreference

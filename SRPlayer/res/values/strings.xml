@@ -22,7 +22,7 @@
 <string name="rightNowInfoRetrievalRate">Vid spelning</string>
 <string name="rightNowInfoRetrievalRateSummary">Frekvens i minuter för hämtning av program information vid spelning (0=aldrig).</string>
 <string name="rightNowInfoRetrievalPausedRate">Vid Pause</string>
-<string name="rightNowInfoRetrievalPausedRateSummary">Frekvens i minuter för hämtning av program information i pausat läge (0=aldrig).</string>
+<string name="rightNowInfoRetrievalPausedRateSummary">Frekvens i minuter för hämtning av program information vid paus (0=aldrig).</string>
 
 <string name="configCategories">Inställningar</string>
 <string name="mediaButtonName">Play/Stop knapp</string>
