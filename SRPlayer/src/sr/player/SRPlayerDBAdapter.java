@@ -50,8 +50,8 @@ public class SRPlayerDBAdapter {
     public static final int AVSNITT_OFFLINE = 4;
     public static final int DOWNLOAD_QUEUE = 5;
     
-    public static final int KÖAD_FÖR_NEDLADDNING = 0;
-    public static final int AKTIV_NEDLADDNING = 1;
+    public static final int QUEUED_FOR_DOWNLOAD = 0;
+    public static final int ACTIVE_DOWNLOAD = 1;
     
     
     private static final String TAG = "SRPlayerDBAdapter";
@@ -300,7 +300,7 @@ public class SRPlayerDBAdapter {
      */
     public boolean podcastSetAsCurrentDownloading(long rowId) {
         ContentValues args = new ContentValues();
-        args.put(KEY_ID, AKTIV_NEDLADDNING);        
+        args.put(KEY_ID, ACTIVE_DOWNLOAD);        
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }

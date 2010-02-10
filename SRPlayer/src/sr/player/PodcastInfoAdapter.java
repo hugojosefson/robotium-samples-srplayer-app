@@ -46,7 +46,7 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 pb.setVisibility(View.GONE);
                 if (CurrentItem.getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
                 {                	
-                	if ((Integer.parseInt(CurrentItem.getID())) == SRPlayerDBAdapter.AKTIV_NEDLADDNING)
+                	if ((Integer.parseInt(CurrentItem.getID())) == SRPlayerDBAdapter.ACTIVE_DOWNLOAD)
                 	{
                 		
                 		
