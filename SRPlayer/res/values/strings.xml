@@ -49,8 +49,10 @@
 <string name="program_label">Program</string>
 <string name="channel_label">Kanal</string>
 
-<string name="PodlistProgressText">Hämtar lista</string>
+<string name="queue_list_label">Nedladdningskö</string>
 
+<string name="PodlistProgressText">Hämtar lista</string>
+<string name="WindErorText">På grund av en bugg som uppkom i Android 1.6 (Issue 4124) så fungerar det tyvärr inte att spola på din mobil! Lyssna Offline istället så kan du spola.</string>
 <!-- About Dialog -->
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is released under GPL.

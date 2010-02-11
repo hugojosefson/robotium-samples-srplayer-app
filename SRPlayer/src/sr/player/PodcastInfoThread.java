@@ -76,7 +76,7 @@ public class PodcastInfoThread extends Thread {
         if (ListAction == GET_CATEGORIES)
 		{
 			FeedUrl = podcast_categories_feed;
-			type = SRPlayerDBAdapter.KATEGORI;
+			type = SRPlayerDBAdapter.CATEGORY;
 		}
 		else if (ListAction == GET_ALL_PROGRAMS)
 		{
@@ -92,13 +92,13 @@ public class PodcastInfoThread extends Thread {
 		else if (ListAction == GET_CHANNEL_LIST)
 		{
 			FeedUrl = channel_list_feed;
-			type = SRPlayerDBAdapter.KANAL;
+			type = SRPlayerDBAdapter.CHANNEL;
 		}
 		else //(ListAction == GET_IND_PROGRAMS)
 		{
 			FeedUrl = podcast_ind_program_feed;
 			FeedUrl = FeedUrl + String.valueOf(id);			
-			type = SRPlayerDBAdapter.AVSNITT;
+			type = SRPlayerDBAdapter.EPISODE;
 		}        
         
         for (RetryCount = 0; RetryCount < 3; RetryCount++)

@@ -155,7 +155,7 @@ public class DownloadPodcastService extends Service {
 		    		}
 		    		
 		    		id = PodList.getInt(SRPlayerDBAdapter.INDEX_ID);
-		    		if ((id == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD) && (!Resume))
+		    		if ((id == SRPlayerDBAdapter.ACTIVE_DOWNLOAD_PAUSED) && (!Resume))
 		    		{
 		    			//Download is paused.
 		    			Abort = true;

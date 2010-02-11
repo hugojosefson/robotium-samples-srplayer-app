@@ -74,11 +74,11 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 TextView bt = (TextView) v.findViewById(R.id.text2);
                 ProgressBar pb = (ProgressBar) v.findViewById(R.id.progress);
                 pb.setVisibility(View.GONE);
-                if (CurrentItem.getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
+                if (CurrentItem.getType() == SRPlayerDBAdapter.EPISODE_TO_DOWNLOAD)
                 {       
                 	int CurrID = (Integer.parseInt(CurrentItem.getID())); 
-                	if ((CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING) ||
-                		(CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD))
+                	if ((CurrID == SRPlayerDBAdapter.ACTIVE_DOWNLOAD) ||
+                		(CurrID == SRPlayerDBAdapter.ACTIVE_DOWNLOAD_PAUSED))
                 	{
                 		
                 		
@@ -89,7 +89,7 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 		double BytesDownloadedMB = ((double)BytesDownloaded)/1000000;
                 		
                 		String CurrDownloadText = CurrentContext.getResources().getString(R.string.CurrentDownloadDesc);
-                		if (CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD)
+                		if (CurrID == SRPlayerDBAdapter.ACTIVE_DOWNLOAD_PAUSED)
                 		{
                 			CurrDownloadText = "Pausad! ";
                 		}
