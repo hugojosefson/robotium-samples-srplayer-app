@@ -1,3 +1,19 @@
+/**
+  * This file is part of SR Player for Android
+  *
+  * SR Player for Android is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as published by
+  * the Free Software Foundation.
+  *
+  * SR Player for Android is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with SR Player for Android.  If not, see <http://www.gnu.org/licenses/>.
+  */
+
 package sr.player;
 
 import java.io.BufferedInputStream;
@@ -31,12 +47,16 @@ public class DownloadPodcastService extends Service {
 	private Timer timer = new Timer();
 	private boolean AlreadyRunning;
 	private boolean Abort;
+	private boolean Delete;
+	private boolean Pause;
+	private boolean Resume;
 	private SRPlayerDBAdapter SRPlayerDB; 
 	private Cursor PodList;
 	
 	String address,guid;		
 	String filename;
 	File root;		
+	int id;
 	int bytesDownloaded;
 	File subdirectory;		
 	String outfile;
@@ -47,10 +67,41 @@ public class DownloadPodcastService extends Service {
     InputStream in;
     URL url;
     long rowId;
+    
+    public static final int PAUSE = 1;
+    public static final int RESUME = 2;
+    public static final int ABORT_CURRENT = 3;
 			
 	@Override
 	public void onStart(Intent intent, int startId) {
+		Delete = false;
 		Abort = false;
+		Pause = false;
+		Resume = false;
+		int CurrAction = intent.getIntExtra("Action", 0);
+		switch (CurrAction)
+		{
+		case PAUSE:
+			//TODO Set the status of the current downloading item to pauses
+			//and do an abort
+			Pause = true;
+			Abort = true;
+			break;
+		case RESUME:
+			//TODO Remove the paused status of the current item
+			//and start downloading again
+			Resume = true;
+			break;
+		case ABORT_CURRENT:
+			//TODO Set the flag that the current item shall
+			//be not only aborted but also deleted from the DB and SD card
+			Abort = true;
+			Delete = true;
+			break;		
+		default:
+			 
+		}
+				
 		if (AlreadyRunning == false)
 		{
 		//Due to long executiontimes the
@@ -68,8 +119,7 @@ public class DownloadPodcastService extends Service {
 		super.onDestroy();
 	}
 
-
-
+	
 	private void DownloadNewPodcasts()
 	{
 		AlreadyRunning = true;		
@@ -82,18 +132,19 @@ public class DownloadPodcastService extends Service {
 		
 		for(;;)
 		{			
-			if ((PodList.getCount() == 0) || (Abort))
+			if (PodList.getCount() == 0)
 				break;
 			
 			if (PodList.moveToFirst())
-		    {
+		    {				
 				//Log.d(SRPlayer.TAG, "Found new podcast to download");
 				buffer = new byte[8096];
 		    	do {
 		    		failure = false;
 		    			    		
 		    		guid = PodList.getString(SRPlayerDBAdapter.INDEX_GUID); //The GUID contains the unique ID and path to the file
-		    		address = PodList.getString(SRPlayerDBAdapter.INDEX_LINK); //The GUID contains the unique ID and path to the file
+		    		
+		    		address = PodList.getString(SRPlayerDBAdapter.INDEX_LINK); 
 		    		//bytesDownloaded = PodList.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED); //The GUID contains the unique ID and path to the file
 		    		rowId = PodList.getLong(SRPlayerDBAdapter.INDEX_ROWID);
 		    		if (address == null)
@@ -102,6 +153,14 @@ public class DownloadPodcastService extends Service {
 		    			SRPlayerDB.deleteFavorite(rowId);
 		    			continue;
 		    		}
+		    		
+		    		id = PodList.getInt(SRPlayerDBAdapter.INDEX_ID);
+		    		if ((id == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD) && (!Resume))
+		    		{
+		    			//Download is paused.
+		    			Abort = true;
+		    		}
+		    			
 		    		
 		    		//Extract the filename
 		    		File file = new File(guid);		    		
@@ -117,6 +176,24 @@ public class DownloadPodcastService extends Service {
 		    		outfile = subdirectory.getAbsolutePath() + "/" + filename;
 		    		File newfile = new File(outfile);
 		    		bytesDownloaded = (int)newfile.length();
+		    		
+		    		if (Abort)
+					{
+		    			if (Delete)
+		    			{
+		    				Log.d(SRPlayer.TAG, "Deleting and aborting the current download");
+		    				newfile.delete();
+		    				SRPlayerDB.deleteFavorite(rowId);
+		    				Abort = false; //Continue to the next one
+		    			}
+		    			
+		    			if (Pause)
+		    			{
+		    				SRPlayerDB.podcastSetAsPaused(rowId);
+		    			}
+		    				
+						break;
+					}
 		    		
 		    		out = null;
 		            conn = null;
@@ -183,7 +260,7 @@ public class DownloadPodcastService extends Service {
 		                    if ((totalBytesRead - diffBytesRead) > 100000)
 		                    {
 		                    	diffBytesRead = totalBytesRead;
-		                    	SRPlayerDB.SetBytesDownloaded(rowId, totalBytesRead);
+		                    	SRPlayerDB.SetBytesDownloaded(rowId, totalBytesRead);		                    	
 		                    }
 		                    if (Abort)
 		                    	break;
@@ -242,7 +319,7 @@ public class DownloadPodcastService extends Service {
 		            }
 		    		
 		    		
-		    	} while (PodList.moveToNext());
+		    	} while ((!Abort) && (PodList.moveToNext()));
 		    }
 			
 			PodList.requery();
