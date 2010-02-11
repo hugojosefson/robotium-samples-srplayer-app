@@ -60,7 +60,7 @@ android:id="@+id/PlayerLayout"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:scrollbars="horizontal"   
+    android:scrollbars="horizontal"       
     >
  
     <TextView
@@ -260,7 +260,7 @@ android:id="@+id/PlayerLayout"
 	
 	<Button 
     	android:layout_height="55dip"     	
-	    android:layout_width="70dip" 	   
+	    android:layout_width="63dip" 	   
 	    android:id="@+id/PlayerButton" 	    
 	    android:background="@drawable/player"	    	    
 	    android:text="Spelare"
@@ -275,7 +275,7 @@ android:id="@+id/PlayerLayout"
 	
 	<Button 
     	android:layout_height="55dip"     	
-	    android:layout_width="70dip" 	   
+	    android:layout_width="63dip" 	   
 	    android:id="@+id/Favorites" 	    
 	    android:background="@drawable/favorite"		    	    
 	    android:text="Favoriter"
@@ -288,12 +288,28 @@ android:id="@+id/PlayerLayout"
 		android:visibility="visible"
 	    >
     </Button>
+    
+    <Button 
+    	android:layout_height="55dip"     	
+	    android:layout_width="63dip" 	   
+	    android:id="@+id/Channels" 	    
+	    android:background="@drawable/channel"		    	    
+	    android:text="Kanaler"
+	    android:textStyle="bold"
+	    android:textSize="10dip"	    	    	    	    	    
+	    android:textColor="#FFFFFF"	    
+	    android:gravity="bottom|center_horizontal"	    
+	    android:layout_alignParentBottom="true"     
+	    android:layout_toRightOf="@+id/Favorites"
+		android:visibility="visible"
+	    >
+    </Button>
 	
 	
 	<Button 
     	android:layout_height="55dip"     	
-	    android:layout_width="70dip" 	   
-	    android:id="@+id/ProgChannelButton" 	    
+	    android:layout_width="63dip" 	   
+	    android:id="@+id/ProgButton" 	    
 	    android:background="@drawable/channel_prog_select"	    	    
 	    android:text="Program A-Ö"
 	    android:textStyle="bold"
@@ -302,13 +318,13 @@ android:id="@+id/PlayerLayout"
 	    android:gravity="bottom|center_horizontal"	    
 	    android:layout_alignParentBottom="true"
 	    ImageView.ScaleType="centerInside"
-	    android:layout_toRightOf="@+id/Favorites"
+	    android:layout_toRightOf="@+id/Channels"
 	    >
     </Button>
 		
 	<Button 
     	android:layout_height="55dip"     	
-	    android:layout_width="70dip" 	   
+	    android:layout_width="63dip" 	   
 	    android:id="@+id/PodCatButton" 	    
 	    android:background="@drawable/category"		    	    
 	    android:text="Kategorier"
@@ -317,24 +333,11 @@ android:id="@+id/PlayerLayout"
 	    android:textColor="#FFFFFF"	    
 	    android:gravity="bottom|center_horizontal"	    
 	    android:layout_alignParentBottom="true"     
-	    android:layout_toRightOf="@+id/ProgChannelButton"
+	    android:layout_toRightOf="@+id/ProgButton"
 		android:visibility="visible"
 	    >
     </Button>
            
     </RelativeLayout>
-    
-    <ImageButton 
-    	android:layout_height="wrap_content" 
-	    android:layout_width="wrap_content" 	   
-	    android:id="@+id/ModeButton" 
-	    android:src="@drawable/mode_pod"
-	    android:layout_centerInParent="true"
-	    ImageView.ScaleType="centerInside"    
-	    android:background="#00FFFFFF"
-	    android:layout_above="@+id/LowerRelativeLayout"
-		android:layout_alignRight="@+id/LowerRelativeLayout"
-		android:layout_marginRight="10dip"
-	    />
-	 
+         
 </RelativeLayout>
