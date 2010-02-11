@@ -1,3 +1,19 @@
+/**
+  * This file is part of SR Player for Android
+  *
+  * SR Player for Android is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as published by
+  * the Free Software Foundation.
+  *
+  * SR Player for Android is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with SR Player for Android.  If not, see <http://www.gnu.org/licenses/>.
+  */
+
 package sr.player;
 
 import java.util.ArrayList;
@@ -12,6 +28,7 @@ import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
@@ -32,6 +49,19 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                     LayoutInflater vi = (LayoutInflater)CurrentContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     v = vi.inflate(R.layout.podlistitem, null);
                 }
+                
+                RelativeLayout MainView = (RelativeLayout) v.findViewById(R.id.podlistview);
+                if ((position % 2) != 0)
+                {
+                	
+                	MainView.setBackgroundResource(R.drawable.list_selector_bg_odd);
+                }
+                else
+                {                	
+                	MainView.setBackgroundResource(R.drawable.list_selector_bg);
+                }
+                	
+                
                 CurrentItem = items.get(position);                
                 String Title = CurrentItem.getTitle();
                 String Desciption = CurrentItem.getDescription();
@@ -45,8 +75,10 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 ProgressBar pb = (ProgressBar) v.findViewById(R.id.progress);
                 pb.setVisibility(View.GONE);
                 if (CurrentItem.getType() == SRPlayerDBAdapter.AVSNITT_ATT_LADDA_NER)
-                {                	
-                	if ((Integer.parseInt(CurrentItem.getID())) == SRPlayerDBAdapter.ACTIVE_DOWNLOAD)
+                {       
+                	int CurrID = (Integer.parseInt(CurrentItem.getID())); 
+                	if ((CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING) ||
+                		(CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD))
                 	{
                 		
                 		
@@ -57,6 +89,10 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 		double BytesDownloadedMB = ((double)BytesDownloaded)/1000000;
                 		
                 		String CurrDownloadText = CurrentContext.getResources().getString(R.string.CurrentDownloadDesc);
+                		if (CurrID == SRPlayerDBAdapter.AKTIV_NEDLADDNING_PAUSAD)
+                		{
+                			CurrDownloadText = "Pausad! ";
+                		}
                 		                		
                 		if ((FileSize > 0) && (BytesDownloaded > 0))
                 		{                			
@@ -70,6 +106,9 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 			Log.d(SRPlayer.TAG,"Incorrect size/bytes downloaded");
                 			pb.setProgress(0);
                 		}
+                		
+                		
+                		
                 		bt.setText(CurrDownloadText);
                 		pb.setVisibility(View.VISIBLE);
                 	}
