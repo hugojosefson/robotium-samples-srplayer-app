@@ -1,3 +1,19 @@
+/**
+  * This file is part of SR Player for Android
+  *
+  * SR Player for Android is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as published by
+  * the Free Software Foundation.
+  *
+  * SR Player for Android is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with SR Player for Android.  If not, see <http://www.gnu.org/licenses/>.
+  */
+
 package sr.player;
 
 import android.content.ContentValues;
@@ -42,16 +58,17 @@ public class SRPlayerDBAdapter {
     public static final int INDEX_FILESIZE = 8;
     public static final int INDEX_BYTESDOWNLOADED = 9;
         
-    public static final int KANAL = 0;
+    public static final int CHANNEL = 0;
     public static final int PROGRAM = 1;
-    public static final int AVSNITT = 2;
-    public static final int KATEGORI = 3;
-    public static final int AVSNITT_ATT_LADDA_NER = 10;
-    public static final int AVSNITT_OFFLINE = 4;
+    public static final int EPISODE = 2;
+    public static final int CATEGORY = 3;
+    public static final int EPISODE_TO_DOWNLOAD = 10;
+    public static final int EPISODE_OFFLINE = 4;
     public static final int DOWNLOAD_QUEUE = 5;
     
-    public static final int QUEUED_FOR_DOWNLOAD = 0;
+    public static final int QUEUE_FOR_DOWNLOAD = 0;
     public static final int ACTIVE_DOWNLOAD = 1;
+    public static final int ACTIVE_DOWNLOAD_PAUSED = 2;
     
     
     private static final String TAG = "SRPlayerDBAdapter";
@@ -189,7 +206,7 @@ public class SRPlayerDBAdapter {
     public Cursor fetchPodcastsToDownload() {
 
     	return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TYPE,
-                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, "type =" + String.valueOf(AVSNITT_ATT_LADDA_NER), null, null, null, KEY_ROWID);
+                KEY_ID, KEY_LABEL, KEY_LINK, KEY_DESC, KEY_NAME, KEY_GUID, KEY_FILESIZE, KEY_BYTESDOWNLOADED}, "type =" + String.valueOf(EPISODE_TO_DOWNLOAD), null, null, null, KEY_ROWID);
     }
     
     /**
@@ -265,7 +282,7 @@ public class SRPlayerDBAdapter {
      */
     public boolean podcastDownloadCompleteUpdate(long rowId, String FilePath) {
         ContentValues args = new ContentValues();
-        args.put(KEY_TYPE, AVSNITT_OFFLINE);
+        args.put(KEY_TYPE, EPISODE_OFFLINE);
         args.put(KEY_LINK, FilePath);
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
@@ -301,6 +318,16 @@ public class SRPlayerDBAdapter {
     public boolean podcastSetAsCurrentDownloading(long rowId) {
         ContentValues args = new ContentValues();
         args.put(KEY_ID, ACTIVE_DOWNLOAD);        
+        
+        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+    
+    /**
+     *  Change a favorite as the active downloading podcast
+     */
+    public boolean podcastSetAsPaused(long rowId) {
+        ContentValues args = new ContentValues();
+        args.put(KEY_ID, ACTIVE_DOWNLOAD_PAUSED);        
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
