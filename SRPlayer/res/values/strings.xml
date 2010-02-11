@@ -16,6 +16,9 @@
 <string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
 <string name="menu_delete_episode">Radera avsnitt</string>
 <string name="menu_delete_from_queue">Ta bort ifrån kö</string>
+<string name="menu_delete_from_queue_and_delete">Avbryt och radera</string>
+<string name="menu_pause">Pausa nedladdning</string>
+<string name="menu_resume">Starta nedladdning</string>
 <string name="menu_listen_offline">Lyssna offline"</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
