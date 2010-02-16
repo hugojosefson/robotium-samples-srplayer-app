@@ -17,11 +17,20 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>            
+            
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <meta-data android:name="android.app.searchable" 
+                       android:resource="@xml/searchable" />
+                                                
         </activity>
+        
         <activity android:name=".FaqActivity"
                   android:label="FAQ" android:launchMode="singleInstance"                                   
-                  /> 
+                  />                                                   
         
     <service android:name="PlayerService"></service>
     <service android:name="DownloadPodcastService"></service>
@@ -59,7 +68,12 @@
 	</receiver>
 	
 <activity android:name=".SRPlayerPreferences"></activity>
+
+<meta-data android:name="android.app.default_searchable"
+android:value=".SRPlayerSearch" />
+
 </application>
+
     <uses-sdk android:minSdkVersion="3" />
 
 
