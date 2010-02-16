@@ -39,6 +39,13 @@
 		android:summaryOff="@string/KillServiceNameOffSummary"
 		android:summaryOn="@string/KillServiceNameOnSummary"
 	></CheckBoxPreference>
+	<CheckBoxPreference
+		android:key="AnimationDisable"
+	    android:title="@string/AnimationDisableName"
+		android:disableDependentsState="false"
+		android:summaryOff="@string/AnimationEnable"
+		android:summaryOn="@string/AnimationDisable"				
+	></CheckBoxPreference>
 	
 	        
 </PreferenceScreen>
