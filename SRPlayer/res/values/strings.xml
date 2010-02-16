@@ -34,6 +34,9 @@
 <string name="KillServiceName">Beteende för "Stäng av"</string>
 <string name="KillServiceNameOffSummary">Stänger fönstret och pausa spelaren.</string>
 <string name="KillServiceNameOnSummary">Stoppar tjänsten. Bör EJ kombineras med widget.</string>
+<string name="AnimationDisableName">Inaktivera animationer</string>
+<string name="AnimationEnable">Animationer är aktiva</string>
+<string name="AnimationDisable">Animationer är ej aktiva</string>
 
 <string name="ProgramListLabel">Program A-Ö</string>
 <string name="SingleFavoriteAdded"> favorit är tillagd</string>
@@ -57,4 +60,11 @@
 <string name="about_title">About SR Player</string>
 <string name="about_message">SR Player is released under GPL.
 Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn). Tack till alla på Swedroid <a href="http://www.swedroid.se/forum/">forumet</a>.</string>
+
+<string name="search_label">Sök</string>
+<string name="search_hint"></string>
+<string name="no_search_from_player">Sökning ifrån spelarvyn ej möjlig</string>
+<string name="search_result_label">Sökresultat</string>
+<string name="no_match">Sökningen gav inga träffar</string>
+
 </resources>
