@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,6 +27,7 @@ import java.util.TimerTask;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.app.TimePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -52,6 +54,7 @@ import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
@@ -123,6 +126,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int FAVORITES_CATEGORIES = 9;	
 	public static final int FAVORITES_OFFLINE_PROGRAMS = 10;
 	public static final int DOWNLOAD_QUEUE = 11;
+	public static final int SEARCH_RESULT = 12;
 	       	
 	public static final String ACTION = "ACTION";
 	private static int CurrentAction;
@@ -130,6 +134,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private ProgressDialog waitingfordata;
 	    	
 	private String PoddIDLabel;
+	private String LastQuery;
 	
 	private Timer SeekTimer;
 	private Timer downloadTimer;
@@ -137,8 +142,45 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private TimerTask downloadTimerTask;
 	
 	//Database variables
-	SRPlayerDBAdapter SRPlayerDB; 
-			
+	SRPlayerDBAdapter SRPlayerDB;
+	
+	@Override
+	 public boolean onSearchRequested() {
+		if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
+    	{        		
+    		//Generate a toast that you can't search from
+			//the player view
+			Context context = getApplicationContext();
+			CharSequence text = getResources().getString(R.string.no_search_from_player);				
+			int duration = Toast.LENGTH_LONG;
+
+			Toast toast = Toast.makeText(context, text, duration);
+			toast.show();
+    		return false;
+    	}
+		super.onSearchRequested();
+		return true;		
+	 }
+				
+	@Override
+	protected void onNewIntent(Intent intent) {						       
+        String query = null;
+
+        // locate a query string; prefer a fresh search Intent over saved
+        // state
+        if (intent.ACTION_SEARCH.equals(intent.getAction())) {
+            query = intent.getStringExtra(SearchManager.QUERY);
+        } 
+        if (query != null && query.length() > 0) {
+        	Log.d(TAG,"Query with the string " + query);
+        	        	
+        	LastQuery = query.toLowerCase();        	
+        	GenerateNewList(SRPlayer.SEARCH_RESULT, 0, "", "", false,null);
+        }
+	
+		super.onNewIntent(intent);
+	}
+
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromTouch) {
 		
@@ -230,7 +272,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		super.onCreate(savedInstanceState);
 		
-		Log.d(TAG, "onCreate");
+		Log.d(TAG, "onCreate");	
 		
 		this.isExitCalled = false;
 		if ( savedInstanceState != null ) {
@@ -244,6 +286,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		requestWindowFeature  (Window.FEATURE_NO_TITLE);
 		
 		setContentView(R.layout.main);
+		
+		//setDefaultKeyMode(DEFAULT_KEYS_SEARCH_LOCAL);
 
 		SeekTimer = new Timer();
 		downloadTimer = new Timer();
@@ -903,12 +947,20 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     {
     	View LayoutToHide = null;
     	View LayoutToShow = null;
+    	Animation FadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fadein);
     	TextView tv = (TextView) findViewById(R.id.PageLabel);
+    	
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		boolean DisableAnim = prefs.getBoolean("AnimationDisable", false);
+    	
+    	if (!DisableAnim)
+    		tv.startAnimation(FadeInAnimation);
+    	
 		tv.setText(SRPlayer.currentStation.getStationName());
 		Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
 		ScrollView sv = (ScrollView) findViewById(R.id.PlayerLayout);
 		ViewGroup.MarginLayoutParams Layout = (MarginLayoutParams) sv.getLayoutParams();
-		
+				
 		final float scale = getBaseContext().getResources().getDisplayMetrics().density;		
 		
 		if (Hide)
@@ -920,9 +972,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		LayoutToHide = (View)findViewById(R.id.PlayerControlsLayout);
     		LayoutToHide.setVisibility(View.GONE);
     		
+    		Animation SliedFromBottomAnimation = AnimationUtils.loadAnimation(this, R.anim.slidefrombottom);
+    		//Animation SliedFromBottomAnimation = AnimationUtils.loadAnimation(this, R.anim.slidefromright);
     		//Show the listview
     		LayoutToShow = (View)findViewById(R.id.ListViewLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
+    		if (!DisableAnim)
+    			LayoutToShow.startAnimation(SliedFromBottomAnimation);
     		
     		PlayerButton.setBackgroundResource(R.drawable.player);
     		
@@ -936,8 +992,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		Button ProgramButton = (Button) findViewById(R.id.ProgButton);
 			Button CategoryButton = (Button) findViewById(R.id.PodCatButton);			    	
 			Button FavoriteButton = (Button) findViewById(R.id.Favorites);			    	
-			Button ChannelButton = (Button) findViewById(R.id.Channels);
-    		
+			Button ChannelButton = (Button) findViewById(R.id.Channels);			    		
 			
 			ProgramButton.setBackgroundResource(R.drawable.channel_prog_select);
     		CategoryButton.setBackgroundResource(R.drawable.category);
@@ -947,10 +1002,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		//Show the player
     		LayoutToShow = (View)findViewById(R.id.PlayerLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
+    		if (!DisableAnim)
+    			LayoutToShow.startAnimation(FadeInAnimation);
     		
     		LayoutToShow = (View)findViewById(R.id.PlayerControlsLayout);
     		LayoutToShow.setVisibility(View.VISIBLE);
-    		
+    		if (!DisableAnim)
+    			LayoutToShow.startAnimation(FadeInAnimation);
+    		    		    		
     		//Hide the listview
     		LayoutToHide = (View)findViewById(R.id.ListViewLayout);
     		LayoutToHide.setVisibility(View.GONE);
@@ -1011,8 +1070,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			
     			LayoutToShow = (View)findViewById(R.id.SeekLayout);
     			LayoutToShow.setVisibility(View.VISIBLE);
-    			
-    			
+    			if (!DisableAnim)
+    				LayoutToShow.startAnimation(FadeInAnimation);
+    			    			
     			UpdateSeekBar();
     		}
     	}
@@ -1020,7 +1080,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             
     protected void GenerateNewList(int Action, int position, String ID, String Label, boolean NoNewHist, Object SavedAdapter)
     {
-    	CurrentAction = Action;
+    	if (Action != SRPlayer.SEARCH_RESULT)
+    		CurrentAction = Action;
+    	
     	TextView tv;
     	Cursor FavCursor;
     	PodcastInfo FavoritesInfo;
@@ -1115,6 +1177,72 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             if (!NoNewHist)                
             	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label,SavedAdapter));
     		
+    		break;
+    	case SEARCH_RESULT:
+    		    		
+    		int PodInfoSize = PodInfo.size();
+    		int LoopVar = 0;
+    		int Count = 0;
+    		String CurrTitle,CurrDesc;
+    		List<PodcastInfo> TempPodInfo = new ArrayList<PodcastInfo>();
+    		if (SavedAdapter == null)
+    		{    			    			    	
+        		for (LoopVar = 0; LoopVar < PodInfoSize; LoopVar++)
+        		{
+        			//Loop over all the items and check which of them
+        			//that do not match
+        			CurrTitle = PodInfo.get(LoopVar).getTitle();
+        			CurrDesc = PodInfo.get(LoopVar).getDescription();
+        			if ((CurrTitle.toLowerCase().indexOf(LastQuery) >= 0) ||
+        				((CurrDesc != null) && (CurrDesc.toLowerCase().indexOf(LastQuery) >= 0)))
+        			{
+        				//Match        				
+        				TempPodInfo.add(PodInfo.get(LoopVar));
+        				Count++;
+        			}
+        		}
+    		}
+    		    		
+    		if ((Count > 0) || (SavedAdapter != null))
+    		{
+    			UpdatePlayerVisibility(true);
+    			tv = (TextView) findViewById(R.id.PageLabel);
+    			tv.setText(R.string.search_result_label);
+    			PoddIDLabel = getResources().getString(R.string.search_result_label);
+    		}
+    		    		    		
+        	if (Count > 0)
+        	{        			        		
+        			PodInfo.clear();
+        			PodInfo.addAll(TempPodInfo);
+        			setListAdapter(PodList);
+        			if (!NoNewHist)
+        			{
+        				
+            	   		HistoryList.add(new History(SRPlayer.SEARCH_RESULT,"",
+            	   				PoddIDLabel,
+            	   				TempPodInfo));            	   		
+        			}
+        	}
+        	else if (SavedAdapter == null)
+        	{
+        		//TODO No match. Generate a toast
+       			Context context = getApplicationContext();		
+       			int duration = Toast.LENGTH_LONG;
+        		Toast toast = Toast.makeText(context, R.string.no_match, duration);
+        		toast.show();
+        	}
+        	
+        	if (SavedAdapter != null)
+    		{
+    			CurrentAction = HistoryList.get(HistoryList.size()-2).ReadAction();    		
+    			PodInfo.clear();
+    			TempPodInfo.addAll((Collection<? extends PodcastInfo>) SavedAdapter);    			
+    		    PodInfo.addAll((Collection<? extends PodcastInfo>) TempPodInfo);
+    		    SavedAdapter = null;    	
+    		    setListAdapter(PodList);
+    		}
+        	        	
     		break;
     	case FAVORITES:
     		HighlightedButton = 2;
