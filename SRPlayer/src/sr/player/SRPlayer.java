@@ -83,8 +83,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private static final int MENU_ABOUT = 1;
 	private static final int MENU_CONFIG = 2;
 	private static final int MENU_UPDATE_INFO = 3;
+	private static final int MENU_SEARCH = 3;
 	private static final int MENU_SLEEPTIMER = 4;
 	private static final int MENU_HELP = 5;
+	
 	public static final int MENU_CONTEXT_ADD_TO_FAVORITES = 20;			
 	public static final int MENU_CONTEXT_DELETE_FAVORITE = 21;
 	public static final int MENU_CONTEXT_DOWNLOAD = 22;
@@ -576,8 +578,18 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			setIcon(android.R.drawable.ic_menu_help);
 		menu.add(0, SRPlayer.MENU_CONFIG, 0, R.string.menu_config).
 			setIcon(android.R.drawable.ic_menu_save);
-		menu.add(0, SRPlayer.MENU_UPDATE_INFO, 0, R.string.menu_update_info).
+
+		if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
+    	{
+			menu.add(0, SRPlayer.MENU_UPDATE_INFO, 0, R.string.menu_update_info).
 			setIcon(android.R.drawable.ic_menu_info_details);
+    	}
+		else
+		{
+			menu.add(0, SRPlayer.MENU_SEARCH, 0, R.string.menu_search).
+			setIcon(android.R.drawable.ic_search_category_default);
+		}
+								
 		if (this.boundService.SleeptimerIsRunning())
 		{
 			menu.add(0, SRPlayer.MENU_SLEEPTIMER, 0, R.string.menu_sleeptimer_cancel).
@@ -605,6 +617,18 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			menu.findItem(MENU_SLEEPTIMER).setIcon(R.drawable.ic_menu_sleeptimer);
 			menu.findItem(MENU_SLEEPTIMER).setTitle(R.string.menu_sleeptimer);
 		}
+		
+		if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
+    	{
+			menu.findItem(MENU_UPDATE_INFO).setTitle(R.string.menu_update_info);
+			menu.findItem(MENU_UPDATE_INFO).setIcon(android.R.drawable.ic_menu_info_details);
+    	}
+		else
+		{
+			menu.findItem(MENU_SEARCH).setTitle(R.string.menu_search);
+			menu.findItem(MENU_SEARCH).setIcon(android.R.drawable.ic_search_category_default);
+		}
+						
 		return true;
 	}
 	
@@ -633,7 +657,14 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			handleMenuConfig();
 			return true;
 		case SRPlayer.MENU_UPDATE_INFO:
-			boundService.restartRightNowInfo(true);
+			if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
+			{
+				boundService.restartRightNowInfo(true);
+			}
+			else
+			{
+				 onSearchRequested();
+			}
 			return true;
 		case SRPlayer.MENU_HELP:			
 			Intent FaqIntent = new Intent(SRPlayer.this, FaqActivity.class);

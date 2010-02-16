@@ -11,6 +11,7 @@
 <string name="menu_update_info">Update info</string>
 <string name="menu_sleeptimer">Start sleeptimer</string>
 <string name="menu_help">Hjälp</string>
+<string name="menu_search">Sök</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <string name="menu_add_to_favorite">Addera till favoriter</string>
 <string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
