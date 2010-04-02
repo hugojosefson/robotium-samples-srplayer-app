@@ -11,6 +11,7 @@
 <string name="menu_update_info">Update info</string>
 <string name="menu_sleeptimer">Start sleeptimer</string>
 <string name="menu_help">Hjälp</string>
+<string name="menu_alarm">Alarm</string>
 <string name="menu_search">Sök</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <string name="menu_add_to_favorite">Addera till favoriter</string>
@@ -20,7 +21,7 @@
 <string name="menu_delete_from_queue_and_delete">Avbryt och radera</string>
 <string name="menu_pause">Pausa nedladdning</string>
 <string name="menu_resume">Starta nedladdning</string>
-<string name="menu_listen_offline">Lyssna offline"</string>
+<string name="menu_listen_offline">Lyssna offline</string>
 <!-- Preferences -->
 <string name="rightNowInfoCategories">Programinformation</string>
 <string name="rightNowInfoRetrievalRate">Vid spelning</string>
@@ -67,5 +68,25 @@ Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn
 <string name="no_search_from_player">Sökning ifrån spelarvyn ej möjlig</string>
 <string name="search_result_label">Sökresultat</string>
 <string name="no_match">Sökningen gav inga träffar</string>
+
+<string-array name="week_days">
+<item>Måndag</item>
+<item>Tisdag</item>
+<item>Onsdag</item>
+<item>Torsdag</item>
+<item>Fredag</item>
+<item>Lördag</item>
+<item>Söndag</item>
+</string-array>
+
+<string-array name="week_days_prefix">
+<item>Må</item>
+<item>Ti</item>
+<item>On</item>
+<item>To</item>
+<item>Fr</item>
+<item>Lö</item>
+<item>Sö</item>
+</string-array>
 
 </resources>
