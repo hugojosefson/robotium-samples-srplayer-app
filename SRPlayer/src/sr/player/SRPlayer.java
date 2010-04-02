@@ -19,13 +19,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.TimePickerDialog;
@@ -35,6 +40,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,8 +64,10 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -71,7 +79,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	private static final String _SR_RIGHTNOWINFO_URL = 
 		"http://api.sr.se/api/rightnowinfo/rightnowinfo.aspx?filterinfo=all";
-	private static final String _SR_RIGHTNOWINFO_IND_URL =
+	public static final String _SR_RIGHTNOWINFO_IND_URL =
 		"http://api.sr.se/api/rightnowinfo/Rightnowinfo.aspx?unit=";
 	private static Station currentStation = new Station("P1", 
 			"rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp",
@@ -86,6 +94,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private static final int MENU_SEARCH = 3;
 	private static final int MENU_SLEEPTIMER = 4;
 	private static final int MENU_HELP = 5;
+	private static final int MENU_ALARM = 6;
 	
 	public static final int MENU_CONTEXT_ADD_TO_FAVORITES = 20;			
 	public static final int MENU_CONTEXT_DELETE_FAVORITE = 21;
@@ -93,6 +102,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int MENU_CONTEXT_ABORT_AND_DELETE = 23;
 	public static final int MENU_CONTEXT_PAUSE = 24;
 	public static final int MENU_CONTEXT_RESUME = 25;
+	public static final int MENU_CONTEXT_SET_AS_ALARM = 26;
 	
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	protected static final int MSGPLAYERSTOP = 1;
@@ -129,6 +139,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int FAVORITES_OFFLINE_PROGRAMS = 10;
 	public static final int DOWNLOAD_QUEUE = 11;
 	public static final int SEARCH_RESULT = 12;
+	public static final int ALARM = 13;
 	       	
 	public static final String ACTION = "ACTION";
 	private static int CurrentAction;
@@ -142,10 +153,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private Timer downloadTimer;
 	private TimerTask SeekTimerTask;
 	private TimerTask downloadTimerTask;
+	private int Rep;
 	
 	//Database variables
 	SRPlayerDBAdapter SRPlayerDB;
-	
+	    
 	@Override
 	 public boolean onSearchRequested() {
 		if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
@@ -247,11 +259,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
         	{        		
         		TextView tv = (TextView) findViewById(R.id.PageLabel);
-        		tv.setText(boundService.getCurrentStation().getStationName());
+        		tv.setText(boundService.getCurrentStation().getStationName());        		
         	}
         	
   			// Set channel in spinner
-        	Station station = boundService.getCurrentStation();        	
+        	//Station station = boundService.getCurrentStation();        	
+        	SRPlayer.currentStation = boundService.getCurrentStation().clone();
         	UpdateSeekBar();
         	
         	//TODO If the current stream is a podcast/offline. Retreive the text from saved data
@@ -361,6 +374,50 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	public void onClick(View v) {	        		        		
         		GenerateNewList(SRPlayer.CATEGORIES, 0, "", "", false,
         				(CategoryArray.size() > 0) ? CategoryArray : null);
+        	}
+		});
+        
+        RelativeLayout AlarmChannelLayout = (RelativeLayout) findViewById(R.id.AlarmChannelLayout);
+        AlarmChannelLayout.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {
+        		if (ChannelArray.size() == 0)
+        		{
+        			podcastinfothread = new PodcastInfoThread(SRPlayer.this, PodcastInfoThread.GET_CHANNEL_LIST, 0);
+        			podcastinfothread.start();  
+        			waitingfordata = ProgressDialog.show(SRPlayer.this,"SR Player",getResources().getString(R.string.PodlistProgressText));
+        		}
+        		else
+        		{
+        			OpenAlarmChannelDialog();
+        		}
+        		
+        	}
+		});
+        
+        RelativeLayout AlarmTimeLayout = (RelativeLayout) findViewById(R.id.AlarmTimeLayout);
+        AlarmTimeLayout.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {	        		        		
+        		OpenAlarmTimeDialog();
+        	}
+		});
+        
+        RelativeLayout AlarmRepLayout = (RelativeLayout) findViewById(R.id.AlarmRepLayout);
+        AlarmRepLayout.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {	        		        		
+        		OpenAlarmRepeatDialog();
+        	}
+		});
+        
+        CheckBox AlarmEnable = (CheckBox) findViewById(R.id.AlarmEnable);
+        AlarmEnable.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {	        		        		
+        		CheckBox checkBox = (CheckBox) findViewById(R.id.AlarmEnable);
+        		//SharedPreferences settings = getPreferences(0);
+        		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        		SharedPreferences.Editor editor = settings.edit();
+        		editor.putBoolean("AlarmEnable", checkBox.isChecked());
+        		editor.commit();                
+                SRPlayerAlarm.HandleAlarmStateChange(getApplicationContext());
         	}
 		});
                 
@@ -602,6 +659,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		}
 		menu.add(0, SRPlayer.MENU_HELP, 0, R.string.menu_help).
 		setIcon(android.R.drawable.ic_menu_help);
+		
+		menu.add(0, SRPlayer.MENU_ALARM, 0, R.string.menu_alarm);
 		return true;
 	}
 	
@@ -642,7 +701,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             }
         };
            
-	
+        
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		Log.d(TAG, "onMenuItemSelected");
@@ -685,6 +744,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			SelectSleepTimeDialog.setTitle("Ange tid HH:MM");
 			SelectSleepTimeDialog.show();
 			}
+			return true;
+		case MENU_ALARM:								
+			GenerateNewList(SRPlayer.ALARM, 0, "", "Alarm", false,null);
 			return true;
 			
 		}
@@ -790,6 +852,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
                 		  waitingfordata.dismiss();                      
                       UpdatePlayerVisibility(true);
                       UpdateList();
+                      if (CurrentAction == SRPlayer.ALARM)
+                      {
+                    	  OpenAlarmChannelDialog();
+                      }                      
                       break;
                   case MSGUPDATESEEK :
                 	  UpdateSeekBar();
@@ -877,6 +943,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    	{
    		tv.setText("Kategorier");
    	}
+   	else if (CurrentAction == SRPlayer.ALARM)
+   	{
+   		tv.setText("Alarm");
+   	}
    	else
    	{        		                        	
  		tv.setText(PoddIDLabel);
@@ -908,7 +978,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		    	ProgramArray.clear();
 		    	ProgramArray.addAll(NewPodInfo);
 		    }
-		    else if ((CurrentAction == CHANNELS) && (ChannelArray.size() == 0))
+		    else if (((CurrentAction == CHANNELS) || (CurrentAction == ALARM)) 
+		    		&& (ChannelArray.size() == 0))
 		    {
 		    	//store the program list
 		    	ChannelArray.clear();
@@ -1006,8 +1077,28 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		Animation SliedFromBottomAnimation = AnimationUtils.loadAnimation(this, R.anim.slidefrombottom);
     		//Animation SliedFromBottomAnimation = AnimationUtils.loadAnimation(this, R.anim.slidefromright);
     		//Show the listview
-    		LayoutToShow = (View)findViewById(R.id.ListViewLayout);
-    		LayoutToShow.setVisibility(View.VISIBLE);
+    		
+    		if (CurrentAction != SRPlayer.ALARM)
+    		{	
+    			LayoutToHide = (View)findViewById(R.id.AlarmLayout);
+        		LayoutToHide.setVisibility(View.GONE);
+    			
+    			LayoutToShow = (View)findViewById(R.id.ListViewLayout);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    		}
+    		else
+    		{    		
+    			tv = (TextView) findViewById(R.id.PageLabel);
+    	    	tv.setText("Alarm");
+    	    	
+    			UpdateAlarmView();
+    			LayoutToShow = (View)findViewById(R.id.AlarmLayout);
+    			LayoutToShow.setVisibility(View.VISIBLE);
+    			
+    			LayoutToHide = (View)findViewById(R.id.ListViewLayout);
+        		LayoutToHide.setVisibility(View.GONE);
+    		}
+    		    		
     		if (!DisableAnim)
     			LayoutToShow.startAnimation(SliedFromBottomAnimation);
     		
@@ -1043,6 +1134,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		    		    		
     		//Hide the listview
     		LayoutToHide = (View)findViewById(R.id.ListViewLayout);
+    		LayoutToHide.setVisibility(View.GONE);
+    		
+    		//Hide the AlarmLayout
+    		LayoutToHide = (View)findViewById(R.id.AlarmLayout);
     		LayoutToHide.setVisibility(View.GONE);
     		
     		//Check the mode 
@@ -1127,6 +1222,13 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
        	       	       	
     	switch (Action)
     	{
+    	case SRPlayer.ALARM :
+    		UpdatePlayerVisibility(true);
+    		
+    		//Init the history
+            HistoryList.clear();
+            HistoryList.add(new History(SRPlayer.ALARM,"","Alarm",null));
+			break;
     	case SRPlayer.PLAYER:
     		//Just show the player    		    	   	
     		UpdatePlayerVisibility(false);
@@ -1573,7 +1675,6 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     				SRPlayer.currentStation.setChannelId(Integer.parseInt(PodInfo.get(currentPosition).getID()));
     				//SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_URL);
     				SRPlayer.currentStation.setRightNowUrl(_SR_RIGHTNOWINFO_IND_URL+PodInfo.get(currentPosition).getID());
-    				
     				SRPlayer.currentStation.setStreamType(Station.NORMAL_STREAM);					
     				boundService.selectChannel(SRPlayer.currentStation);					
     				clearAllText();
@@ -1702,7 +1803,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		break;    			        	
         	case SRPlayer.CHANNELS:        		        		
         		Log.d(TAG, "Channel favorite added. ID set to " + String.valueOf(SelectedIndex));
-        		Selectedid = (int)SelectedIndex; 
+        		Selectedid = Integer.parseInt(PodInfo.get((int)SelectedIndex).getID()); 
         		FavType = SRPlayerDBAdapter.CHANNEL;
         		break;
         	case SRPlayer.PROGRAMS:            	
@@ -1789,7 +1890,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			//Start the service to download the new podcast. 
 			StartDownloadService();
 			
-			return true;
+			return true;		
 		default:
 			return super.onContextItemSelected(item);
 		}
@@ -1907,6 +2008,180 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			FavCursor.close();
 	}
 	
+	void OpenAlarmChannelDialog()
+	{
+		if (!ChannelArray.isEmpty())
+		{
+			//Resources res = getResources();
+			String[] items = new String[ChannelArray.size()];
+			//SharedPreferences settings = getPreferences(0);
+			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+			String AlarmStationName = settings.getString("AlarmStationName", "P1");
+			int AlarmStationID = settings.getInt("AlarmStationID", 132);
+			String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
+			int SelectedID = 0;
+			
+			for (int i = 0; i<ChannelArray.size(); i++)
+			{
+				items[i] = ChannelArray.get(i).getTitle();
+				if (ChannelArray.get(i).getID().equals(String.valueOf(AlarmStationID)))
+				{
+					SelectedID = i;
+				}
+			}
 	
+			//Find the selected channel		
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);		
+			builder.setTitle(R.string.pick_channel);
+			builder.setSingleChoiceItems(items, SelectedID, new DialogInterface.OnClickListener() {
+			    public void onClick(DialogInterface dialog, int item) {
+			        dialog.dismiss();
+			           //Save the new channel, id and name
+			        PodcastInfo NewChannel = ChannelArray.get(item);
+			        //SharedPreferences settings = getPreferences(0);
+			        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putInt("AlarmStationID", Integer.parseInt(NewChannel.getID()));
+					editor.putString("AlarmStationName", NewChannel.getTitle());
+					editor.putString("AlarmStationURL", NewChannel.getLink());
+	        		editor.commit();
+	        		SRPlayerAlarm.HandleAlarmStateChange(getApplicationContext());
+	        		UpdateAlarmView();
+			    }
+			});
+			AlertDialog alert = builder.create();
+			alert.show();
+		}
+	}
 	
+	void OpenAlarmRepeatDialog()
+	{
+		Resources res = getResources();
+		String[] items = res.getStringArray(R.array.week_days);
+		
+		//SharedPreferences settings = getPreferences(0);
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+		Rep = settings.getInt("AlarmRep", 255);
+		boolean Selected[];
+		Selected = new boolean[7];
+		for (int i=0; i<7; i++)
+		{
+			if ( (Rep & (1<<i)) != 0)
+			{
+				Selected[i] = true;
+			}
+			else
+			{
+				Selected[i] = false;
+			}
+		}
+    	    		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);		
+		builder.setTitle("Ange dagar");
+		builder.setMultiChoiceItems(items, Selected, new DialogInterface.OnMultiChoiceClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which, boolean isChecked) {				
+				if (isChecked)
+				{
+					Rep |= (1<<which);
+				}
+				else
+				{
+					Rep &= ~(1<<which);
+				}								
+			}
+		});
+									    
+		AlertDialog alert = builder.create();
+		alert.setButton("Spara", new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				
+				//SharedPreferences settings = getPreferences(0);
+				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putInt("AlarmRep", Rep);
+        		editor.commit();
+        		SRPlayerAlarm.HandleAlarmStateChange(getApplicationContext());
+        		UpdateAlarmView();        		
+			}
+		});
+		alert.show();
+	}
+	
+	private TimePickerDialog.OnTimeSetListener mAlarmTimeSetListener =
+        new TimePickerDialog.OnTimeSetListener() {
+
+            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            	  //Store the selected Hour and Minute
+            		//SharedPreferences settings = getPreferences(0);
+            		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            		SharedPreferences.Editor editor = settings.edit();
+            		editor.putInt("AlarmHour", hourOfDay);
+            		editor.putInt("AlarmMinute", minute);               
+            		editor.commit();  
+            		SRPlayerAlarm.HandleAlarmStateChange(getApplicationContext());
+            		UpdateAlarmView();
+            		
+            		
+            }
+        };
+        
+    private void OpenAlarmTimeDialog()
+    {
+    	//SharedPreferences settings = getPreferences(0);
+    	SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+    	int Hour = settings.getInt("AlarmHour", 6);
+    	int Minute = settings.getInt("AlarmMinute", 0);
+    	
+    	TimePickerDialog SelectAlarmTimeDialog = new TimePickerDialog(this,
+				mAlarmTimeSetListener, 
+				Hour, 
+                Minute, 
+                true);
+		SelectAlarmTimeDialog.setTitle("Ange tid HH:MM");
+		SelectAlarmTimeDialog.show();
+    }
+    
+    private void UpdateAlarmView()
+    {
+    	//SharedPreferences settings = getPreferences(0);    	
+    	SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+    	
+    	int Hour = settings.getInt("AlarmHour", 6);
+    	int Minute = settings.getInt("AlarmMinute", 0);
+    	boolean AlarmEnable = settings.getBoolean("AlarmEnable", false);
+    	String AlarmStationName = settings.getString("AlarmStationName", "P1");
+    	Rep = settings.getInt("AlarmRep", 255);
+    	
+		String RepStr = "";
+		Resources res = getResources();
+		String[] items = res.getStringArray(R.array.week_days_prefix);
+		
+		
+		for (int i=0; i<7; i++)
+		{
+			if(((1<<i) & Rep) != 0)
+			{
+				RepStr += items[i] + " ";
+			}
+		}
+			
+    	
+    	TextView tv = (TextView) findViewById(R.id.AlarmTime);
+		tv.setText(String.format("%02d", Hour) + ":" + String.format("%02d", Minute));
+		
+		tv = (TextView) findViewById(R.id.AlarmRep);
+		tv.setText(RepStr);
+		
+		tv = (TextView) findViewById(R.id.AlarmChannel);
+		tv.setText(AlarmStationName);
+				
+		CheckBox AlarmEnableCheckBox = (CheckBox) findViewById(R.id.AlarmEnable);
+		AlarmEnableCheckBox.setChecked(AlarmEnable);
+    }
+        
 }
