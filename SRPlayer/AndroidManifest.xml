@@ -67,6 +67,16 @@
 	    </intent-filter>
 	</receiver>
 	
+	<receiver android:name=".BootupReceiver">
+       <intent-filter>
+       <action
+       android:name ="android.intent.action.BOOT_COMPLETED">
+       </action>
+       </intent-filter>
+    </receiver>
+	
+	<receiver android:name="SRPlayerAlarm" android:process=":remote" />
+	
 <activity android:name=".SRPlayerPreferences"></activity>
 
 <meta-data android:name="android.app.default_searchable"
@@ -80,4 +90,6 @@ android:value=".SRPlayerSearch" />
 <uses-permission android:name="android.permission.INTERNET"></uses-permission>
 <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>  
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest> 
