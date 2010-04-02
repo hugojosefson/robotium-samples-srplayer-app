@@ -55,6 +55,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	// Constants used in the start intent to show what we want to perform.
 	public static final int GET_INFO = 0;	
 	public static final int TOGGLE_STREAMING_STATUS = 1;
+	public static final int ALARM_START = 2;
 	
 	// Constants used in the broadcast intent to send status information
 	public static final int STOP = 0;	
@@ -122,6 +123,31 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		Log.i(getClass().getSimpleName(), "PlayService onStart!");
 		switch (intent.getFlags())
         {
+		case ALARM_START:
+			//Read the information from the intent
+						
+			int AlarmStationID = intent.getIntExtra("AlarmStationID",132);
+			String AlarmStationName = intent.getStringExtra("AlarmStationName");
+			String AlarmStationURL = intent.getStringExtra("AlarmStationURL");
+			
+			currentStation.setChannelId(AlarmStationID);
+			currentStation.setStationName(AlarmStationName);
+			currentStation.setStreamType(Station.NORMAL_STREAM);			
+			currentStation.setRightNowUrl(SRPlayer._SR_RIGHTNOWINFO_IND_URL+AlarmStationID);
+			currentStation.setStreamUrl(AlarmStationURL);
+			
+			try {				
+				startPlay();
+			} catch (IllegalArgumentException e) {				
+				e.printStackTrace();
+			} catch (IllegalStateException e) {				
+				e.printStackTrace();
+			} catch (IOException e) {				
+				e.printStackTrace();
+			}
+			//Release the WakeLock
+			AlarmAlertWakeLock.releaseCpuLock();
+			break;
         case GET_INFO :
         	//Request from widget to get updated information
         	if (LastRetreivedInfo == null)
@@ -190,6 +216,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			getBaseContext().unregisterReceiver(connectionStateReceiver);
 		}
 		
+		//To be on the safeside, try to release the
+		//lock just in case it is still there
+		AlarmAlertWakeLock.releaseCpuLock();
+		
 		super.onDestroy();
 	}
 
@@ -200,30 +230,27 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 
 	public void selectChannel(Station station) {
 		Log.d(getClass().getSimpleName(), "PlayerService selectChannel");
-
-		if ( !station.equals(this.currentStation) ) {
-			Log.d(getClass().getSimpleName(), "PlayerService not equal");
-			this.currentStation = station.clone();
-			if ( this.playerStatus == PLAY ) {
-				stopPlay();
-				try {
-					startPlay();
-				} catch (IllegalStateException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} 
-			else if ( this.playerStatus == PAUSE ) {
-				//If the channel changes and the stream is paused.
-				//Stop so that the stream is reset
-				stopPlay();
+		this.currentStation = station.clone();
+		if ((this.playerStatus == PLAY ) || (this.playerStatus == BUFFER ))   
+		{
+			stopPlay();
+			try {
+				startPlay();
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			updateNotify(this.currentStation.getStationName(), null);
-			restartRightNowInfo(true);
-			this.LastRetreivedInfo = null;
-			UpdateDataAndInformReceivers(); //Inform widgets
-		} 		
+		} 
+		else if ( this.playerStatus == PAUSE ) {
+			//If the channel changes and the stream is paused.
+			//Stop so that the stream is reset
+			stopPlay();
+		}
+		updateNotify(this.currentStation.getStationName(), null);
+		restartRightNowInfo(true);
+		this.LastRetreivedInfo = null;
+		UpdateDataAndInformReceivers(); //Inform widgets		 	
 	}
 	
 	public void startPlay() throws IllegalArgumentException, 
@@ -306,7 +333,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.setOnInfoListener(this);
 		this.player.setOnPreparedListener(this);
 		this.player.setOnBufferingUpdateListener(this);
-		this.player.setOnSeekCompleteListener(this);
+		this.player.setOnSeekCompleteListener(this);		
 		
 		this.player.prepareAsync();
 		this.playerStatus = BUFFER;
@@ -318,6 +345,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.stop();
 		this.player.reset();
 		this.playerStatus = STOP;
+		
 			
 		UpdateDataAndInformReceivers(); //Inform widgets
 		if ( notification != null ) {
@@ -410,6 +438,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 			Log.i(getClass().getSimpleName(), "Not stopped restarting !!");
 			this.player.stop();
 			this.player.reset();
+			//this.player.start();
 			
 				try {
 					this.startStream();
@@ -506,6 +535,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {		
 		Log.d(getClass().getSimpleName(), "PlayerService onBufferingUpdate : " + percent + "%");
+		
 		if (this.currentStation.getStreamType() == Station.NORMAL_STREAM)
 		{
 			if ( this.playerObservers != null ) {
@@ -666,8 +696,12 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	}
 	
 	public int GetDuration() {
-		if (this.playerStatus != STOP)
-			return this.player.getDuration();
+		//if (this.playerStatus != STOP)
+		if ((this.player != null) && (this.player.isPlaying()))
+			if (this.currentStation.getStreamType() != Station.NORMAL_STREAM)
+				return this.player.getDuration();				
+			else
+				return -1;
 		else
 			return -1;
 	}
