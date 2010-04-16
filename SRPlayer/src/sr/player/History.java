@@ -16,8 +16,6 @@ package sr.player;
 
 import java.io.Serializable;
 
-import android.util.Log;
-
 public class History implements Serializable {
 	/**
 	 * 

@@ -24,8 +24,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnFocusChangeListener;
-import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -131,7 +129,8 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 }
                 else
                 {
-                	bt.setVisibility(View.GONE);
+                	// We should not be doing this since bt is null here
+                	// bt.setVisibility(View.GONE);
                 }	
                 return v;
         }

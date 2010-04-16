@@ -19,18 +19,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.TimePickerDialog;
@@ -42,6 +37,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -62,7 +58,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
@@ -182,7 +177,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 
         // locate a query string; prefer a fresh search Intent over saved
         // state
-        if (intent.ACTION_SEARCH.equals(intent.getAction())) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             query = intent.getStringExtra(SearchManager.QUERY);
         } 
         if (query != null && query.length() > 0) {
@@ -286,6 +281,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
+		// Make sure volume button changes Media Volume if SR Player in focus.
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
 		Log.d(TAG, "onCreate");	
 		
@@ -1691,9 +1688,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	}
    }
     
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-
         if ((keyCode == KeyEvent.KEYCODE_BACK) && (HistoryList.size() > 0)) {
         	//Remove the last entry in the history list and execute
         	//the previous one
@@ -1791,7 +1788,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		switch (item.getItemId()) {
 		case MENU_CONTEXT_ADD_TO_FAVORITES:
-			//Lägg till bland favoriter
+			//Lï¿½gg till bland favoriter
 			Log.d(TAG, "Add to favorites selected. ID = " + String.valueOf(SelectedIndex));						
 			int Selectedid = -1;
 			int FavType = 0;
@@ -1916,7 +1913,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	public void UpdateDownloadList()
 	{
-		PodcastInfo FavoritesInfo = new PodcastInfo();
+		// PodcastInfo FavoritesInfo = new PodcastInfo();
 		
 		int PodInfoSize = PodInfo.size();
 		int LoopVar = 0;
@@ -2016,9 +2013,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			String[] items = new String[ChannelArray.size()];
 			//SharedPreferences settings = getPreferences(0);
 			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-			String AlarmStationName = settings.getString("AlarmStationName", "P1");
+			// String AlarmStationName = settings.getString("AlarmStationName", "P1");
 			int AlarmStationID = settings.getInt("AlarmStationID", 132);
-			String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
+			// String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
 			int SelectedID = 0;
 			
 			for (int i = 0; i<ChannelArray.size(); i++)
