@@ -14,7 +14,7 @@
 <string name="menu_alarm">Alarm</string>
 <string name="menu_search">Sök</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
-<string name="menu_add_to_favorite">Addera till favoriter</string>
+<string name="menu_add_to_favorite">Lägg till som favorit</string>
 <string name="menu_remove_from_favorite">Ta bort ifrån favoriter</string>
 <string name="menu_delete_episode">Radera avsnitt</string>
 <string name="menu_delete_from_queue">Ta bort ifrån kö</string>

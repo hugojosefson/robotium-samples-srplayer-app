@@ -37,7 +37,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -99,6 +98,12 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int MENU_CONTEXT_RESUME = 25;
 	public static final int MENU_CONTEXT_SET_AS_ALARM = 26;
 	
+	public static final int P1_CHANNELID = 132;
+	public static final int P2_CHANNELID = 163;
+	public static final int P3_CHANNELID = 164;
+	public static final int P4_CHANNELID = 158;
+	public static final int P4_SPORT_CHANNELID = 179;
+			
 	protected static final int MSGUPDATECHANNELINFO = 0;
 	protected static final int MSGPLAYERSTOP = 1;
 	protected static final int MSGNEWPODINFO = 2;	
@@ -250,16 +255,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
             // cast its IBinder to a concrete class and directly access it.
         	boundService = ((PlayerService.PlayerBinder)service).getService();
         	boundService.addPlayerObserver(SRPlayer.this);
+        	SRPlayer.currentStation = boundService.getCurrentStation().clone();
         	// Set StationName, but only if the historlist is empty
         	if ((HistoryList.isEmpty()) || (CurrentAction == SRPlayer.PLAYER))
         	{        		
         		TextView tv = (TextView) findViewById(R.id.PageLabel);
-        		tv.setText(boundService.getCurrentStation().getStationName());        		
+        		tv.setText(boundService.getCurrentStation().getStationName());
+        		UpdatePlayerVisibility(false);
         	}
-        	
-  			// Set channel in spinner
-        	//Station station = boundService.getCurrentStation();        	
-        	SRPlayer.currentStation = boundService.getCurrentStation().clone();
+        	  			        	        
         	UpdateSeekBar();
         	
         	//TODO If the current stream is a podcast/offline. Retreive the text from saved data
@@ -281,8 +285,6 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
-		// Make sure volume button changes Media Volume if SR Player in focus.
-		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
 		Log.d(TAG, "onCreate");	
 		
@@ -930,7 +932,21 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    private void UpdateList()
    {
    	setListAdapter(PodList);
-	   
+   	
+   	//Set the position in the list to where the 
+   	//use was before
+   	
+   	if (!HistoryList.isEmpty())
+   	{
+   		int HistoryIndex = HistoryList.size()-1;
+   		History CurrHistory = HistoryList.get(HistoryIndex);
+   		int ListPos = CurrHistory.ReadListPos();   		
+   		if ((ListPos > 0) && (ListPos <= (PodList.getCount()-1)))
+   		{
+   			getListView().setSelection(ListPos);
+   		}
+   	}
+   		   		  
    	TextView tv = (TextView) findViewById(R.id.PageLabel);
    	if (CurrentAction == SRPlayer.PROGRAMS)
    	{
@@ -1047,7 +1063,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	View LayoutToHide = null;
     	View LayoutToShow = null;
     	Animation FadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fadein);
-    	TextView tv = (TextView) findViewById(R.id.PageLabel);
+    	TextView tv = (TextView) findViewById(R.id.PageLabel);    	
     	
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		boolean DisableAnim = prefs.getBoolean("AnimationDisable", false);
@@ -1058,12 +1074,15 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		tv.setText(SRPlayer.currentStation.getStationName());
 		Button PlayerButton = (Button) findViewById(R.id.PlayerButton);
 		ScrollView sv = (ScrollView) findViewById(R.id.PlayerLayout);
+		RelativeLayout PageL = (RelativeLayout)findViewById(R.id.page_header_layout);
 		ViewGroup.MarginLayoutParams Layout = (MarginLayoutParams) sv.getLayoutParams();
 				
 		final float scale = getBaseContext().getResources().getDisplayMetrics().density;		
 		
 		if (Hide)
-    	{
+    	{						
+			PageL.setBackgroundResource(R.drawable.black_gradient);
+			
     		//Hide the player
     		LayoutToHide = (View)findViewById(R.id.PlayerLayout);
     		LayoutToHide.setVisibility(View.GONE);
@@ -1105,7 +1124,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		LayoutToHide.setVisibility(View.GONE);
     	}
     	else
-    	{    	
+    	{       		
+    		//PageL.setBackgroundColor(android.R.color.transparent);
+    		//PageL.setBackgroundResource(R.drawable.black_gradient);
+    		    		    	    
     		PlayerButton.setBackgroundResource(R.drawable.player_pressed);
     		
     		Button ProgramButton = (Button) findViewById(R.id.ProgButton);
@@ -1140,6 +1162,32 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		//Check the mode 
     		if (SRPlayer.currentStation.getStreamType() == Station.NORMAL_STREAM)
     		{
+    			//Check if the channel is P1, P2, P3, P4 or any other
+    			int ChannelBGID = R.drawable.black_gradient;
+    			    			
+    			switch (SRPlayer.currentStation.getChannelId())
+    			{
+    			case P1_CHANNELID : //P1
+    				ChannelBGID = R.drawable.p1_gradient;
+    				break;
+    			case P2_CHANNELID : //P2
+    				ChannelBGID = R.drawable.p2_gradient;
+    				break;
+    			case P3_CHANNELID : //P3
+    				ChannelBGID = R.drawable.p3_gradient;
+    				break;
+    			case P4_CHANNELID : //P4
+    				ChannelBGID = R.drawable.p4_gradient;
+    				break;
+    			case P4_SPORT_CHANNELID :
+    				ChannelBGID = R.drawable.p4_gradient;
+    				break;
+    			default:    				
+    				break;
+    			}
+    			
+    			PageL.setBackgroundResource(ChannelBGID);
+    			
     			//All text should be visible
     			LayoutToShow = (View)findViewById(R.id.NextProgramNamnLabel);
     			LayoutToShow.setVisibility(View.VISIBLE);
@@ -1159,7 +1207,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			LayoutToShow = (View)findViewById(R.id.NextSongNamn);
     			LayoutToShow.setVisibility(View.VISIBLE);
     			    			 
-    			Layout.bottomMargin = (int) (65 * scale);
+    			Layout.bottomMargin = (int) (60 * scale);
     			sv.setLayoutParams(Layout);
     			
     			LayoutToHide = (View)findViewById(R.id.SeekLayout);
@@ -1167,6 +1215,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
     		else
     		{
+    			PageL.setBackgroundResource(R.drawable.black_gradient);
+    			
     			//All text should be visible
     			LayoutToHide = (View)findViewById(R.id.NextProgramNamnLabel);
     			LayoutToHide.setVisibility(View.GONE);
@@ -1186,7 +1236,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			LayoutToHide = (View)findViewById(R.id.NextSongNamn);
     			LayoutToHide.setVisibility(View.GONE);
     			    			
-    			Layout.bottomMargin = (int) (100 * scale);
+    			Layout.bottomMargin = (int) (90 * scale);
     			sv.setLayoutParams(Layout);
     			
     			sv.setLayoutParams(Layout);
@@ -1224,7 +1274,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		
     		//Init the history
             HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.ALARM,"","Alarm",null));
+            HistoryList.add(new History(SRPlayer.ALARM,"","Alarm",null,0));
 			break;
     	case SRPlayer.PLAYER:
     		//Just show the player    		    	   	
@@ -1239,8 +1289,11 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
     		
             //Init the history
-            HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.PROGRAMS,"",getResources().getString(R.string.ProgramListLabel),SavedAdapter));
+    		if (!NoNewHist)
+    		{
+    			HistoryList.clear();
+    			HistoryList.add(new History(SRPlayer.PROGRAMS,"",getResources().getString(R.string.ProgramListLabel),SavedAdapter,0));
+    		}
     		break;
     	case SRPlayer.CHANNELS:
     		//Live mode    		
@@ -1254,14 +1307,17 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
     	   	
     	   	//Init the history
-            HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.CHANNELS,"","Kanaler",SavedAdapter));
+    	   	if (!NoNewHist)
+    	   	{
+    	   		HistoryList.clear();
+    	   		HistoryList.add(new History(SRPlayer.CHANNELS,"","Kanaler",SavedAdapter,0));
+    	   	}
             break;
     	case SRPlayer.CATEGORIES:
     		//Init the history
     		HighlightedButton = 1;
     		HistoryList.clear();
-	        HistoryList.add(new History(SRPlayer.CATEGORIES,"","",SavedAdapter));
+	        HistoryList.add(new History(SRPlayer.CATEGORIES,"","",SavedAdapter,0));
 	        
 	        if (SavedAdapter == null)
     		{    		
@@ -1286,7 +1342,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
             //Add a new level to the history
             if (!NoNewHist)
-            	HistoryList.add(new History(SRPlayer.PROGRAMS_IN_A_CATEGORY,ID,Label,SavedAdapter));
+            	HistoryList.add(new History(SRPlayer.PROGRAMS_IN_A_CATEGORY,ID,Label,SavedAdapter,0));
     		break;
     		
     	case GET_IND_PROGRAMS:        		
@@ -1305,7 +1361,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     		}
         	
             if (!NoNewHist)                
-            	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label,SavedAdapter));
+            	HistoryList.add(new History(SRPlayer.GET_IND_PROGRAMS,PoddId,Label,SavedAdapter,0));
     		
     		break;
     	case SEARCH_RESULT:
@@ -1351,7 +1407,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         				
             	   		HistoryList.add(new History(SRPlayer.SEARCH_RESULT,"",
             	   				PoddIDLabel,
-            	   				TempPodInfo));            	   		
+            	   				TempPodInfo,0));            	   		
         			}
         	}
         	else if (SavedAdapter == null)
@@ -1444,7 +1500,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	   	
     	   	//Init the history
             HistoryList.clear();
-            HistoryList.add(new History(SRPlayer.FAVORITES,"","Favoriter",SavedAdapter));
+            HistoryList.add(new History(SRPlayer.FAVORITES,"","Favoriter",SavedAdapter,0));
             
     		break;
     	case DOWNLOAD_QUEUE:
@@ -1543,7 +1599,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	   	tv.setText(FavoriteLabel);
     	   	//Add to the history
     	   	if (!NoNewHist)
-    	   		HistoryList.add(new History(Action,ID,FavoriteLabel,SavedAdapter));
+    	   		HistoryList.add(new History(Action,ID,FavoriteLabel,SavedAdapter,0));
             
     		break;
     	
@@ -1596,7 +1652,19 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
        	{
        		UpdateArray(SavedAdapter);           
        	}
-		
+    	
+    	//If the historylist has more than 2 items
+    	//set the position of the previous to the 
+    	//position    	
+    	if ((position != 0) && 
+    		!HistoryList.isEmpty() && 
+    		(HistoryList.size() > 1) &&
+    		!NoNewHist)
+    	{
+    		int HistoryIndex = HistoryList.size()-2;
+    		HistoryList.get(HistoryIndex).WriteListPos(position);
+    	}
+    	        	    	
     }
     
     
@@ -1658,8 +1726,16 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     			info.setProgramInfo(PodInfo.get(currentPosition).getDescription());
     			boundService.rightNowUpdate(info);    
     			//HistoryList.clear(); Dont clear. Add to player to history instead
-    			HistoryList.add(new History(SRPlayer.PLAYER,"",PoddIDLabel,null));
+    			HistoryList.add(new History(SRPlayer.PLAYER,"",PoddIDLabel,null,0));
     			CurrentAction = SRPlayer.PLAYER;
+    			
+    			//Save which index that got you here
+    			if ((position != 0) && !HistoryList.isEmpty() && (HistoryList.size() > 1))
+    	    	{
+    	    		int HistoryIndex = HistoryList.size()-2;
+    	    		HistoryList.get(HistoryIndex).WriteListPos(position);
+    	    	}
+    			
         		break;
         	case SRPlayer.FAVORITES_CHANNELS:
         	case SRPlayer.CHANNELS:
@@ -1681,16 +1757,16 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         		UpdatePlayerVisibility(false); //Show the player
         		CurrentAction = SRPlayer.PLAYER;
         		//HistoryList.clear();
-        		HistoryList.add(new History(SRPlayer.PLAYER,"",SRPlayer.currentStation.getStationName(),null));
+        		HistoryList.add(new History(SRPlayer.PLAYER,"",SRPlayer.currentStation.getStationName(),null,0));
         		break;
             default:
             	break;
         	}
    }
     
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+
         if ((keyCode == KeyEvent.KEYCODE_BACK) && (HistoryList.size() > 0)) {
         	//Remove the last entry in the history list and execute
         	//the previous one
@@ -1711,8 +1787,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
         	String PrevLabel = PrevHistory.ReadLabel();
         	Object PrevObject = PrevHistory.ReadStreamdata();
         	
-        	GenerateNewList(PrevAction, 0, PrevID, PrevLabel, true,PrevObject);
-        	
+        	GenerateNewList(PrevAction, PrevHistory.ReadListPos(), PrevID, PrevLabel, true,PrevObject);        	
         	}
         		
         	return true;
@@ -1788,7 +1863,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		switch (item.getItemId()) {
 		case MENU_CONTEXT_ADD_TO_FAVORITES:
-			//Lï¿½gg till bland favoriter
+			//Lägg till bland favoriter
 			Log.d(TAG, "Add to favorites selected. ID = " + String.valueOf(SelectedIndex));						
 			int Selectedid = -1;
 			int FavType = 0;
@@ -1913,7 +1988,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	
 	public void UpdateDownloadList()
 	{
-		// PodcastInfo FavoritesInfo = new PodcastInfo();
+		PodcastInfo FavoritesInfo = new PodcastInfo();
 		
 		int PodInfoSize = PodInfo.size();
 		int LoopVar = 0;
@@ -2013,9 +2088,9 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			String[] items = new String[ChannelArray.size()];
 			//SharedPreferences settings = getPreferences(0);
 			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-			// String AlarmStationName = settings.getString("AlarmStationName", "P1");
+			//String AlarmStationName = settings.getString("AlarmStationName", "P1");
 			int AlarmStationID = settings.getInt("AlarmStationID", 132);
-			// String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
+			//String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
 			int SelectedID = 0;
 			
 			for (int i = 0; i<ChannelArray.size(); i++)
@@ -2059,7 +2134,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		
 		//SharedPreferences settings = getPreferences(0);
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		Rep = settings.getInt("AlarmRep", 255);
+		Rep = settings.getInt("AlarmRep", 127);
 		boolean Selected[];
 		Selected = new boolean[7];
 		for (int i=0; i<7; i++)
@@ -2100,6 +2175,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 				//SharedPreferences settings = getPreferences(0);
 				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 				SharedPreferences.Editor editor = settings.edit();
+				Rep &= 0x7F; //Mask out the bits of interest 
 				editor.putInt("AlarmRep", Rep);
         		editor.commit();
         		SRPlayerAlarm.HandleAlarmStateChange(getApplicationContext());
@@ -2152,7 +2228,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     	int Minute = settings.getInt("AlarmMinute", 0);
     	boolean AlarmEnable = settings.getBoolean("AlarmEnable", false);
     	String AlarmStationName = settings.getString("AlarmStationName", "P1");
-    	Rep = settings.getInt("AlarmRep", 255);
+    	Rep = settings.getInt("AlarmRep", 127);
     	
 		String RepStr = "";
 		Resources res = getResources();

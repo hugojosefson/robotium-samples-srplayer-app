@@ -63,12 +63,87 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 CurrentItem = items.get(position);                
                 String Title = CurrentItem.getTitle();
                 String Desciption = CurrentItem.getDescription();
-                TextView tt = (TextView) v.findViewById(R.id.text1);                
+                TextView tt = (TextView) v.findViewById(R.id.text1);
+                String TagLine = null;
                 if (tt != null) 
-                {
-                    tt.setText(Title);                            		
+                {                    
+                    int GBDrawID = 0;
+                    
+                    if (CurrentItem.getType() == SRPlayerDBAdapter.CHANNEL)
+                    {
+	                    switch (Integer.valueOf(CurrentItem.getID()))
+	                    {
+		    			case SRPlayer.P1_CHANNELID : //P1
+		    				GBDrawID = R.drawable.p1_gradient;
+		    				//TagLine = "den talade kanalen";
+		    				TagLine = CurrentItem.getTagline();
+		    				break;
+		    			case SRPlayer.P2_CHANNELID : //P2
+		    				GBDrawID = R.drawable.p2_gradient;
+		    				//TagLine = "musik och språk";
+		    				TagLine = CurrentItem.getTagline();
+		    				break;
+		    			case SRPlayer.P3_CHANNELID : //P3
+		    				GBDrawID = R.drawable.p3_gradient;
+		    				//TagLine = "den unga kanalen";
+		    				TagLine = CurrentItem.getTagline();
+		    				break;
+		    			case SRPlayer.P4_CHANNELID : //P4
+		    				GBDrawID = R.drawable.p4_gradient;
+		    				//TagLine = "den vuxna kanalen";
+		    				TagLine = CurrentItem.getTagline();
+		    				break;
+		    			/*
+		    			case SRPlayer.P4_SPORT_CHANNELID :
+		    				TagLine = "radiosporten";
+		    				Title = "P4";
+		    				GBDrawID = R.drawable.p4_gradient;
+		    				break;
+		    				*/
+		    			default:    
+		    				//Instead of using category, check if
+		    				//the name starts with P4
+		    				String[] SplitStr;		    				
+		    				if (Title.indexOf("P4 ") >= 0)
+		    				{		    				
+		    					SplitStr = Title.split(" ");
+		    					if (SplitStr.length > 1)
+		    					{
+		    						GBDrawID = R.drawable.p4_gradient;
+		    						Title = SplitStr[0];
+		    						TagLine = SplitStr[1];
+		    					}
+		    				}
+		    				break;
+		    			}
+                    }
+                    
+                    tt.setText(Title);
+                    
+                    if (GBDrawID != 0)
+                    {
+                    	tt.setBackgroundResource(GBDrawID);
+                    }
+                    else
+                    {
+                    	tt.setBackgroundColor(android.R.color.transparent);
+                    }
+                                        
                 }
-                                                               
+                
+                TextView taglineview = (TextView) v.findViewById(R.id.tagline);
+                if (TagLine != null)
+                {                	                	
+                	taglineview.setText(TagLine);
+                	taglineview.setVisibility(View.VISIBLE);
+                	tt.setTextColor(Color.WHITE);
+                }
+                else                
+                {
+                	taglineview.setVisibility(View.GONE);
+                	tt.setTextColor(Color.BLACK);
+                }                                       
+                
                 TextView bt = (TextView) v.findViewById(R.id.text2);
                 ProgressBar pb = (ProgressBar) v.findViewById(R.id.progress);
                 pb.setVisibility(View.GONE);
@@ -127,11 +202,7 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 		bt.setTextColor(Color.BLACK);
                 	}                	
                 }
-                else
-                {
-                	// We should not be doing this since bt is null here
-                	// bt.setVisibility(View.GONE);
-                }	
+                	
                 return v;
         }
 }

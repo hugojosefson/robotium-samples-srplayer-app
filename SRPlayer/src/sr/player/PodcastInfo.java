@@ -27,12 +27,15 @@ public class PodcastInfo implements Serializable {
 	private String ID;
 	private String PoddID;
 	private String Link;
+	private String LowLink; //Url for low quality
+	private String HighLink; //Url for high quality
 	private String Description;
 	private int DBIndex;
 	private String guid;
 	private int type;
 	private int filesize;
 	private int bytesdownloaded;
+	private String Tagline;
 	
 	
 	/**
@@ -80,11 +83,40 @@ public class PodcastInfo implements Serializable {
 	public String getLink() {
 		return Link;
 	}
+	
 	/**
-	 * @param ID the ID to set
+	 * @return the ID
+	 */
+	public String getLowLink() {
+		return LowLink;
+	}
+	
+	/**
+	 * @return the ID
+	 */
+	public String getHighLink() {
+		return HighLink;
+	}
+	
+	/**
+	 * @param Link is the link to be set
 	 */
 	public void setLink(String Link) {
 		this.Link = Link;
+	}
+	
+	/**
+	 * @param Link is the link to be set
+	 */
+	public void setLowLink(String Link) {
+		this.LowLink = Link;
+	}
+	
+	/**
+	 * @param Link is the link to be set
+	 */
+	public void setHighLink(String Link) {
+		this.HighLink = Link;
 	}
 	
 	/**
@@ -163,5 +195,19 @@ public class PodcastInfo implements Serializable {
 	 */
 	public void setBytesdownloaded(int bytesdownloaded) {
 		this.bytesdownloaded = bytesdownloaded;
+	}
+	
+	/**
+	 * @return the Tagline
+	 */
+	public String getTagline() {
+		return Tagline;
+	}
+	
+	/**
+	 * @param Tagline
+	 */
+	public void setTagline(String Tagline) {
+		this.Tagline = Tagline;
 	}
 }

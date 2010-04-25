@@ -84,6 +84,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 	private RightNowChannelInfo LastRetreivedInfo;
 	private ConnectionStateReceiver connectionStateReceiver;
 
+	private static String PrefPrefix = "CURRENT";
 	
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -115,6 +116,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         IntentFilter networkIntentFilter = new IntentFilter();        
         networkIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);        
         getBaseContext().registerReceiver(connectionStateReceiver, networkIntentFilter);
+                
+        this.currentStation.SetFromPrefs(PrefPrefix, getApplicationContext());
 	}
 
 	@Override
@@ -218,6 +221,8 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		//To be on the safeside, try to release the
 		//lock just in case it is still there
 		AlarmAlertWakeLock.releaseCpuLock();
+		
+		this.currentStation.SaveToPrefs(PrefPrefix, getApplicationContext());
 		
 		super.onDestroy();
 	}
@@ -332,7 +337,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.player.setOnInfoListener(this);
 		this.player.setOnPreparedListener(this);
 		this.player.setOnBufferingUpdateListener(this);
-		this.player.setOnSeekCompleteListener(this);		
+		this.player.setOnSeekCompleteListener(this);	
+		
+		//this.player.setLooping((this.currentStation.getStreamType() == Station.NORMAL_STREAM));
 		
 		this.player.prepareAsync();
 		this.playerStatus = BUFFER;

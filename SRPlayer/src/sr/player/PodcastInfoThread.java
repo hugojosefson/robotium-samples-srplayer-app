@@ -167,6 +167,7 @@ public class PodcastInfoThread extends Thread {
 		String CurrentID,CurrentName;
 		boolean ValidStream = false;
 		String CurrentType="";
+		String CurrentQuality="";
 		while (eventType != XmlPullParser.END_DOCUMENT) {          			
 			if(eventType == XmlPullParser.START_TAG)
 			{				          
@@ -180,7 +181,8 @@ public class PodcastInfoThread extends Thread {
 				}				
 				else if (CurrentTag.equals("url")) {        			        			        	
 					//Check if the channel has support for 3gp
-					CurrentType = xpp.getAttributeValue(null, "type");									
+					CurrentType = xpp.getAttributeValue(null, "type");
+					CurrentQuality = xpp.getAttributeValue(null, "quality");
         		} 
 
 			}
@@ -196,12 +198,29 @@ public class PodcastInfoThread extends Thread {
 				String CurrentText = xpp.getText();
 				if (CurrentTag.equals("url")) {
 					if (CurrentType.equals("3gp"))
-					{
-						ValidStream = true;
-						NewInfo.setLink(CurrentText);
+					{	
+						if (CurrentQuality.equals("high"))
+						{
+							//ValidStream = true; //requires normal stream at this point
+							NewInfo.setHighLink(CurrentText);
+						}
+						else if (CurrentQuality.equals("low"))
+						{
+							//ValidStream = true; //requires a normal stream at this point
+							NewInfo.setLowLink(CurrentText);
+						}
+						else
+						{
+							//Normal stream
+							ValidStream = true;
+							NewInfo.setLink(CurrentText);
+						}
+						
 					}
 				}
-				
+				else if (CurrentTag.equals("tagline")) {
+					NewInfo.setTagline(CurrentText);
+				}
 								
 			}			
 			eventType = xpp.next();         

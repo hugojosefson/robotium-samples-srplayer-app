@@ -25,18 +25,30 @@ public class History implements Serializable {
 	private String ID;
 	private String Label;
 	private Object StreamData;
+	private int ListPos;
 	
-	public History(int Action, String ID, String Label, Object StreamData) {
+	public History(int Action, String ID, String Label, Object StreamData, int ListPos) {
 		super();
 		this.Action = Action;
 		this.ID = ID;
 		this.Label = Label;
 		this.StreamData = StreamData;		
+		this.ListPos = ListPos;
 	}
 
 	public int ReadAction()
 	{
 		return this.Action;
+	}
+	
+	public int ReadListPos()
+	{
+		return this.ListPos;
+	}
+	
+	public void WriteListPos(int ListPos)
+	{
+		this.ListPos = ListPos;
 	}
 	
 	public String ReadID()

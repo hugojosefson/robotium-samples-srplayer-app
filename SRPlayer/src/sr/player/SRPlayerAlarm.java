@@ -35,7 +35,7 @@ public class SRPlayerAlarm extends BroadcastReceiver {
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
     	int Hour = settings.getInt("AlarmHour", 6);
     	int Minute = settings.getInt("AlarmMinute", 0);
-    	int Rep = settings.getInt("AlarmRep", 255);
+    	int Rep = settings.getInt("AlarmRep", 127);
     	String AlarmStationName = settings.getString("AlarmStationName", "P1");
     	String AlarmStationURL = settings.getString("AlarmStationURL", "rtsp://lyssna-mp4.sr.se/live/mobile/SR-P1.sdp");
     	
@@ -45,9 +45,9 @@ public class SRPlayerAlarm extends BroadcastReceiver {
     	
     	
     	    	
-    	if (AlarmEnable)
+    	if (AlarmEnable && ((Rep & 0x7F)!= 0))
     	{
-    	Log.d(SRPlayer.TAG,"Alarm enabled");
+    	//Log.d(SRPlayer.TAG,"Alarm enabled. Rep = " + Rep);
     	//Calculate when the next alarm should go off
     	
     	//First check which day it is

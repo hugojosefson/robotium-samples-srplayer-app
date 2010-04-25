@@ -15,6 +15,10 @@
   */
 package sr.player;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
 /** <code>Station</code> is a value object used to pass station infromation between different
  * parts of the application.
  *
@@ -28,6 +32,12 @@ public class Station implements Cloneable {
 	public static final int NORMAL_STREAM = 0; 
 	public static final int POD_STREAM = 1;
 	public static final int OFFLINE_STREAM = 2;
+	
+	public static final String streamUrl_pref = "_STREAM_URL"; 
+	public static final String sationname_pref = "_STATION_NAME";
+	public static final String rightnowurl_pref = "_RIGHTNOW_URL";
+	public static final String channelid_pref = "_CHANNEL_ID";
+	public static final String streamtype_pref = "_STREAM_TYPE";
 		
 	
 	public Station(String stationName, String streamUrl,  String rightNowUrl,
@@ -156,5 +166,44 @@ public class Station implements Cloneable {
 		Station newStation = new Station(this.stationName, this.streamUrl, 
 				this.rightNowUrl, this.channelId, this.streamType);
 		return newStation;
+	}
+	
+	public void SaveToPrefs(String Prefix, Context con)
+	{		
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(con);
+		SharedPreferences.Editor editor = settings.edit();
+		
+		editor.putString(Prefix+streamUrl_pref, this.streamUrl);
+		editor.putString(Prefix+sationname_pref, this.stationName);
+		editor.putString(Prefix+rightnowurl_pref, this.rightNowUrl);
+		editor.putInt(Prefix+channelid_pref, this.channelId);
+		editor.putInt(Prefix+streamtype_pref, this.streamType);
+		
+		editor.commit();
+	}
+	
+	public boolean SetFromPrefs(String Prefix, Context con)
+	{
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(con);
+		if (
+				settings.contains(Prefix+streamUrl_pref) &&
+				settings.contains(Prefix+sationname_pref) &&
+				settings.contains(Prefix+rightnowurl_pref) &&
+				settings.contains(Prefix+channelid_pref) &&
+				settings.contains(Prefix+streamtype_pref)				
+			)
+		{
+			this.streamUrl = settings.getString(Prefix+streamUrl_pref, "");
+			this.stationName = settings.getString(Prefix+sationname_pref, "");
+			this.rightNowUrl = settings.getString(Prefix+rightnowurl_pref, "");
+			this.channelId = settings.getInt(Prefix+channelid_pref, 0);
+			this.streamType = settings.getInt(Prefix+streamtype_pref, 0);			
+		}
+		else
+		{
+			return false;
+		}
+		
+		return true;
 	}
 }
