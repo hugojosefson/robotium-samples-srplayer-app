@@ -59,6 +59,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -89,6 +90,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	private static final int MENU_SLEEPTIMER = 4;
 	private static final int MENU_HELP = 5;
 	private static final int MENU_ALARM = 6;
+	private static final int MENU_EXPORT_FAV = 7;
+	private static final int MENU_IMPORT_FAV = 8;
 	
 	public static final int MENU_CONTEXT_ADD_TO_FAVORITES = 20;			
 	public static final int MENU_CONTEXT_DELETE_FAVORITE = 21;
@@ -142,6 +145,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	public static final int ALARM = 13;
 	       	
 	public static final String ACTION = "ACTION";
+	private boolean FLAG_THUMB_PLUS;
 	private static int CurrentAction;
 	PodcastInfoThread podcastinfothread;
 	private ProgressDialog waitingfordata;
@@ -222,7 +226,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 				SDKVal = 0;
 			}
 						
-			if ((currentStation.getStreamType() != Station.OFFLINE_STREAM) && ( SDKVal >= 4))
+			//if (false)
+			if ((currentStation.getStreamType() != Station.OFFLINE_STREAM) && ( SDKVal >= 4))			
 			{
 				Context context = getApplicationContext();
 				CharSequence text = getResources().getString(R.string.WindErorText);				
@@ -473,7 +478,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 					
 		//Add a contextmenu for the listview
 		registerForContextMenu(getListView());
-		
+								
 		//Start the download service so it can check if there are
 		//any podcasts to download
 		startService(new Intent(SRPlayer.this, DownloadPodcastService.class));			
@@ -660,6 +665,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		setIcon(android.R.drawable.ic_menu_help);
 		
 		menu.add(0, SRPlayer.MENU_ALARM, 0, R.string.menu_alarm);
+		
+		menu.add(0, SRPlayer.MENU_EXPORT_FAV, 0, R.string.menu_exp_fav);
+		
+		menu.add(0, SRPlayer.MENU_IMPORT_FAV, 0, R.string.menu_imp_fav);
 		return true;
 	}
 	
@@ -704,6 +713,10 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		Log.d(TAG, "onMenuItemSelected");
+		int Count, Duration;
+		Toast toast;
+		Context context;		
+					
 		switch (item.getItemId()) {
 		case SRPlayer.MENU_EXIT:
 			handleMenuExit();
@@ -731,7 +744,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		case SRPlayer.MENU_SLEEPTIMER:
 			if (this.boundService.SleeptimerIsRunning())
 			{
-				this.boundService.StopSleeptimer();
+				this.boundService.StopSleeptimer(false);
 			}
 			else
 			{
@@ -747,7 +760,20 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		case MENU_ALARM:								
 			GenerateNewList(SRPlayer.ALARM, 0, "", "Alarm", false,null);
 			return true;
-			
+		case MENU_EXPORT_FAV:								
+			Count = SRPlayerDB.ExportToXML("favorites.xml");
+			context = getApplicationContext();		
+   			Duration = Toast.LENGTH_LONG;
+    		toast = Toast.makeText(context, R.string.fav_export_result, Duration);
+    		toast.show();
+			return true;
+		case MENU_IMPORT_FAV:								
+			Count = SRPlayerDB.ImportFromXML("favorites.xml");
+			context = getApplicationContext();		
+   			Duration = Toast.LENGTH_LONG;
+    		toast = Toast.makeText(context, R.string.fav_import_result, Duration);
+    		toast.show();
+			return true;	
 		}
 		return super.onMenuItemSelected(featureId, item);
 	}
@@ -930,9 +956,29 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
    }
    
    private void UpdateList()
-   {
+   {		 
+	 boolean ReindexSectionIndexer = false;
+	 switch (CurrentAction)
+	 {
+	 case SRPlayer.FAVORITES_PROGRAMS :
+	 case SRPlayer.PROGRAMS :
+	 case SRPlayer.PROGRAMS_IN_A_CATEGORY :
+	 case SRPlayer.FAVORITES_OFFLINE_PROGRAMS :
+	 case SRPlayer.SEARCH_RESULT :
+		 PodList = new PodcastInfoAdapter(this,
+	               R.layout.podlistitem, (ArrayList<PodcastInfo>) PodInfo);
+		 ReindexSectionIndexer = true;
+	 }
+	 
    	setListAdapter(PodList);
    	
+   	if (ReindexSectionIndexer)
+   	{
+   		getListView().setFastScrollEnabled(false);	
+   		getListView().setFastScrollEnabled(true);
+   		jiggleListView(); //ugly solution but it works
+   	}
+	
    	//Set the position in the list to where the 
    	//use was before
    	
@@ -1255,6 +1301,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
     {
     	if (Action != SRPlayer.SEARCH_RESULT)
     		CurrentAction = Action;
+    	
+    	getListView().setFastScrollEnabled(false);
     	
     	TextView tv;
     	Cursor FavCursor;
@@ -2256,5 +2304,20 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 		CheckBox AlarmEnableCheckBox = (CheckBox) findViewById(R.id.AlarmEnable);
 		AlarmEnableCheckBox.setChecked(AlarmEnable);
     }
+    
+    private void jiggleListView() {
+        
+        int newWidth = ( FLAG_THUMB_PLUS ) ? RelativeLayout.LayoutParams.FILL_PARENT :
+        	getListView().getWidth() - 1;
+
+        RelativeLayout.LayoutParams l = new RelativeLayout.LayoutParams(
+                        newWidth,
+                        FrameLayout.LayoutParams.FILL_PARENT
+        );
+
+        getListView().setLayoutParams( l );
+       
+        FLAG_THUMB_PLUS = FLAG_THUMB_PLUS ? false : true; 
+}
         
 }
