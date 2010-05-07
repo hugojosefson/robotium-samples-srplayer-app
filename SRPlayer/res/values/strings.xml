@@ -12,6 +12,8 @@
 <string name="menu_sleeptimer">Start sleeptimer</string>
 <string name="menu_help">Hjälp</string>
 <string name="menu_alarm">Alarm</string>
+<string name="menu_exp_fav">Exportera favoriter</string>
+<string name="menu_imp_fav">Importera favoriter</string>
 <string name="menu_search">Sök</string>
 <string name="menu_sleeptimer_cancel">Stop sleeptimer</string>
 <string name="menu_add_to_favorite">Lägg till som favorit</string>
@@ -88,5 +90,8 @@ Created by Jesper Svensson (JDS), Pontus Ullgren (ponul) and Mats (ZilverZurfarn
 <item>Lö</item>
 <item>Sö</item>
 </string-array>
+
+<string name="fav_export_result">Dina favoriter har exporterats</string>
+<string name="fav_import_result">Dina favoriter har importerats</string>
 
 </resources>
