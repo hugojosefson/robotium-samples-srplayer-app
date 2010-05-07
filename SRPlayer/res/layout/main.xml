@@ -181,7 +181,8 @@ android:id="@+id/PlayerLayout"
               android:layout_height="wrap_content"
               android:layout_weight="1"                            
               android:drawSelectorOnTop="false"
-              android:divider="@android:drawable/divider_horizontal_bright"/>
+              android:divider="@android:drawable/divider_horizontal_bright"                                          
+              />
          
 </RelativeLayout>
 
@@ -370,6 +371,7 @@ android:id="@+id/AlarmLayout"
         android:textSize="12dip"        
         android:layout_marginLeft="4dip"
         android:gravity="center_vertical"	
+        android:background="@android:color/transparent"
         />
   
 	<SeekBar
@@ -383,6 +385,8 @@ android:id="@+id/AlarmLayout"
 	    android:thumbOffset="0dip"    
 	    android:progressDrawable="@drawable/searchbg"
 	    android:secondaryProgress="100"
+	    android:paddingLeft="10dip"
+	    android:paddingRight="10dip"
 	/>      
     
     <TextView
@@ -395,6 +399,7 @@ android:id="@+id/AlarmLayout"
         android:layout_alignParentRight="true"      
         android:layout_marginRight="4dip"
         android:gravity="center_vertical"	
+        android:background="@android:color/transparent"
         />
 </RelativeLayout>
 
