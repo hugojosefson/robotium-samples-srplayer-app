@@ -16,12 +16,27 @@
 
 package sr.player;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -171,6 +186,23 @@ public class SRPlayerDBAdapter {
         initialValues.put(KEY_GUID, guid);
         initialValues.put(KEY_FILESIZE, -1);
         initialValues.put(KEY_BYTESDOWNLOADED, 0);
+        
+        
+        return mDb.insert(DATABASE_TABLE, null, initialValues);
+    }
+    
+    public long createFavorite(int Type, int ID, String Label, String Link, String Desc, String Name, String guid, int FileSize, int BytesDownloaded) {
+    	Log.d(TAG,"New row in datase");
+    	ContentValues initialValues = new ContentValues();
+        initialValues.put(KEY_TYPE, Type);
+        initialValues.put(KEY_ID, ID);
+        initialValues.put(KEY_LABEL, Label);
+        initialValues.put(KEY_LINK, Link);
+        initialValues.put(KEY_DESC, Desc);
+        initialValues.put(KEY_NAME, Name);
+        initialValues.put(KEY_GUID, guid);
+        initialValues.put(KEY_FILESIZE, FileSize);
+        initialValues.put(KEY_BYTESDOWNLOADED, BytesDownloaded);
         
         
         return mDb.insert(DATABASE_TABLE, null, initialValues);
@@ -330,5 +362,251 @@ public class SRPlayerDBAdapter {
         args.put(KEY_ID, ACTIVE_DOWNLOAD_PAUSED);        
         
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+    
+    public int ImportFromXML(String XMLFilename) {
+    	int FavId,FavFilesize,FavbytesDownloaded,FavType;
+    	String FavLabel,FavLink,FavDesc,FavGuid,FavName,CurrentTag;
+    	
+    	InputStream XmlStream = null;
+    	
+    	File root,subdirectory;
+        
+		root = Environment.getExternalStorageDirectory();					
+		subdirectory = new File(root, "SRPlayer");
+		if (subdirectory.exists() == false)
+		{
+			return 0;
+		}
+		
+		String XMLFullFilepath = subdirectory.getAbsolutePath() + "/" + XMLFilename;		
+		
+		FileInputStream fis = null;
+		try {
+		
+		fis = new FileInputStream(XMLFullFilepath);
+				
+		XmlPullParserFactory factory;
+		
+		factory = XmlPullParserFactory.newInstance();
+        factory.setNamespaceAware(false);
+        XmlPullParser xpp = factory.newPullParser();
+        xpp.setInput(fis, null);
+        int eventType = xpp.getEventType();
+        while( eventType != XmlPullParser.END_DOCUMENT) {
+       	 if (eventType == XmlPullParser.START_TAG)
+       	 {
+       		String CurrName = xpp.getName();
+       		if ( CurrName.equals("favorite")) 
+       		{
+       			CurrentTag = "none";
+       			FavId = 0;
+       			FavFilesize = 0;
+       			FavbytesDownloaded = 0;
+       			FavType = 0;
+       	    	FavLabel = null;
+       	    	FavLink = null;
+       	    	FavDesc = null;
+       	    	FavGuid = null;
+       	    	FavName = null;
+       	    	
+       			//found a favorite. Try to get all the fields
+       			while (eventType != XmlPullParser.END_DOCUMENT) {          			
+       				if(eventType == XmlPullParser.START_TAG)
+       				{				          
+       					CurrentTag = xpp.getName();				       									       					
+       				}
+       				else if(eventType == XmlPullParser.END_TAG) {              				         
+       					if (xpp.getName().equals("favorite")) {
+       						//Insert the favorite in the DB
+       						createFavorite(FavType, 
+       								FavId, 
+       								FavLabel, 
+       								FavLink, 
+       								FavDesc, 
+       								FavName, 
+       								FavGuid,
+       								FavFilesize,FavbytesDownloaded
+       								);
+       	        			break;
+       	        		}
+       					else CurrentTag = "none";
+       				} 
+       				else if(eventType == XmlPullParser.TEXT) {              				
+       					String CurrentText = xpp.getText();       					
+       					
+       					if (CurrentTag.equals(KEY_TYPE)) {
+       						FavType = Integer.valueOf(CurrentText);
+       					}
+       					else if (CurrentTag.equals(KEY_ID))
+       					{
+       						FavId = Integer.valueOf(CurrentText);
+       					}
+       					else if (CurrentTag.equals(KEY_LABEL))
+       					{
+       						FavLabel = CurrentText;
+       					}
+       					else if (CurrentTag.equals(KEY_LINK))
+       					{
+       						FavLink = CurrentText;
+       					}
+       					else if (CurrentTag.equals(KEY_DESC))
+       					{
+       						FavDesc = CurrentText;
+       					}
+       					else if (CurrentTag.equals(KEY_NAME))
+       					{
+       						FavName = CurrentText;
+       					}
+       					else if (CurrentTag.equals(KEY_GUID))
+       					{
+       						FavGuid = CurrentText;
+       					}
+       					else if (CurrentTag.equals(KEY_FILESIZE))
+       					{
+       						FavFilesize = Integer.valueOf(CurrentText);
+       					}
+       					else if (CurrentTag.equals(KEY_BYTESDOWNLOADED))
+       					{
+       						FavbytesDownloaded = Integer.valueOf(CurrentText);
+       					}
+       					
+       				}			
+       				eventType = xpp.next();         
+       			}       			
+       		}
+       	 }       	 
+       	 eventType = xpp.next();		
+        }
+		} catch (FileNotFoundException e) {			
+			e.printStackTrace();
+		} catch (XmlPullParserException e) {			
+			e.printStackTrace();
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		
+    	
+		
+    	return 0;
+    }
+    
+    public int ExportToXML(String XMLFilename) {
+    	int FavId,FavFilesize,FavbytesDownloaded,FavType;
+    	String FavLabel,FavLink,FavDesc,FavGuid,FavName;
+		
+    	File root,subdirectory;
+        
+		root = Environment.getExternalStorageDirectory();					
+		subdirectory = new File(root, "SRPlayer");
+		if (subdirectory.exists() == false)
+		{
+			Log.d(SRPlayer.TAG, "Directory does not exist. Creating it");
+			subdirectory.mkdir();
+		}		
+		String XMLFullFilepath = subdirectory.getAbsolutePath() + "/" + XMLFilename;
+		File XMLExportFile = new File(XMLFullFilepath); //Create the file
+		
+		FileOutputStream fos = null;
+		OutputStreamWriter out = null;
+		try {
+			fos = new FileOutputStream(XMLFullFilepath);
+			out = new OutputStreamWriter(fos, "UTF-8");
+			out.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+		} catch (FileNotFoundException e) { 
+			e.printStackTrace();
+			return 0;
+	    } catch (UnsupportedEncodingException e) {			
+			e.printStackTrace();
+			return 0;
+		} catch (IOException e) {					
+			e.printStackTrace();
+		}
+		
+	    Cursor FavCursor = fetchAllFavorites();
+	    
+	    if (FavCursor.moveToFirst())
+	    {
+	    	do {
+	    		if (FavCursor.isNull(INDEX_ID))
+	    			FavId = 0;
+	    		else
+	    			FavId = FavCursor.getInt(SRPlayerDBAdapter.INDEX_ID);
+	    		
+	    		if (FavCursor.isNull(INDEX_FILESIZE))
+	    			FavFilesize = 0;
+	    		else
+		    		FavFilesize = FavCursor.getInt(SRPlayerDBAdapter.INDEX_FILESIZE);
+
+	    		
+	    		if (FavCursor.isNull(INDEX_TYPE))
+	    			FavType = 0;
+	    		else
+	    			FavType = FavCursor.getInt(SRPlayerDBAdapter.INDEX_TYPE);
+
+	    		
+	    		if (FavCursor.isNull(INDEX_LABEL))
+	    			FavLabel = "";
+	    		else
+	    			FavLabel = FavCursor.getString(SRPlayerDBAdapter.INDEX_LABEL);
+
+	    		
+	    		if (FavCursor.isNull(INDEX_LINK))
+	    			FavLink = "";
+	    		else
+	    			FavLink = FavCursor.getString(SRPlayerDBAdapter.INDEX_LINK);
+
+	    		
+	    		if (FavCursor.isNull(INDEX_GUID))
+	    			FavGuid = "";
+	    		else
+	    			FavGuid = FavCursor.getString(SRPlayerDBAdapter.INDEX_GUID);
+
+	    		
+	    		if (FavCursor.isNull(INDEX_NAME))
+	    			FavName = "";
+	    		else
+	    			FavName = FavCursor.getString(SRPlayerDBAdapter.INDEX_NAME);
+	    		
+	    		if (FavCursor.isNull(INDEX_DESC))
+	    			FavDesc = "";
+	    		else
+	    			FavDesc = FavCursor.getString(SRPlayerDBAdapter.INDEX_DESC);
+	    		
+	    		if (FavCursor.isNull(INDEX_BYTESDOWNLOADED))
+	    			FavbytesDownloaded = 0;
+	    		else
+	    			FavbytesDownloaded = FavCursor.getInt(SRPlayerDBAdapter.INDEX_BYTESDOWNLOADED);
+
+	    		
+	    		
+	    		//Write the xml file with the keys as tagnames	    		
+	    		try {	    			
+		    		out.write("<favorite>\n");
+		    		out.write("<"+KEY_ID+">"+FavId+"</"+KEY_ID+">\n");
+		    		out.write("<"+KEY_LABEL+">"+FavLabel+"</"+KEY_LABEL+">\n");
+		    		out.write("<"+KEY_LINK+">"+FavLink+"</"+KEY_LINK+">\n");
+		    		out.write("<"+KEY_DESC+">"+FavDesc+"</"+KEY_DESC+">\n");
+		    		out.write("<"+KEY_GUID+">"+FavGuid+"</"+KEY_GUID+">\n");
+		    		out.write("<"+KEY_TYPE+">"+FavType+"</"+KEY_TYPE+">\n");
+		    		out.write("<"+KEY_NAME+">"+FavName+"</"+KEY_NAME+">\n");
+		    		out.write("<"+KEY_FILESIZE+">"+FavFilesize+"</"+KEY_FILESIZE+">\n");
+		    		out.write("<"+KEY_BYTESDOWNLOADED+">"+FavbytesDownloaded+"</"+KEY_BYTESDOWNLOADED+">\n");
+					out.write("</favorite>\n");
+				} catch (IOException e) {					
+					XMLExportFile.delete();
+					e.printStackTrace();
+				}
+	    			    		
+	    	} while (FavCursor.moveToNext());
+	    }
+	    FavCursor.close();
+	    try {
+			out.close();
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+			   
+        return FavCursor.getCount();
     }
 }
