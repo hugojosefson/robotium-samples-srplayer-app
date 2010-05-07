@@ -30,6 +30,7 @@ public class sleepTimertask extends TimerTask {
 		@Override
 		public void run() {				
 			this.boundservice.stopPlay();
+			this.boundservice.StopSleeptimer(true);
 		}
 	
 }
