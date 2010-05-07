@@ -117,7 +117,7 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         networkIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);        
         getBaseContext().registerReceiver(connectionStateReceiver, networkIntentFilter);
                 
-        this.currentStation.SetFromPrefs(PrefPrefix, getApplicationContext());
+        this.currentStation.SetFromPrefs(PrefPrefix, getApplicationContext());        
 	}
 
 	@Override
@@ -212,6 +212,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
         mNM.cancel(PlayerService.NOTIFY_ID);
         // Cancel the rightNowTasks
 		rightNowTimer.cancel();
+		
+		if ( this.sleepTimertask != null) {
+			this.sleepTimertask.cancel();
+			sleepTimerIsRunning = false;
+		}
 		
 		if (connectionStateReceiver != null)
 		{		
@@ -362,10 +367,11 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.notification = null;
         this.restartRightNowInfo(false);
         
-        if ( this.sleepTimertask != null) {
-			this.sleepTimertask.cancel();
-			sleepTimerIsRunning = false;
-		}
+        
+        //if ( this.sleepTimertask != null) {
+		//	this.sleepTimertask.cancel();
+		//	sleepTimerIsRunning = false;
+		//}
         
     	for(PlayerObserver observer : this.playerObservers) {
         	observer.onPlayerStoped();	// Call observers to let them
@@ -388,10 +394,10 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		this.notification = null;
         this.restartRightNowInfo(false);
         
-        if ( this.sleepTimertask != null) {
-			this.sleepTimertask.cancel();
-			sleepTimerIsRunning = false;
-		}
+        //if ( this.sleepTimertask != null) {
+		//	this.sleepTimertask.cancel();
+		//	sleepTimerIsRunning = false;
+		//}
         
     	for(PlayerObserver observer : this.playerObservers) {
         	observer.onPlayerStoped();	// Call observers to let them
@@ -685,8 +691,9 @@ OnCompletionListener, OnInfoListener, OnErrorListener, OnBufferingUpdateListener
 		Sleeptimer.schedule(sleepTimertask, Delay * _TIME_MINUTE); //Delay is in minutes		
 	}
 	
-	public void StopSleeptimer() {
-		sleepTimertask.cancel();
+	public void StopSleeptimer(boolean NoCancel) {
+		if (!NoCancel) 
+			sleepTimertask.cancel();
 		sleepTimerIsRunning = false;
 	}
 	
