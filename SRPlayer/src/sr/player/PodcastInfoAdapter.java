@@ -17,6 +17,10 @@
 package sr.player;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -27,18 +31,57 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
+public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> implements SectionIndexer {
 
         private ArrayList<PodcastInfo> items;
         private Context CurrentContext;
         private PodcastInfo CurrentItem;
+        
+        HashMap<String, Integer> alphaIndexer; 
+        String[] sections; 
 
         public PodcastInfoAdapter(Context context, int textViewResourceId, ArrayList<PodcastInfo> items) {
                 super(context, textViewResourceId, items);
+                                                
+                alphaIndexer = new HashMap<String, Integer>();
                 this.items = items;
                 CurrentContext = context;
+                
+                
+                //This genetation of section is a bit
+                //of an overkill, but it works. All the 
+                //code below could be solved with a single 
+                //loop over items
+
+                int size = items.size(); 
+                for (int i = size - 1; i >= 0; i--) {
+                	//go backwards so that the first occurrence of 
+                	//the letter is in the hashmap
+                     String element = items.get(i).getTitle(); //Using first letter of title 
+                     alphaIndexer.put(element.substring(0, 1), i);   
+                }
+                
+                Set<String> keys = alphaIndexer.keySet(); // set of first letters ...sets 
+                
+                Iterator<String> it = keys.iterator(); 
+                ArrayList<String> keyList = new ArrayList<String>(); 
+
+                //Make an ArrayList of the HashMap keys (i.e. first letters)
+                while (it.hasNext()) { 
+                     String key = it.next(); 
+                     keyList.add(key); 
+                } 
+
+                //Sort the keylist
+                Collections.sort(keyList); 
+
+                //Make an array of the keylist
+                sections = new String[keyList.size()]; 
+                keyList.toArray(sections);    
+                Log.d(SRPlayer.TAG,"Sections generated. Size is " + sections.length);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -59,6 +102,11 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 	MainView.setBackgroundResource(R.drawable.list_selector_bg);
                 }
                 	
+                
+                //verify that the items list is still valid since
+                //the list may have been cleared during an update
+                if ((items == null) || ((position + 1) > items.size()))
+                		return v; //Can't extract item
                 
                 CurrentItem = items.get(position);                
                 String Title = CurrentItem.getTitle();
@@ -126,7 +174,8 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                     }
                     else
                     {
-                    	tt.setBackgroundColor(android.R.color.transparent);
+                    	tt.setBackgroundResource(android.R.color.transparent);
+                    	//tt.setBackgroundColor(android.R.color.transparent);
                     }
                                         
                 }
@@ -205,4 +254,22 @@ public class PodcastInfoAdapter extends ArrayAdapter<PodcastInfo> {
                 	
                 return v;
         }
+
+		@Override
+		public int getPositionForSection(int section) {
+			String letter = sections[section]; 
+            return alphaIndexer.get(letter); 			
+		}
+
+		@Override
+		public int getSectionForPosition(int position) {
+			//Log.d(SRPlayer.TAG,"getSectionForPosition");
+			return 0;
+		}
+
+		@Override
+		public Object[] getSections() {
+			//Log.d(SRPlayer.TAG,"Requesting sections. Size is " + sections.length);
+			return sections;			
+		}
 }
