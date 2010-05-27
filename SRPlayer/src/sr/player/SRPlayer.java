@@ -227,7 +227,7 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 			}
 						
 			//if (false)
-			if ((currentStation.getStreamType() != Station.OFFLINE_STREAM) && ( SDKVal >= 4))			
+			if ((currentStation.getStreamType() != Station.OFFLINE_STREAM) && ( SDKVal >= 4) && ( SDKVal < 8))			
 			{
 				Context context = getApplicationContext();
 				CharSequence text = getResources().getString(R.string.WindErorText);				
@@ -245,7 +245,8 @@ public class SRPlayer extends ListActivity implements PlayerObserver, SeekBar.On
 				this.SeekTimerTask.cancel();
 			}
 		    SeekTimerTask = new seekTimerTask(this);
-		    SeekTimer.schedule(SeekTimerTask, 500, 1000);
+		    //SeekTimer.schedule(SeekTimerTask, 500, 1000);
+		    SeekTimer.schedule(SeekTimerTask, 2000, 1000);
 		}
 	}
 	
